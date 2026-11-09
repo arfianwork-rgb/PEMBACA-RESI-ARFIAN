@@ -56,7 +56,7 @@
                 </label>
             </div>
 
-            <!-- Tombol Salin Dikembalikan ke Posisi Semula di Atas Riwayat -->
+            <!-- Tombol Salin -->
             <div class="grid grid-cols-2 gap-2 mb-3">
                 <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[11px] font-semibold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📋</span> Salin Valid
@@ -66,44 +66,39 @@
                 </button>
             </div>
 
-            <!-- Daftar Riwayat dengan Latar Belakang Hijau/Merah -->
+            <!-- Daftar Riwayat (Lencana ADA/TIDAK ADA di dalam list sudah dihapus) -->
             <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[180px] max-h-72 overflow-y-auto border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar dengan Tombol Soon di Kiri-Kanan -->
+    <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-around items-center shadow-2xl">
-        <!-- Tombol Soon Kiri -->
         <button onclick="showToast('Fitur segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
             <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
             <span class="text-[10px] font-bold tracking-wide">Soon</span>
         </button>
 
-        <!-- Tombol Utama Pindai (Tengah) -->
         <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-blue-400 hover:text-blue-300 transition active:scale-95 -mt-3">
             <span class="text-xl bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-600/50 border border-blue-400/40">📷</span>
             <span class="text-[10px] font-bold tracking-wide text-white">Pindai</span>
         </button>
 
-        <!-- Tombol Soon Kanan -->
         <button onclick="showToast('Fitur segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
             <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
             <span class="text-[10px] font-bold tracking-wide">Soon</span>
         </button>
     </nav>
 
-    <!-- Area Utama Kamera Full Screen (Tersembunyi secara default) -->
+    <!-- Area Utama Kamera Full Screen -->
     <main id="camera-wrapper" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
         <div class="relative w-full flex-1 bg-black overflow-hidden">
             <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-            <!-- Target Garis Pemindai -->
             <div class="absolute inset-0 border-2 border-emerald-400 border-dashed opacity-60 m-10 rounded-3xl pointer-events-none animate-pulse"></div>
         </div>
         <canvas id="canvas" class="hidden"></canvas>
 
-        <!-- Panel Informasi Bagian Bawah Saat Kamera Aktif -->
         <footer class="w-full bg-slate-900/95 backdrop-blur-md p-4 border-t border-slate-800 space-y-3">
             <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
                 <div class="overflow-hidden pr-2">
@@ -126,7 +121,6 @@
         </footer>
     </main>
 
-    <!-- Custom Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
@@ -342,6 +336,7 @@
 
             const li = document.createElement('li');
             
+            // Lencana teks ADA/TIDAK ADA sudah dihapus, kini hanya menampilkan nomor dengan latar belakang warna kartu
             if (isInDb) {
                 li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-3 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs shadow-sm";
             } else {
@@ -351,11 +346,7 @@
             li.dataset.number = nomor;
             li.dataset.status = isInDb ? 'ada' : 'tidak';
             
-            let badge = isInDb 
-                ? `<span class="text-[10px] bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-lg font-sans font-bold">✔ ADA</span>`
-                : `<span class="text-[10px] bg-rose-500/30 text-rose-300 border border-rose-500/40 px-2.5 py-1 rounded-lg font-sans font-bold">✖ TIDAK ADA</span>`;
-
-            li.innerHTML = `<span class="tracking-wide font-bold">${nomor}</span> ${badge}`;
+            li.innerHTML = `<span class="tracking-wide font-bold">${nomor}</span>`;
             resultList.prepend(li);
         }
 
