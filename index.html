@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Plus Jakarta Sans', sans-serif; } 
-        /* Animasi halus untuk toast notification */
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -19,52 +18,42 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden pb-20">
 
-    <!-- Header & Dashboard Utama (Tampil saat kamera tertutup) -->
+    <!-- Header & Dashboard Utama -->
     <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
-        <!-- Header Atas -->
-        <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-3xl border border-slate-800 flex justify-between items-center shadow-lg">
+        <!-- Header Atas ala Android App Bar -->
+        <div class="bg-slate-900/90 backdrop-blur-md px-4 py-3.5 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
             <div>
-                <h1 class="text-base font-bold text-white tracking-tight">Database Resi Web</h1>
+                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi Web</h1>
                 <p id="db-status" class="text-[11px] text-amber-400 mt-0.5">Menghubungkan Google Sheets...</p>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-full border border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-[10px] font-semibold text-slate-300">Online</span>
             </div>
         </div>
 
         <!-- Panel Total Valid & Tidak Valid di Tengah -->
         <div class="grid grid-cols-2 gap-3">
             <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-emerald-500/30 text-center shadow-lg">
-                <span class="block text-2xl font-extrabold text-emerald-400" id="count-valid">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-emerald-400/80 font-bold">✔ Total Valid</span>
+                <span class="block text-3xl font-extrabold text-emerald-400 tracking-tight" id="count-valid">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-400/80 font-bold mt-1 block">✔ Total Valid</span>
             </div>
             <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-rose-500/30 text-center shadow-lg">
-                <span class="block text-2xl font-extrabold text-rose-400" id="count-invalid">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-rose-400/80 font-bold">✖ Tidak Valid</span>
-            </div>
-        </div>
-
-        <!-- Tombol Buka Kamera & Upload -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-5 rounded-3xl border border-slate-800 flex flex-col items-center text-center shadow-lg">
-            <div class="w-12 h-12 bg-blue-600/20 border border-blue-500/40 rounded-full flex items-center justify-center mb-2.5 text-blue-400 text-lg shadow-inner">
-                📸
-            </div>
-            <h2 class="text-base font-bold text-white mb-1">Siap Memindai Resi</h2>
-            <p class="text-xs text-slate-400 max-w-xs mb-4">Arahkan kamera ke nomor resi pengiriman untuk validasi otomatis dengan database.</p>
-            <button id="btn-start-camera" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-600/30 active:scale-95 transition text-sm flex items-center justify-center gap-2">
-                <span>📷</span> Buka Kamera Full Screen
-            </button>
-            <div class="mt-3">
-                <label class="text-xs text-slate-400 cursor-pointer hover:text-slate-200 underline">
-                    Atau unggah foto dari galeri
-                    <input type="file" id="file-upload" accept="image/*" class="hidden">
-                </label>
+                <span class="block text-3xl font-extrabold text-rose-400 tracking-tight" id="count-invalid">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-rose-400/80 font-bold mt-1 block">✖ Tidak Valid</span>
             </div>
         </div>
 
         <!-- Bagian Bawah: Daftar Riwayat Resi yang Sudah Disken -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-5 rounded-3xl border border-slate-800 flex-1 flex flex-col shadow-lg">
+        <div class="bg-slate-900/80 backdrop-blur-md p-4 rounded-3xl border border-slate-800 flex-1 flex flex-col shadow-lg">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Resi Terpindai</h3>
+                <label class="text-xs text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
+                    Unggah Galeri
+                    <input type="file" id="file-upload" accept="image/*" class="hidden">
+                </label>
             </div>
             
             <!-- Dua Tombol Salin Terpisah -->
@@ -77,10 +66,18 @@
                 </button>
             </div>
 
-            <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[140px] max-h-60 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-8">Belum ada resi yang dipindai hari ini</li>
+            <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[180px] max-h-72 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
+    </div>
+
+    <!-- Tombol Kamera Mengambang (Floating Action Button / FAB ala Android) -->
+    <div class="fixed bottom-5 right-5 z-40">
+        <button id="btn-start-camera" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-5 rounded-full shadow-2xl shadow-blue-600/50 active:scale-95 transition flex items-center gap-2.5 border border-blue-400/30 backdrop-blur-md">
+            <span class="text-lg">📷</span>
+            <span class="text-xs font-bold tracking-wide uppercase">Buka Kamera</span>
+        </button>
     </div>
 
     <!-- Area Utama Kamera Full Screen (Tersembunyi secara default) -->
@@ -115,7 +112,7 @@
         </footer>
     </main>
 
-    <!-- Custom Toast Notification Container (Pengganti Popup Bawaan Browser) -->
+    <!-- Custom Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-5 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
@@ -151,9 +148,8 @@
         let masterDatabase = new Set();
         const orderRegex = /58[67]\d{15}/g; 
 
-        // Fungsi Custom Toast Notification yang Elegan
         function showToast(message, type = 'info') {
-            toastContainer.innerHTML = ''; // Hapus toast sebelumnya jika ada
+            toastContainer.innerHTML = '';
             
             const toast = document.createElement('div');
             toast.className = `toast-animate pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold backdrop-blur-xl transition-all max-w-sm w-full`;
@@ -178,7 +174,6 @@
             }, 3000);
         }
 
-        // Sinkronisasi otomatis Google Sheets CSV
         async function autoSyncDatabase() {
             try {
                 const response = await fetch(FIXED_SHEETS_URL);
@@ -239,24 +234,24 @@
             }
         }
 
-        // Buka Kamera Full Screen
         btnStart.addEventListener('click', async () => {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 video.srcObject = stream;
                 
                 mainDashboard.classList.add('hidden');
+                btnStart.parentElement.classList.add('hidden'); // Sembunyikan FAB saat kamera aktif
                 cameraWrapper.classList.remove('hidden');
             } catch (err) {
-                alert("Gagal membuka kamera: " + err.message);
+                showToast("Gagal membuka kamera: " + err.message, "error");
             }
         });
 
-        // Tutup Kamera
         btnStop.addEventListener('click', () => {
             if (stream) stream.getTracks().forEach(track => track.stop());
             cameraWrapper.classList.add('hidden');
             mainDashboard.classList.remove('hidden');
+            btnStart.parentElement.classList.remove('hidden'); // Munculkan kembali FAB
         });
 
         async function processImage(imageSource) {
@@ -327,7 +322,7 @@
 
         function tambahKeDaftar(nomor, isInDb) {
             if(scannedNumbers.size === 1) {
-                resultList.innerHTML = ''; // Hapus teks "Belum ada resi"
+                resultList.innerHTML = ''; 
             }
 
             const li = document.createElement('li');
@@ -343,7 +338,6 @@
             resultList.prepend(li);
         }
 
-        // Tombol Salin Resi Valid (✔ ADA) dengan Custom Toast
         btnCopyValid.addEventListener('click', () => {
             const validItems = resultList.querySelectorAll('li[data-status="ada"]');
             if(validItems.length === 0) {
@@ -356,7 +350,6 @@
             });
         });
 
-        // Tombol Salin Resi Tidak Valid (✖ TIDAK ADA) dengan Custom Toast
         btnCopyInvalid.addEventListener('click', () => {
             const invalidItems = resultList.querySelectorAll('li[data-status="tidak"]');
             if(invalidItems.length === 0) {
