@@ -84,10 +84,10 @@
 
     <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-around items-center shadow-2xl">
-        <!-- Tombol Pengaturan Database -->
-        <button id="btn-open-settings" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-95">
-            <span class="text-lg bg-slate-800/80 p-2 rounded-xl border border-slate-700">⚙️</span>
-            <span class="text-[10px] font-bold tracking-wide">Database</span>
+        <!-- Tombol Status / Info Kiri -->
+        <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-95">
+            <span class="text-lg bg-slate-800/80 p-2 rounded-xl border border-slate-700">🔄</span>
+            <span class="text-[10px] font-bold tracking-wide">Muat Ulang</span>
         </button>
 
         <!-- Tombol Utama Pindai (Tengah) -->
@@ -102,22 +102,6 @@
             <span class="text-[10px] font-bold tracking-wide">Soon</span>
         </button>
     </nav>
-
-    <!-- Modal Pengaturan Database -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl">
-            <div class="flex justify-between items-center">
-                <h2 class="text-sm font-bold text-white">⚙️ Pengaturan Database Sheets</h2>
-                <button id="btn-close-settings" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
-            </div>
-            <p class="text-[11px] text-slate-400">Masukkan link Publik CSV Google Sheets Anda:</p>
-            <textarea id="input-sheets-url" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"></textarea>
-            <div class="flex gap-2 pt-2">
-                <button id="btn-save-settings" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg">Simpan & Hubungkan</button>
-                <button id="btn-reset-settings" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-2.5 rounded-xl transition">Default</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Area Utama Kamera Full Screen -->
     <main id="camera-wrapper" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
@@ -152,8 +136,9 @@
     <div id="toast-container" class="fixed bottom-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
-        const DEFAULT_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSEDsXuDSQyUoOSHH9_S_em73jCM2iYIlbBo9_A_B8EzHoLye9_TuYJqld9pcehq6iWb8qHQrRVjj4o/pub?output=csv";
-        let activeSheetsUrl = localStorage.getItem('custom_sheets_url') || DEFAULT_SHEETS_URL;
+        // LINK DATABASE GOOGLE SHEETS UTAMA (DIKUNCI PERMANEN DI SINI)
+        // Ganti URL di bawah jika Anda membuat file/link CSV baru di masa mendatang.
+        const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSEDsXuDSQyUoOSHH9_S_em73jCM2iYIlbBo9_A_B8EzHoLye9_TuYJqld9pcehq6iWb8qHQrRVjj4o/pub?output=csv";
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -181,19 +166,12 @@
         const lastScannedNumber = document.getElementById('last-scanned-number');
         const lastScannedBadge = document.getElementById('last-scanned-badge');
 
-        const settingsModal = document.getElementById('settings-modal');
-        const btnOpenSettings = document.getElementById('btn-open-settings');
-        const btnCloseSettings = document.getElementById('btn-close-settings');
-        const btnSaveSettings = document.getElementById('btn-save-settings');
-        const btnResetSettings = document.getElementById('btn-reset-settings');
-        const inputSheetsUrl = document.getElementById('input-sheets-url');
-
         let stream = null;
         let scannedNumbers = new Set();
         let scanHistoryData = []; 
         let validCount = 0;
         let invalidCount = 0;
-        let masterDatabase = new Map(); // Map menyimpan Resi -> { toko, kurir, produk }
+        let masterDatabase = new Map(); 
         const orderRegex = /58[67]\d{15}/g; 
 
         function showToast(message, type = 'info') {
@@ -223,7 +201,7 @@
         async function autoSyncDatabase() {
             try {
                 dbStatus.innerText = "Memuat database...";
-                const response = await fetch(activeSheetsUrl);
+                const response = await fetch(FIXED_SHEETS_URL);
                 const csvText = await response.text();
                 
                 masterDatabase.clear();
@@ -252,6 +230,7 @@
                 if(masterDatabase.size > 0) {
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
                     dbStatus.className = "text-[11px] text-emerald-400 mt-0.5";
+                    showToast("Database berhasil disinkronkan!", "success");
                 } else {
                     dbStatus.innerText = "Database kosong / format salah";
                     dbStatus.className = "text-[11px] text-amber-400 mt-0.5";
@@ -259,38 +238,11 @@
             } catch (err) {
                 dbStatus.innerText = "Gagal memuat database online";
                 dbStatus.className = "text-[11px] text-rose-400 mt-0.5";
+                showToast("Gagal terhubung ke Google Sheets.", "error");
             }
         }
 
         window.addEventListener('DOMContentLoaded', autoSyncDatabase);
-
-        btnOpenSettings.addEventListener('click', () => {
-            inputSheetsUrl.value = activeSheetsUrl;
-            settingsModal.classList.remove('hidden');
-        });
-        btnCloseSettings.addEventListener('click', () => settingsModal.classList.add('hidden'));
-        
-        btnSaveSettings.addEventListener('click', () => {
-            const newUrl = inputSheetsUrl.value.trim();
-            if(newUrl) {
-                activeSheetsUrl = newUrl;
-                localStorage.setItem('custom_sheets_url', newUrl);
-                settingsModal.classList.add('hidden');
-                autoSyncDatabase();
-                showToast("Database berhasil diperbarui!", "success");
-            } else {
-                showToast("Link Sheets tidak boleh kosong!", "error");
-            }
-        });
-
-        btnResetSettings.addEventListener('click', () => {
-            activeSheetsUrl = DEFAULT_SHEETS_URL;
-            localStorage.removeItem('custom_sheets_url');
-            inputSheetsUrl.value = DEFAULT_SHEETS_URL;
-            settingsModal.classList.add('hidden');
-            autoSyncDatabase();
-            showToast("Database dikembalikan ke default.", "info");
-        });
 
         function playSound(type) {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -367,7 +319,6 @@
                             countInvalidSpan.innerText = invalidCount;
                         }
 
-                        // Otomatis jadikan nomor resi sebagai nomor invoice karena nilainya sama
                         scanHistoryData.unshift({
                             resi: num,
                             invoice: num,
