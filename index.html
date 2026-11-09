@@ -274,15 +274,22 @@
             countSpan.innerText = scannedNumbers.size;
         }
 
-        btnCopy.addEventListener('click', () => {
-            if(scannedNumbers.size === 0) {
-                alert("Belum ada resi yang dipindai.");
+     btnCopy.addEventListener('click', () => {
+            // Ambil hanya elemen li yang memiliki status 'ada' (valid)
+            const validItems = resultList.querySelectorAll('li[data-status="ada"]');
+            
+            if(validItems.length === 0) {
+                alert("Tidak ada resi yang valid (✔ ADA) untuk disalin.");
                 return;
             }
-            const listData = Array.from(scannedNumbers).join('\n');
+
+            // Ekstrak nomor resinya saja
+            const validNumbers = Array.from(validItems).map(li => li.dataset.number);
+            const listData = validNumbers.join('\n');
+
             navigator.clipboard.writeText(listData).then(() => {
                 const textAsli = btnCopy.innerText;
-                btnCopy.innerText = "Berhasil Disalin!";
+                btnCopy.innerText = `Berhasil Menyalin ${validNumbers.length} Resi Valid!`;
                 setTimeout(() => {
                     btnCopy.innerText = textAsli;
                 }, 2000);
