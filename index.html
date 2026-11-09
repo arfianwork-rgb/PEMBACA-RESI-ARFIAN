@@ -48,39 +48,49 @@
 
         <!-- Bagian Bawah: Daftar Riwayat Resi yang Sudah Disken -->
         <div class="bg-slate-900/80 backdrop-blur-md p-4 rounded-3xl border border-slate-800 flex-1 flex flex-col shadow-lg">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Resi Terpindai</h3>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Resi</h3>
                 <label class="text-xs text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
                     Unggah Galeri
                     <input type="file" id="file-upload" accept="image/*" class="hidden">
                 </label>
             </div>
 
+            <!-- Tombol Salin Dikembalikan ke Posisi Semula di Atas Riwayat -->
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[11px] font-semibold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>📋</span> Salin Valid
+                </button>
+                <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[11px] font-semibold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>📋</span> Salin Invalid
+                </button>
+            </div>
+
             <!-- Daftar Riwayat dengan Latar Belakang Hijau/Merah -->
-            <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[220px] max-h-80 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-12">Belum ada resi yang dipindai hari ini</li>
+            <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[180px] max-h-72 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar (Menu Navigasi Bawah ala Android Modern) -->
+    <!-- Bottom Navigation Bar dengan Tombol Soon di Kiri-Kanan -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-around items-center shadow-2xl">
-        <!-- Tombol Buka Kamera -->
-        <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-blue-400 hover:text-blue-300 transition active:scale-95">
-            <span class="text-lg bg-blue-600/20 p-2 rounded-xl border border-blue-500/40">📷</span>
-            <span class="text-[10px] font-bold tracking-wide">Pindai</span>
+        <!-- Tombol Soon Kiri -->
+        <button onclick="showToast('Fitur segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
+            <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
+            <span class="text-[10px] font-bold tracking-wide">Soon</span>
         </button>
 
-        <!-- Tombol Salin Valid -->
-        <button id="btn-copy-valid" class="flex flex-col items-center gap-1 text-emerald-400 hover:text-emerald-300 transition active:scale-95">
-            <span class="text-lg bg-emerald-600/20 p-2 rounded-xl border border-emerald-500/40">📋</span>
-            <span class="text-[10px] font-bold tracking-wide">Salin Valid</span>
+        <!-- Tombol Utama Pindai (Tengah) -->
+        <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-blue-400 hover:text-blue-300 transition active:scale-95 -mt-3">
+            <span class="text-xl bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-600/50 border border-blue-400/40">📷</span>
+            <span class="text-[10px] font-bold tracking-wide text-white">Pindai</span>
         </button>
 
-        <!-- Tombol Salin Tidak Valid -->
-        <button id="btn-copy-invalid" class="flex flex-col items-center gap-1 text-rose-400 hover:text-rose-300 transition active:scale-95">
-            <span class="text-lg bg-rose-600/20 p-2 rounded-xl border border-rose-500/40">📋</span>
-            <span class="text-[10px] font-bold tracking-wide">Salin Invalid</span>
+        <!-- Tombol Soon Kanan -->
+        <button onclick="showToast('Fitur segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
+            <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
+            <span class="text-[10px] font-bold tracking-wide">Soon</span>
         </button>
     </nav>
 
@@ -245,7 +255,7 @@
                 video.srcObject = stream;
                 
                 mainDashboard.classList.add('hidden');
-                bottomNav.classList.add('hidden'); // Sembunyikan navigasi bawah saat kamera aktif
+                bottomNav.classList.add('hidden'); 
                 cameraWrapper.classList.remove('hidden');
             } catch (err) {
                 showToast("Gagal membuka kamera: " + err.message, "error");
@@ -256,7 +266,7 @@
             if (stream) stream.getTracks().forEach(track => track.stop());
             cameraWrapper.classList.add('hidden');
             mainDashboard.classList.remove('hidden');
-            bottomNav.classList.remove('hidden'); // Munculkan kembali navigasi bawah
+            bottomNav.classList.remove('hidden'); 
         });
 
         async function processImage(imageSource) {
@@ -332,7 +342,6 @@
 
             const li = document.createElement('li');
             
-            // Pembedaan warna latar belakang kartu item riwayat (Hijau untuk Valid, Merah untuk Tidak Valid)
             if (isInDb) {
                 li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-3 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs shadow-sm";
             } else {
