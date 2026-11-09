@@ -17,7 +17,7 @@
         <!-- Header -->
         <div class="bg-slate-800/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
-                <div class="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-semibold mb-2">LIVE SYNC EDITION</div>
+                <div class="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-semibold mb-2">AUTO-SYNC ACTIVE</div>
                 <h1 class="text-2xl font-bold tracking-tight text-white">Database Resi Web</h1>
                 <p class="text-xs text-slate-400 mt-1">Sistem Pemindai & Validasi Resi Terintegrasi</p>
             </div>
@@ -27,22 +27,15 @@
             </div>
         </div>
 
-        <!-- Panel Sinkronisasi DATA RESI (Google Sheets CSV) -->
-        <div class="bg-slate-800/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                    <span>🔄 DATA RESI (Google Sheets Sync)</span>
+        <!-- Status Panel Sinkronisasi Otomatis -->
+        <div class="bg-slate-800/80 backdrop-blur-md p-5 rounded-3xl shadow-xl border border-slate-700/50 flex items-center justify-between">
+            <div>
+                <h2 class="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                    <span>🔄 STATUS DATABASE RESI</span>
                 </h2>
-                <span id="db-badge" class="text-[10px] bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium">Belum Terhubung</span>
+                <p id="db-status" class="text-xs text-amber-400 mt-1">Menghubungkan ke Google Sheets...</p>
             </div>
-            <p class="text-xs text-slate-400 mb-3">Tempel Link Publik CSV dari Google Sheets (File > Share > Publish to web > CSV):</p>
-            <div class="flex gap-2">
-                <input type="text" id="sheets-url-input" class="w-full p-3 text-xs bg-slate-900/80 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-slate-200 placeholder-slate-500 transition" placeholder="https://docs.google.com/.../pub?output=csv">
-                <button id="btn-sync-sheets" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-3 px-5 rounded-xl transition shadow-lg shadow-emerald-600/20 active:scale-95 whitespace-nowrap">
-                    Sinkronisasi Data
-                </button>
-            </div>
-            <p id="db-status" class="text-xs text-slate-400 mt-2">Database master saat ini kosong.</p>
+            <span id="db-badge" class="text-[10px] bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full font-medium">Memuat...</span>
         </div>
 
         <!-- Camera Section -->
@@ -92,6 +85,9 @@
     </div>
 
     <script>
+        // Link CSV Google Sheets sudah ditanam permanen di sini
+        const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/1Z_EcdObqZfOIWe3Akyp3gBKHFUl_y9dEMSFA8UHAvfM/pub?output=csv";
+
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const statusText = document.getElementById('status-text');
@@ -105,8 +101,6 @@
         const fileUpload = document.getElementById('file-upload');
         const btnCopy = document.getElementById('btn-copy');
         
-        const sheetsUrlInput = document.getElementById('sheets-url-input');
-        const btnSyncSheets = document.getElementById('btn-sync-sheets');
         const dbStatus = document.getElementById('db-status');
         const dbBadge = document.getElementById('db-badge');
 
@@ -115,19 +109,10 @@
         let masterDatabase = new Set();
         const orderRegex = /58[67]\d{15}/g; 
 
-        // Fungsi Sinkronisasi Google Sheets CSV
-        btnSyncSheets.addEventListener('click', async () => {
-            const url = sheetsUrlInput.value.trim();
-            if(!url) {
-                alert("Silakan masukkan tautan CSV Google Sheets terlebih dahulu.");
-                return;
-            }
-
-            dbStatus.innerText = "⏳ Sedang mengambil data dari Google Sheets...";
-            dbStatus.className = "text-xs text-amber-400 mt-2";
-
+        // Fungsi Sinkronisasi Otomatis saat halaman dimuat
+        async function autoSyncDatabase() {
             try {
-                const response = await fetch(url);
+                const response = await fetch(FIXED_SHEETS_URL);
                 const csvText = await response.text();
                 
                 masterDatabase.clear();
@@ -135,7 +120,6 @@
                 let count = 0;
 
                 lines.forEach(line => {
-                    // Bersihkan tanda kutip jika ada dari format CSV
                     const cols = line.split(',');
                     cols.forEach(col => {
                         const cleanVal = col.replace(/["']/g, "").trim();
@@ -153,19 +137,24 @@
                 });
 
                 if(masterDatabase.size > 0) {
-                    dbStatus.innerText = `✅ Berhasil menyinkronkan ${masterDatabase.size} data dari Google Sheets!`;
-                    dbStatus.className = "text-xs font-bold text-emerald-400 mt-2";
-                    dbBadge.innerText = `${masterDatabase.size} Data Aktif`;
-                    dbBadge.className = "text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full font-semibold";
+                    dbStatus.innerText = `Sinkronisasi otomatis berhasil (${masterDatabase.size} data aktif)`;
+                    dbStatus.className = "text-xs font-semibold text-emerald-400 mt-1";
+                    dbBadge.innerText = `${masterDatabase.size} Resi Terdaftar`;
+                    dbBadge.className = "text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-full font-semibold";
                 } else {
-                    dbStatus.innerText = "⚠️ Tidak ditemukan format data yang valid di link tersebut.";
-                    dbStatus.className = "text-xs text-rose-400 mt-2";
+                    dbStatus.innerText = "Database kosong atau format belum terbaca.";
+                    dbStatus.className = "text-xs text-amber-400 mt-1";
+                    dbBadge.innerText = "Kosong";
                 }
             } catch (err) {
-                dbStatus.innerText = "❌ Gagal mengambil data. Pastikan link Google Sheets sudah 'Publish to web' berformat CSV.";
-                dbStatus.className = "text-xs text-rose-400 mt-2";
+                dbStatus.innerText = "Gagal memuat database online.";
+                dbStatus.className = "text-xs text-rose-400 mt-1";
+                dbBadge.innerText = "Offline";
             }
-        });
+        }
+
+        // Jalankan sinkronisasi otomatis pas halaman dibuka
+        window.addEventListener('DOMContentLoaded', autoSyncDatabase);
 
         function playSound(type) {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
