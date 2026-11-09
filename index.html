@@ -130,9 +130,9 @@
             <span class="text-xs font-extrabold bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/40 border border-cyan-300/30 uppercase tracking-widest">PINDAI</span>
         </button>
 
-        <button onclick="showToast('Sistem v3.0 Pro Aktif', 'success')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
-            <span class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">v3.1</span>
-            <span class="text-[9px] font-bold tracking-wider uppercase">Sistem</span>
+        <button onclick="handleUserClick()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
+            <span id="nav-user-label" class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
+            <span class="text-[9px] font-bold tracking-wider uppercase">Operator</span>
         </button>
     </nav>
 
@@ -180,6 +180,7 @@
         const toggleText = document.getElementById('toggle-text');
         const searchHistory = document.getElementById('search-history');
         const toastContainer = document.getElementById('toast-container');
+        const navUserLabel = document.getElementById('nav-user-label');
         
         const countValidSpan = document.getElementById('count-valid');
         const countRemainingSpan = document.getElementById('count-remaining');
@@ -208,8 +209,30 @@
         let scannedNumbers = new Set(JSON.parse(localStorage.getItem('v3_scannedNumbers') || '[]'));
         let scanHistoryData = JSON.parse(localStorage.getItem('v3_scanHistoryData') || '[]'); 
         let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
+        let currentOperator = localStorage.getItem('v3_operator') || '';
         let masterDatabase = new Map(); 
         const orderRegex = /58[67]\d{15}/g; 
+
+        // Inisialisasi nama operator di tombol USER jika sudah pernah login
+        if(currentOperator) {
+            navUserLabel.innerText = currentOperator.length > 6 ? currentOperator.substring(0, 6) + '...' : currentOperator;
+        }
+
+        function handleUserClick() {
+            let promptName = prompt("Masukkan Nama Operator / Staf yang Bertugas:", currentOperator);
+            if(promptName !== null) {
+                currentOperator = promptName.trim();
+                if(currentOperator) {
+                    localStorage.setItem('v3_operator', currentOperator);
+                    navUserLabel.innerText = currentOperator.length > 6 ? currentOperator.substring(0, 6) + '...' : currentOperator;
+                    showToast(`Operator aktif: ${currentOperator}`, "success");
+                } else {
+                    localStorage.removeItem('v3_operator');
+                    navUserLabel.innerText = "USER";
+                    showToast("Sesi operator dikosongkan", "info");
+                }
+            }
+        }
 
         function showToast(message, type = 'info') {
             toastContainer.innerHTML = '';
@@ -433,15 +456,11 @@
 
                     lastScannedNumber.innerText = num;
                     
-                    // Mengirim sinyal update ke Google Sheets secara asynchronous
                     if(APPS_SCRIPT_URL && isInDb) {
                         fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, {
                             method: 'GET',
                             redirect: 'follow'
-                        })
-                        .then(response => response.text())
-                        .then(result => console.log("Update Google Sheets Berhasil:", result))
-                        .catch(error => console.log("Gagal Update:", error));
+                        }).catch(err => console.log("Sync Error:", err));
                     }
 
                     if(isInDb) {
@@ -597,7 +616,8 @@
                 "Kurir Pickup": item.kurir,
                 "Nama Produk": item.produk,
                 "Status Scan": item.status,
-                "Waktu Scan": item.waktu
+                "Waktu Scan": item.waktu,
+                "Operator": currentOperator || "-"
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
