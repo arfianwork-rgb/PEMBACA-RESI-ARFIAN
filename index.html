@@ -62,21 +62,26 @@
                 </div>
             </div>
 
-            <!-- Tombol Salin & Ekspor Excel -->
-            <div class="grid grid-cols-3 gap-1.5 mb-3">
+            <!-- Tombol Aksi Lengkap (Salin, Export, & Sisa Belum Discan) -->
+            <div class="grid grid-cols-2 gap-1.5 mb-2">
                 <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📋</span> Salin Valid
                 </button>
                 <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📋</span> Salin Invalid
                 </button>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 mb-3">
                 <button id="btn-export-xlsx" class="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📊</span> Export XLSX
+                </button>
+                <button id="btn-check-remaining" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>🔍</span> Sisa Belum Discan
                 </button>
             </div>
 
             <!-- Daftar Riwayat -->
-            <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[180px] max-h-72 overflow-y-auto border border-slate-800/80">
+            <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[160px] max-h-64 overflow-y-auto border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
@@ -84,19 +89,16 @@
 
     <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-around items-center shadow-2xl">
-        <!-- Tombol Muat Ulang Database -->
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-95">
             <span class="text-lg bg-slate-800/80 p-2 rounded-xl border border-slate-700">🔄</span>
             <span class="text-[10px] font-bold tracking-wide">Muat Ulang</span>
         </button>
 
-        <!-- Tombol Utama Pindai (Tengah) -->
         <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-blue-400 hover:text-blue-300 transition active:scale-95 -mt-3">
             <span class="text-xl bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-600/50 border border-blue-400/40">📷</span>
             <span class="text-[10px] font-bold tracking-wide text-white">Pindai</span>
         </button>
 
-        <!-- Tombol Soon Kanan -->
         <button onclick="showToast('Fitur laporan lanjutan segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
             <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
             <span class="text-[10px] font-bold tracking-wide">Soon</span>
@@ -136,7 +138,6 @@
     <div id="toast-container" class="fixed bottom-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
-        // LINK DATABASE GOOGLE SHEETS TERKUNCI PERMANEN
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
 
         const video = document.getElementById('video');
@@ -159,6 +160,7 @@
         const btnCopyValid = document.getElementById('btn-copy-valid');
         const btnCopyInvalid = document.getElementById('btn-copy-invalid');
         const btnExportXlsx = document.getElementById('btn-export-xlsx');
+        const btnCheckRemaining = document.getElementById('btn-check-remaining');
         const btnClearHistory = document.getElementById('btn-clear-history');
         
         const dbStatus = document.getElementById('db-status');
@@ -318,16 +320,14 @@
                         isInDb = true; 
                     }
 
-                    // Cek apakah resi ini sudah pernah di-scan sebelumnya pada sesi ini
                     if (scannedNumbers.has(num)) {
                         playSound('warn');
                         lastScannedNumber.innerText = num;
                         lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-bold">⚠️ SUDAH PERNAH DI-SCAN</span>`;
                         showToast(`Resi ${num} sudah pernah di-scan sebelumnya!`, "warn");
-                        return; // Berhenti di sini agar tidak masuk ke riwayat lagi
+                        return;
                     }
 
-                    // Jika belum pernah, masukkan ke Set dan Riwayat
                     scannedNumbers.add(num);
                     if (isInDb) {
                         validCount++;
@@ -448,6 +448,48 @@
             const invalidNumbers = invalidItems.map(item => item.resi);
             navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => {
                 showToast(`Berhasil menyalin ${invalidNumbers.length} resi tidak valid!`, "success");
+            });
+        });
+
+        // FITUR BARU: Menampilkan & Menyalin Resi yang Belum Discan dari Database
+        btnCheckRemaining.addEventListener('click', () => {
+            if(masterDatabase.size === 0) {
+                showToast("Database belum termuat.", "error");
+                return;
+            }
+
+            let remainingList = [];
+            masterDatabase.forEach((meta, resi) => {
+                if(!scannedNumbers.has(resi)) {
+                    remainingList.push({ resi, ...meta });
+                }
+            });
+
+            if(remainingList.length === 0) {
+                showToast("Luar biasa! Semua resi di database sudah selesai discan.", "success");
+                return;
+            }
+
+            resultList.innerHTML = '';
+            let justNumbers = [];
+
+            remainingList.forEach(item => {
+                justNumbers.push(item.resi);
+                const li = document.createElement('li');
+                li.className = "font-mono text-amber-100 bg-amber-950/40 p-3 rounded-xl border border-amber-500/30 text-xs shadow-sm space-y-1";
+                li.innerHTML = `
+                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-amber-500/30 px-2 py-0.5 rounded font-sans text-amber-200">BELUM DISCAN</span></div>
+                    <div class="text-[10px] text-amber-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-amber-500/20">
+                        <div>Toko: <b>${item.toko}</b></div>
+                        <div>Kurir: <b>${item.kurir}</b></div>
+                        <div class="col-span-2">Produk: <b>${item.produk}</b></div>
+                    </div>`;
+                resultList.appendChild(li);
+            });
+
+            // Otomatis salin daftar resi yang belum diskan ke clipboard agar mudah diproses
+            navigator.clipboard.writeText(justNumbers.join('\n')).then(() => {
+                showToast(`Menampilkan ${remainingList.length} resi belum diskan (Tersalin ke Clipboard)!`, "success");
             });
         });
 
