@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Resi v2.2</title>
+    <title>Database Resi v2.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <!-- Pustaka untuk Ekspor Excel (.xlsx) -->
@@ -23,11 +23,11 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden pb-24">
 
     <!-- Header & Dashboard Utama -->
-    <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
+    <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-3 flex-1 flex flex-col">
         <!-- Header Atas ala Android App Bar -->
-        <div class="bg-slate-900/90 backdrop-blur-md px-4 py-3.5 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
+        <div class="bg-slate-900/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
             <div>
-                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi v2.2</h1>
+                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi v2.3</h1>
                 <p id="db-status" class="text-[11px] text-amber-400 mt-0.5">Menghubungkan Google Sheets...</p>
             </div>
             <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-full border border-slate-800">
@@ -36,53 +36,61 @@
             </div>
         </div>
 
-        <!-- Panel Total Valid & Tidak Valid di Tengah -->
+        <!-- Panel Total Valid & Sisa Belum Discan di Tengah -->
         <div class="grid grid-cols-2 gap-3">
-            <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-emerald-500/30 text-center shadow-lg">
-                <span class="block text-3xl font-extrabold text-emerald-400 tracking-tight" id="count-valid">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-emerald-400/80 font-bold mt-1 block">✔ Total Valid</span>
+            <div class="bg-slate-900/90 backdrop-blur-md p-3.5 rounded-2xl border border-emerald-500/30 text-center shadow-lg">
+                <span class="block text-2xl font-extrabold text-emerald-400 tracking-tight" id="count-valid">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-400/80 font-bold mt-1 block">✔ Sudah Discan</span>
             </div>
-            <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-rose-500/30 text-center shadow-lg">
-                <span class="block text-3xl font-extrabold text-rose-400 tracking-tight" id="count-invalid">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-rose-400/80 font-bold mt-1 block">✖ Tidak Valid</span>
+            <div class="bg-slate-900/90 backdrop-blur-md p-3.5 rounded-2xl border border-amber-500/30 text-center shadow-lg">
+                <span class="block text-2xl font-extrabold text-amber-400 tracking-tight" id="count-remaining">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-amber-400/80 font-bold mt-1 block">⏳ Belum Discan</span>
             </div>
         </div>
 
-        <!-- Bagian Bawah: Daftar Riwayat Resi & Aksi -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-4 rounded-3xl border border-slate-800 flex-1 flex flex-col shadow-lg">
+        <!-- ================= BAGIAN ATAS: RIWAYAT SUDAH DISCAN ================= -->
+        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
             <div class="flex justify-between items-center mb-2">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Resi</h3>
+                <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">📦 Riwayat Sudah Discan</h3>
                 <div class="flex gap-2">
-                    <label class="text-xs text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
+                    <label class="text-[11px] text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
                         Galeri
                         <input type="file" id="file-upload" accept="image/*" class="hidden">
                     </label>
                     <span class="text-slate-600">|</span>
-                    <button id="btn-clear-history" class="text-xs text-rose-400 hover:text-rose-300 font-semibold underline">Hapus Sesi</button>
+                    <button id="btn-clear-history" class="text-[11px] text-rose-400 hover:text-rose-300 font-semibold underline">Hapus Sesi</button>
                 </div>
             </div>
 
-            <!-- Tombol Aksi Lengkap (Salin, Export, & Sisa Belum Discan) -->
-            <div class="grid grid-cols-2 gap-1.5 mb-2">
-                <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
-                    <span>📋</span> Salin Valid
+            <!-- Tombol Aksi Riwayat -->
+            <div class="grid grid-cols-3 gap-1.5 mb-2">
+                <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[10px] font-semibold py-1.5 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>📋</span> Salin
                 </button>
-                <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
-                    <span>📋</span> Salin Invalid
-                </button>
-            </div>
-            <div class="grid grid-cols-2 gap-1.5 mb-3">
-                <button id="btn-export-xlsx" class="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                <button id="btn-export-xlsx" class="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 text-[10px] font-semibold py-1.5 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📊</span> Export XLSX
                 </button>
-                <button id="btn-check-remaining" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
-                    <span>🔍</span> Sisa Belum Discan
+                <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[10px] font-semibold py-1.5 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>⚠️</span> Invalid
                 </button>
             </div>
 
-            <!-- Daftar Riwayat -->
-            <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[160px] max-h-64 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
+            <!-- List Sudah Discan -->
+            <ul id="result-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-40 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-4">Belum ada resi yang dipindai hari ini</li>
+            </ul>
+        </div>
+
+        <!-- ================= BAGIAN BAWAH: CEK RESI BELUM DISCAN ================= -->
+        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">⏳ Daftar Sisa Belum Discan</h3>
+                <button id="btn-copy-remaining" class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline">Salin Sisa</button>
+            </div>
+
+            <!-- List Belum Discan -->
+            <ul id="remaining-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-40 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-4">Memuat data sisa resi...</li>
             </ul>
         </div>
     </div>
@@ -143,10 +151,11 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const resultList = document.getElementById('result-list');
+        const remainingList = document.getElementById('remaining-list');
         const toastContainer = document.getElementById('toast-container');
         
         const countValidSpan = document.getElementById('count-valid');
-        const countInvalidSpan = document.getElementById('count-invalid');
+        const countRemainingSpan = document.getElementById('count-remaining');
         
         const mainDashboard = document.getElementById('main-dashboard');
         const cameraWrapper = document.getElementById('camera-wrapper');
@@ -159,8 +168,8 @@
         
         const btnCopyValid = document.getElementById('btn-copy-valid');
         const btnCopyInvalid = document.getElementById('btn-copy-invalid');
+        const btnCopyRemaining = document.getElementById('btn-copy-remaining');
         const btnExportXlsx = document.getElementById('btn-export-xlsx');
-        const btnCheckRemaining = document.getElementById('btn-check-remaining');
         const btnClearHistory = document.getElementById('btn-clear-history');
         
         const dbStatus = document.getElementById('db-status');
@@ -234,6 +243,7 @@
                 if(masterDatabase.size > 0) {
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
                     dbStatus.className = "text-[11px] text-emerald-400 mt-0.5";
+                    updateRemainingDisplay();
                     showToast("Database berhasil disinkronkan!", "success");
                 } else {
                     dbStatus.innerText = "Database kosong / format salah";
@@ -334,7 +344,6 @@
                         countValidSpan.innerText = validCount;
                     } else {
                         invalidCount++;
-                        countInvalidSpan.innerText = invalidCount;
                     }
 
                     scanHistoryData.unshift({
@@ -348,6 +357,7 @@
                     });
 
                     tambahKeDaftar(num, isInDb, meta);
+                    updateRemainingDisplay(); // Update otomatis bagian bawah
                     lastScannedNumber.innerText = num;
                     
                     if(isInDb) {
@@ -386,13 +396,13 @@
         });
 
         function tambahKeDaftar(nomor, isInDb, meta) {
-            if(scannedNumbers.size === 1) {
+            if(validCount === 1 && scannedNumbers.size === 1) {
                 resultList.innerHTML = ''; 
             }
 
             const li = document.createElement('li');
             if (isInDb) {
-                li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-3 rounded-xl border border-emerald-500/30 text-xs shadow-sm space-y-1";
+                li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-2.5 rounded-xl border border-emerald-500/30 text-xs shadow-sm space-y-1";
                 li.innerHTML = `
                     <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-emerald-500/30 px-2 py-0.5 rounded font-sans text-emerald-200">VALID</span></div>
                     <div class="text-[10px] text-emerald-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-emerald-500/20">
@@ -401,13 +411,43 @@
                         <div class="col-span-2">Produk: <b>${meta.produk}</b></div>
                     </div>`;
             } else {
-                li.className = "font-mono text-rose-100 bg-rose-950/50 p-3 rounded-xl border border-rose-500/30 text-xs shadow-sm";
-                li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-rose-500/30 px-2 py-0.5 rounded font-sans text-rose-200">TIDAK ADA</span></div>`;
+                li.className = "font-mono text-rose-100 bg-rose-950/50 p-2.5 rounded-xl border border-rose-500/30 text-xs shadow-sm";
+                li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-rose-500/30 px-2 py-0.5 rounded font-sans text-rose-200">TIDAK ADA DI DB</span></div>`;
+            }
+            resultList.prepend(li);
+        }
+
+        // Fungsi memperbarui tampilan bagian bawah (Sisa Belum Discan) secara real-time
+        function updateRemainingDisplay() {
+            if(masterDatabase.size === 0) return;
+
+            let remainingListArray = [];
+            masterDatabase.forEach((meta, resi) => {
+                if(!scannedNumbers.has(resi)) {
+                    remainingListArray.push({ resi, ...meta });
+                }
+            });
+
+            countRemainingSpan.innerText = remainingListArray.length;
+            remainingList.innerHTML = '';
+
+            if(remainingListArray.length === 0) {
+                remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-4 font-semibold">✨ Semua resi di database sudah selesai discan!</li>`;
+                return;
             }
 
-            li.dataset.number = nomor;
-            li.dataset.status = isInDb ? 'ada' : 'tidak';
-            resultList.prepend(li);
+            remainingListArray.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "font-mono text-amber-100 bg-amber-950/40 p-2.5 rounded-xl border border-amber-500/30 text-xs shadow-sm space-y-1";
+                li.innerHTML = `
+                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-amber-500/30 px-2 py-0.5 rounded font-sans text-amber-200">BELUM</span></div>
+                    <div class="text-[10px] text-amber-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-amber-500/20">
+                        <div>Toko: <b>${item.toko}</b></div>
+                        <div>Kurir: <b>${item.kurir}</b></div>
+                        <div class="col-span-2">Produk: <b>${item.produk}</b></div>
+                    </div>`;
+                remainingList.appendChild(li);
+            });
         }
 
         btnClearHistory.addEventListener('click', () => {
@@ -421,8 +461,8 @@
                 validCount = 0;
                 invalidCount = 0;
                 countValidSpan.innerText = "0";
-                countInvalidSpan.innerText = "0";
-                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>`;
+                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-4">Belum ada resi yang dipindai hari ini</li>`;
+                updateRemainingDisplay();
                 showToast("Riwayat sesi berhasil dibersihkan.", "success");
             }
         });
@@ -451,43 +491,21 @@
             });
         });
 
-        btnCheckRemaining.addEventListener('click', () => {
-            if(masterDatabase.size === 0) {
-                showToast("Database belum termuat.", "error");
-                return;
-            }
-
-            let remainingList = [];
+        btnCopyRemaining.addEventListener('click', () => {
+            let remainingNumbers = [];
             masterDatabase.forEach((meta, resi) => {
                 if(!scannedNumbers.has(resi)) {
-                    remainingList.push({ resi, ...meta });
+                    remainingNumbers.push(resi);
                 }
             });
 
-            if(remainingList.length === 0) {
-                showToast("Luar biasa! Semua resi di database sudah selesai discan.", "success");
+            if(remainingNumbers.length === 0) {
+                showToast("Tidak ada sisa resi yang belum discan.", "info");
                 return;
             }
 
-            resultList.innerHTML = '';
-            let justNumbers = [];
-
-            remainingList.forEach(item => {
-                justNumbers.push(item.resi);
-                const li = document.createElement('li');
-                li.className = "font-mono text-amber-100 bg-amber-950/40 p-3 rounded-xl border border-amber-500/30 text-xs shadow-sm space-y-1";
-                li.innerHTML = `
-                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-amber-500/30 px-2 py-0.5 rounded font-sans text-amber-200">BELUM DISCAN</span></div>
-                    <div class="text-[10px] text-amber-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-amber-500/20">
-                        <div>Toko: <b>${item.toko}</b></div>
-                        <div>Kurir: <b>${item.kurir}</b></div>
-                        <div class="col-span-2">Produk: <b>${item.produk}</b></div>
-                    </div>`;
-                resultList.appendChild(li);
-            });
-
-            navigator.clipboard.writeText(justNumbers.join('\n')).then(() => {
-                showToast(`Menampilkan ${remainingList.length} resi belum diskan (Tersalin ke Clipboard)!`, "success");
+            navigator.clipboard.writeText(remainingNumbers.join('\n')).then(() => {
+                showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi belum discan!`, "success");
             });
         });
 
