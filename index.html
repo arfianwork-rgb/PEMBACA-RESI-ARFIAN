@@ -56,7 +56,7 @@
             </div>
             <div class="glass-panel p-4 rounded-3xl border-amber-500/20 text-center relative overflow-hidden group">
                 <span class="block text-3xl font-black text-amber-400 tracking-tight" id="count-remaining">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-amber-300/80 font-bold mt-1 block">Belum Discan</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold mt-1 block">Belum Discan</span>
             </div>
         </div>
 
@@ -199,7 +199,7 @@
     <div id="toast-container" class="fixed bottom-24 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
-        const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
+        // Menggunakan endpoint Apps Script untuk mengambil data database secara aman tanpa blokir CORS
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmpw1m-seyf7ti699vmtQp32qSP8P1Ql2Ce8jtCdp5OWlUWWoUhvpd4WzjboBFHZtv/exec"; 
 
         const video = document.getElementById('video');
@@ -247,7 +247,6 @@
         let masterDatabase = new Map(); 
         const orderRegex = /58[67]\d{15}/g; 
 
-        // Inisialisasi label user di navigasi jika sudah login
         if(currentUser) {
             navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
         }
@@ -348,34 +347,38 @@
             });
         }
 
+        // Fungsi sinkronisasi diperbarui agar menarik data langsung dari Apps Script (Menghindari Error CORS & Link CSV mati)
         async function autoSyncDatabase() {
             try {
                 dbStatus.innerText = "Memuat database...";
-                const response = await fetch(FIXED_SHEETS_URL);
-                const csvText = await response.text();
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=getData`, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                const rows = await response.json();
                 
                 masterDatabase.clear();
-                const lines = csvText.split(/\r?\n/);
+                
+                if (Array.isArray(rows)) {
+                    rows.forEach((cols, index) => {
+                        if (index === 0) return; // Lewati header
+                        if (cols.length >= 1 && cols[0]) {
+                            const resi = cols[0].toString().trim();
+                            const toko = cols[1] ? cols[1].toString().trim() : "-";
+                            const kurir = cols[2] ? cols[2].toString().trim() : "-";
+                            const produk = cols[3] ? cols[3].toString().trim() : "-";
 
-                lines.forEach((line, index) => {
-                    if (index === 0) return;
-                    const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
-                    if (cols.length >= 1) {
-                        const resi = cols[0];
-                        const toko = cols[1] || "-";
-                        const kurir = cols[2] || "-";
-                        const produk = cols[3] || "-";
-
-                        const matches = resi.match(orderRegex);
-                        if (matches) {
-                            matches.forEach(m => {
-                                masterDatabase.set(m, { toko, kurir, produk });
-                            });
-                        } else if (resi.length >= 10) {
-                            masterDatabase.set(resi, { toko, kurir, produk });
+                            const matches = resi.match(orderRegex);
+                            if (matches) {
+                                matches.forEach(m => {
+                                    masterDatabase.set(m, { toko, kurir, produk });
+                                });
+                            } else if (resi.length >= 10) {
+                                masterDatabase.set(resi, { toko, kurir, produk });
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 if(masterDatabase.size > 0) {
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
