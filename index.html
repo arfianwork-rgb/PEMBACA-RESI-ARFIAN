@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Resi v2.3</title>
+    <title>Database Resi v3.0 Enterprise</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <!-- Pustaka untuk Ekspor Excel (.xlsx) -->
@@ -27,7 +27,7 @@
         <!-- Header Atas ala Android App Bar -->
         <div class="bg-slate-900/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
             <div>
-                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi v2.3</h1>
+                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi v3.0</h1>
                 <p id="db-status" class="text-[11px] text-amber-400 mt-0.5">Menghubungkan Google Sheets...</p>
             </div>
             <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-full border border-slate-800">
@@ -49,8 +49,8 @@
         </div>
 
         <!-- BAGIAN UTAMA: RIWAYAT SUDAH DISCAN -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
-            <div class="flex justify-between items-center mb-2">
+        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg space-y-2">
+            <div class="flex justify-between items-center">
                 <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">📦 Riwayat Sudah Discan</h3>
                 <div class="flex gap-2">
                     <label class="text-[11px] text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
@@ -62,8 +62,13 @@
                 </div>
             </div>
 
+            <!-- Kotak Pencarian Cepat (Search Filter) -->
+            <div class="relative">
+                <input type="text" id="search-history" placeholder="🔍 Cari nomor resi atau nama toko..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50">
+            </div>
+
             <!-- Tombol Aksi Riwayat -->
-            <div class="grid grid-cols-3 gap-1.5 mb-2">
+            <div class="grid grid-cols-3 gap-1.5">
                 <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[10px] font-semibold py-1.5 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📋</span> Salin
                 </button>
@@ -76,12 +81,12 @@
             </div>
 
             <!-- List Sudah Discan -->
-            <ul id="result-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-52 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-6">Belum ada resi yang dipindai hari ini</li>
+            <ul id="result-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-44 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-4">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
 
-        <!-- PANEL TOMBOL & DAFTAR SISA BELUM DISCAN (TERSEMBUNYI SECARA DEFAULT) -->
+        <!-- PANEL TOMBOL & DAFTAR SISA BELUM DISCAN -->
         <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg space-y-2">
             <div class="grid grid-cols-2 gap-1.5">
                 <button id="btn-toggle-remaining" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 text-[10px] font-bold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
@@ -92,9 +97,9 @@
                 </button>
             </div>
 
-            <!-- Kontainer Daftar Sisa (Hidden secara default) -->
+            <!-- Kontainer Daftar Sisa -->
             <div id="remaining-container" class="hidden space-y-2 pt-1 border-t border-slate-800">
-                <ul id="remaining-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-44 overflow-y-auto border border-slate-800/80">
+                <ul id="remaining-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-40 overflow-y-auto border border-slate-800/80">
                     <li class="text-center text-slate-500 text-xs py-4">Memuat data...</li>
                 </ul>
             </div>
@@ -113,9 +118,9 @@
             <span class="text-[10px] font-bold tracking-wide text-white">Pindai</span>
         </button>
 
-        <button onclick="showToast('Fitur laporan lanjutan segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
-            <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
-            <span class="text-[10px] font-bold tracking-wide">Soon</span>
+        <button onclick="showToast('Sistem v3.0 Enterprise Aktif', 'success')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-95">
+            <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⚡</span>
+            <span class="text-[10px] font-bold tracking-wide">v3.0</span>
         </button>
     </nav>
 
@@ -153,6 +158,9 @@
 
     <script>
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
+        
+        // Opsional: Jika Anda nanti membuat Google Apps Script Web App untuk simpan 2-arah, masukkan URL-nya di sini
+        const APPS_SCRIPT_URL = ""; 
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -160,6 +168,7 @@
         const remainingList = document.getElementById('remaining-list');
         const remainingContainer = document.getElementById('remaining-container');
         const toggleText = document.getElementById('toggle-text');
+        const searchHistory = document.getElementById('search-history');
         const toastContainer = document.getElementById('toast-container');
         
         const countValidSpan = document.getElementById('count-valid');
@@ -186,10 +195,9 @@
         const lastScannedBadge = document.getElementById('last-scanned-badge');
 
         let stream = null;
-        let scannedNumbers = new Set();
-        let scanHistoryData = []; 
-        let validCount = 0;
-        let invalidCount = 0;
+        let scannedNumbers = new Set(JSON.parse(localStorage.getItem('v3_scannedNumbers') || '[]'));
+        let scanHistoryData = JSON.parse(localStorage.getItem('v3_scanHistoryData') || '[]'); 
+        let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
         let masterDatabase = new Map(); 
         const orderRegex = /58[67]\d{15}/g; 
 
@@ -218,6 +226,46 @@
                 toast.style.transform = 'translateY(10px)';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
+        }
+
+        // Simpan state ke LocalStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('v3_scannedNumbers', JSON.stringify(Array.from(scannedNumbers)));
+            localStorage.setItem('v3_scanHistoryData', JSON.stringify(scanHistoryData));
+            localStorage.setItem('v3_validCount', validCount.toString());
+        }
+
+        // Render ulang daftar riwayat ke layar dengan dukungan Filter Pencarian
+        function renderHistoryList(filterQuery = '') {
+            resultList.innerHTML = '';
+            const filteredData = scanHistoryData.filter(item => 
+                item.resi.toLowerCase().includes(filterQuery.toLowerCase()) || 
+                item.toko.toLowerCase().includes(filterQuery.toLowerCase()) ||
+                item.produk.toLowerCase().includes(filterQuery.toLowerCase())
+            );
+
+            if(filteredData.length === 0) {
+                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-4">Tidak ada riwayat yang cocok</li>`;
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const li = document.createElement('li');
+                if (item.status === 'VALID') {
+                    li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-2.5 rounded-xl border border-emerald-500/30 text-xs shadow-sm space-y-1";
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-emerald-500/30 px-2 py-0.5 rounded font-sans text-emerald-200">VALID (${item.waktu})</span></div>
+                        <div class="text-[10px] text-emerald-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-emerald-500/20">
+                            <div>Toko: <b>${item.toko}</b></div>
+                            <div>Kurir: <b>${item.kurir}</b></div>
+                            <div class="col-span-2">Produk: <b>${item.produk}</b></div>
+                        </div>`;
+                } else {
+                    li.className = "font-mono text-rose-100 bg-rose-950/50 p-2.5 rounded-xl border border-rose-500/30 text-xs shadow-sm";
+                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-rose-500/30 px-2 py-0.5 rounded font-sans text-rose-200">TIDAK ADA (${item.waktu})</span></div>`;
+                }
+                resultList.appendChild(li);
+            });
         }
 
         async function autoSyncDatabase() {
@@ -252,8 +300,10 @@
                 if(masterDatabase.size > 0) {
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
                     dbStatus.className = "text-[11px] text-emerald-400 mt-0.5";
+                    countValidSpan.innerText = validCount;
+                    renderHistoryList();
                     updateRemainingDisplay();
-                    showToast("Database berhasil disinkronkan!", "success");
+                    showToast("Database v3.0 berhasil disinkronkan!", "success");
                 } else {
                     dbStatus.innerText = "Database kosong / format salah";
                     dbStatus.className = "text-[11px] text-amber-400 mt-0.5";
@@ -265,7 +315,15 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', autoSyncDatabase);
+        window.addEventListener('DOMContentLoaded', () => {
+            autoSyncDatabase();
+            countValidSpan.innerText = validCount;
+            renderHistoryList();
+        });
+
+        searchHistory.addEventListener('input', (e) => {
+            renderHistoryList(e.target.value);
+        });
 
         function playSound(type) {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -351,8 +409,6 @@
                     if (isInDb) {
                         validCount++;
                         countValidSpan.innerText = validCount;
-                    } else {
-                        invalidCount++;
                     }
 
                     scanHistoryData.unshift({
@@ -365,10 +421,16 @@
                         waktu: new Date().toLocaleTimeString()
                     });
 
-                    tambahKeDaftar(num, isInDb, meta);
+                    saveToLocalStorage();
+                    renderHistoryList();
                     updateRemainingDisplay(); 
                     lastScannedNumber.innerText = num;
                     
+                    // Sinkronisasi opsional ke Google Apps Script (2-arah) jika URL diisi
+                    if(APPS_SCRIPT_URL) {
+                        fetch(APPS_SCRIPT_URL + `?resi=${num}&status=Berhasil Scan`, { mode: 'no-cors' }).catch(e => console.log(e));
+                    }
+
                     if(isInDb) {
                         playSound('success');
                         lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-bold">✔ ADA (${meta.toko})</span>`;
@@ -404,28 +466,6 @@
             }
         });
 
-        function tambahKeDaftar(nomor, isInDb, meta) {
-            if(validCount === 1 && scannedNumbers.size === 1) {
-                resultList.innerHTML = ''; 
-            }
-
-            const li = document.createElement('li');
-            if (isInDb) {
-                li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-2.5 rounded-xl border border-emerald-500/30 text-xs shadow-sm space-y-1";
-                li.innerHTML = `
-                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-emerald-500/30 px-2 py-0.5 rounded font-sans text-emerald-200">VALID</span></div>
-                    <div class="text-[10px] text-emerald-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-emerald-500/20">
-                        <div>Toko: <b>${meta.toko}</b></div>
-                        <div>Kurir: <b>${meta.kurir}</b></div>
-                        <div class="col-span-2">Produk: <b>${meta.produk}</b></div>
-                    </div>`;
-            } else {
-                li.className = "font-mono text-rose-100 bg-rose-950/50 p-2.5 rounded-xl border border-rose-500/30 text-xs shadow-sm";
-                li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-rose-500/30 px-2 py-0.5 rounded font-sans text-rose-200">TIDAK ADA DI DB</span></div>`;
-            }
-            resultList.prepend(li);
-        }
-
         function updateRemainingDisplay() {
             if(masterDatabase.size === 0) return;
 
@@ -458,7 +498,6 @@
             });
         }
 
-        // Tombol untuk memunculkan / menyembunyikan daftar sisa
         btnToggleRemaining.addEventListener('click', () => {
             if(masterDatabase.size === 0) {
                 showToast("Database belum termuat.", "error");
@@ -478,15 +517,15 @@
                 showToast("Riwayat sudah kosong.", "info");
                 return;
             }
-            if(confirm("Yakin ingin menghapus semua riwayat sesi ini?")) {
+            if(confirm("Yakin ingin menghapus seluruh riwayat dan cache sesi ini?")) {
                 scannedNumbers.clear();
                 scanHistoryData = [];
                 validCount = 0;
-                invalidCount = 0;
+                localStorage.clear();
                 countValidSpan.innerText = "0";
-                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-6">Belum ada resi yang dipindai hari ini</li>`;
+                renderHistoryList();
                 updateRemainingDisplay();
-                showToast("Riwayat sesi berhasil dibersihkan.", "success");
+                showToast("Riwayat dan memori sesi dibersihkan.", "success");
             }
         });
 
@@ -550,10 +589,10 @@
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.0");
 
             const dateStr = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(workbook, `Laporan_Resi_${dateStr}.xlsx`);
+            XLSX.writeFile(workbook, `Laporan_Resi_v3_${dateStr}.xlsx`);
             showToast("File XLSX berhasil diunduh!", "success");
         });
     </script>
