@@ -15,7 +15,7 @@
 
     <!-- Header & Dashboard Utama (Tampil saat kamera tertutup) -->
     <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
-        <!-- Header Atas (Tanpa kotak total kanan) -->
+        <!-- Header Atas -->
         <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-3xl border border-slate-800 flex justify-between items-center shadow-lg">
             <div>
                 <h1 class="text-base font-bold text-white tracking-tight">Database Resi Web</h1>
@@ -55,12 +55,20 @@
 
         <!-- Bagian Bawah: Daftar Riwayat Resi yang Sudah Disken -->
         <div class="bg-slate-900/80 backdrop-blur-md p-5 rounded-3xl border border-slate-800 flex-1 flex flex-col shadow-lg">
-            <div class="flex justify-between items-center mb-3">
+            <div class="flex justify-between items-center mb-2">
                 <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Resi Terpindai</h3>
-                <button id="btn-copy" class="text-xs text-blue-400 hover:text-blue-300 font-semibold underline">
-                    Salin Semua Valid
+            </div>
+            
+            <!-- Dua Tombol Salin Terpisah -->
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[11px] font-semibold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>📋</span> Salin Valid
+                </button>
+                <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[11px] font-semibold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>📋</span> Salin Tidak Valid
                 </button>
             </div>
+
             <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[140px] max-h-60 overflow-y-auto border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-8">Belum ada resi yang dipindai hari ini</li>
             </ul>
@@ -116,7 +124,9 @@
         const btnScan = document.getElementById('btn-scan');
         const btnStop = document.getElementById('btn-stop-camera');
         const fileUpload = document.getElementById('file-upload');
-        const btnCopy = document.getElementById('btn-copy');
+        
+        const btnCopyValid = document.getElementById('btn-copy-valid');
+        const btnCopyInvalid = document.getElementById('btn-copy-invalid');
         
         const dbStatus = document.getElementById('db-status');
         const lastScannedNumber = document.getElementById('last-scanned-number');
@@ -294,24 +304,33 @@
             resultList.prepend(li);
         }
 
-        // Tombol Salin khusus resi yang valid (✔ ADA) saja
-        btnCopy.addEventListener('click', () => {
+        // Tombol Salin Resi Valid (✔ ADA)
+        btnCopyValid.addEventListener('click', () => {
             const validItems = resultList.querySelectorAll('li[data-status="ada"]');
-            
             if(validItems.length === 0) {
                 alert("Tidak ada resi valid untuk disalin.");
                 return;
             }
-
             const validNumbers = Array.from(validItems).map(li => li.dataset.number);
-            const listData = validNumbers.join('\n');
+            navigator.clipboard.writeText(validNumbers.join('\n')).then(() => {
+                const textAsli = btnCopyValid.innerText;
+                btnCopyValid.innerText = `✔ Tersalin (${validNumbers.length})`;
+                setTimeout(() => { btnCopyValid.innerText = textAsli; }, 2000);
+            });
+        });
 
-            navigator.clipboard.writeText(listData).then(() => {
-                const textAsli = btnCopy.innerText;
-                btnCopy.innerText = `Berhasil Menyalin ${validNumbers.length} Resi!`;
-                setTimeout(() => {
-                    btnCopy.innerText = textAsli;
-                }, 2000);
+        // Tombol Salin Resi Tidak Valid (✖ TIDAK ADA)
+        btnCopyInvalid.addEventListener('click', () => {
+            const invalidItems = resultList.querySelectorAll('li[data-status="tidak"]');
+            if(invalidItems.length === 0) {
+                alert("Tidak ada resi tidak valid untuk disalin.");
+                return;
+            }
+            const invalidNumbers = Array.from(invalidItems).map(li => li.dataset.number);
+            navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => {
+                const textAsli = btnCopyInvalid.innerText;
+                btnCopyInvalid.innerText = `✔ Tersalin (${invalidNumbers.length})`;
+                setTimeout(() => { btnCopyInvalid.innerText = textAsli; }, 2000);
             });
         });
     </script>
