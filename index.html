@@ -119,6 +119,36 @@
         </div>
     </div>
 
+    <!-- Halaman Login USER (Tersembunyi secara Default) -->
+    <div id="login-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
+            <div class="text-center space-y-1">
+                <h2 class="text-lg font-extrabold text-white tracking-tight">LOGIN USER</h2>
+                <p class="text-xs text-slate-400">Masukkan User ID dan Password untuk melanjutkan</p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID</label>
+                    <input type="text" id="login-userid" placeholder="Masukkan ID User..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                    <input type="password" id="login-pass" placeholder="Masukkan Password..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button id="btn-submit-login" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
+                    Masuk
+                </button>
+                <button id="btn-close-login" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition border border-slate-700">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation Bar Mengambang -->
     <nav class="fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
@@ -130,9 +160,9 @@
             <span class="text-xs font-extrabold bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/40 border border-cyan-300/30 uppercase tracking-widest">PINDAI</span>
         </button>
 
-        <button onclick="handleUserClick()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
+        <button id="btn-open-login" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
             <span id="nav-user-label" class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
-            <span class="text-[9px] font-bold tracking-wider uppercase">Operator</span>
+            <span class="text-[9px] font-bold tracking-wider uppercase">Akun</span>
         </button>
     </nav>
 
@@ -180,10 +210,6 @@
         const toggleText = document.getElementById('toggle-text');
         const searchHistory = document.getElementById('search-history');
         const toastContainer = document.getElementById('toast-container');
-        const navUserLabel = document.getElementById('nav-user-label');
-        
-        const countValidSpan = document.getElementById('count-valid');
-        const countRemainingSpan = document.getElementById('count-remaining');
         
         const mainDashboard = document.getElementById('main-dashboard');
         const cameraWrapper = document.getElementById('camera-wrapper');
@@ -201,6 +227,14 @@
         const btnExportXlsx = document.getElementById('btn-export-xlsx');
         const btnClearHistory = document.getElementById('btn-clear-history');
         
+        const loginWrapper = document.getElementById('login-wrapper');
+        const btnOpenLogin = document.getElementById('btn-open-login');
+        const btnCloseLogin = document.getElementById('btn-close-login');
+        const btnSubmitLogin = document.getElementById('btn-submit-login');
+        const loginUseridInput = document.getElementById('login-userid');
+        const loginPassInput = document.getElementById('login-pass');
+        const navUserLabel = document.getElementById('nav-user-label');
+
         const dbStatus = document.getElementById('db-status');
         const lastScannedNumber = document.getElementById('last-scanned-number');
         const lastScannedBadge = document.getElementById('last-scanned-badge');
@@ -209,30 +243,48 @@
         let scannedNumbers = new Set(JSON.parse(localStorage.getItem('v3_scannedNumbers') || '[]'));
         let scanHistoryData = JSON.parse(localStorage.getItem('v3_scanHistoryData') || '[]'); 
         let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
-        let currentOperator = localStorage.getItem('v3_operator') || '';
+        let currentUser = localStorage.getItem('v3_currentUser') || '';
         let masterDatabase = new Map(); 
         const orderRegex = /58[67]\d{15}/g; 
 
-        // Inisialisasi nama operator di tombol USER jika sudah pernah login
-        if(currentOperator) {
-            navUserLabel.innerText = currentOperator.length > 6 ? currentOperator.substring(0, 6) + '...' : currentOperator;
+        // Inisialisasi label user di navigasi jika sudah login
+        if(currentUser) {
+            navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
         }
 
-        function handleUserClick() {
-            let promptName = prompt("Masukkan Nama Operator / Staf yang Bertugas:", currentOperator);
-            if(promptName !== null) {
-                currentOperator = promptName.trim();
-                if(currentOperator) {
-                    localStorage.setItem('v3_operator', currentOperator);
-                    navUserLabel.innerText = currentOperator.length > 6 ? currentOperator.substring(0, 6) + '...' : currentOperator;
-                    showToast(`Operator aktif: ${currentOperator}`, "success");
-                } else {
-                    localStorage.removeItem('v3_operator');
-                    navUserLabel.innerText = "USER";
-                    showToast("Sesi operator dikosongkan", "info");
-                }
+        btnOpenLogin.addEventListener('click', () => {
+            loginWrapper.classList.remove('hidden');
+            mainDashboard.classList.add('hidden');
+            bottomNav.classList.add('hidden');
+        });
+
+        btnCloseLogin.addEventListener('click', () => {
+            loginWrapper.classList.add('hidden');
+            mainDashboard.classList.remove('hidden');
+            bottomNav.classList.remove('hidden');
+        });
+
+        btnSubmitLogin.addEventListener('click', () => {
+            let uid = loginUseridInput.value.trim();
+            let pass = loginPassInput.value.trim();
+
+            if(!uid) {
+                showToast("User ID tidak boleh kosong", "error");
+                return;
             }
-        }
+
+            currentUser = uid;
+            localStorage.setItem('v3_currentUser', currentUser);
+            navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+            
+            showToast(`Login berhasil sebagai: ${currentUser}`, "success");
+            loginUseridInput.value = '';
+            loginPassInput.value = '';
+
+            loginWrapper.classList.add('hidden');
+            mainDashboard.classList.remove('hidden');
+            bottomNav.classList.remove('hidden');
+        });
 
         function showToast(message, type = 'info') {
             toastContainer.innerHTML = '';
@@ -617,7 +669,7 @@
                 "Nama Produk": item.produk,
                 "Status Scan": item.status,
                 "Waktu Scan": item.waktu,
-                "Operator": currentOperator || "-"
+                "User ID": currentUser || "-"
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
