@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Resi v3.0 Enterprise</title>
+    <title>Database Resi v3.1 Ultra-Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
-    <!-- Pustaka untuk Ekspor Excel (.xlsx) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Plus Jakarta Sans', sans-serif; } 
         @keyframes slideUp {
@@ -16,149 +15,166 @@
             to { transform: translateY(0); opacity: 1; }
         }
         .toast-animate {
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden pb-24">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden pb-28">
 
     <!-- Header & Dashboard Utama -->
-    <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-3 flex-1 flex flex-col">
-        <!-- Header Atas ala Android App Bar -->
-        <div class="bg-slate-900/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
-            <div>
-                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi v3.0</h1>
-                <p id="db-status" class="text-[11px] text-amber-400 mt-0.5">Menghubungkan Google Sheets...</p>
+    <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
+        <!-- Header Atas ala Modern App Bar -->
+        <div class="glass-panel px-4 py-3.5 rounded-3xl flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-extrabold text-base">
+                    v3.1
+                </div>
+                <div>
+                    <h1 class="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                        Database Resi <span class="text-[10px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold">Pro</span>
+                    </h1>
+                    <p id="db-status" class="text-[11px] text-amber-400/90 font-medium mt-0.5">Menghubungkan Google Sheets...</p>
+                </div>
             </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-full border border-slate-800">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="text-[10px] font-semibold text-slate-300">Online</span>
-            </div>
-        </div>
-
-        <!-- Panel Total Valid & Sisa Belum Discan di Tengah -->
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-slate-900/90 backdrop-blur-md p-3.5 rounded-2xl border border-emerald-500/30 text-center shadow-lg">
-                <span class="block text-2xl font-extrabold text-emerald-400 tracking-tight" id="count-valid">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-emerald-400/80 font-bold mt-1 block">✔ Sudah Discan</span>
-            </div>
-            <div class="bg-slate-900/90 backdrop-blur-md p-3.5 rounded-2xl border border-amber-500/30 text-center shadow-lg">
-                <span class="block text-2xl font-extrabold text-amber-400 tracking-tight" id="count-remaining">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-amber-400/80 font-bold mt-1 block">⏳ Belum Discan</span>
+            <div class="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="text-[10px] font-bold text-emerald-300">Live Cloud</span>
             </div>
         </div>
 
-        <!-- BAGIAN UTAMA: RIWAYAT SUDAH DISCAN -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg space-y-2">
+        <!-- Panel Total Statistik (Sudah Discan & Belum) -->
+        <div class="grid grid-cols-2 gap-3.5">
+            <div class="glass-panel p-4 rounded-3xl border-emerald-500/20 text-center relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl"></div>
+                <span class="block text-3xl font-black text-emerald-400 tracking-tight" id="count-valid">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold mt-1 block">✔ Sudah Discan</span>
+            </div>
+            <div class="glass-panel p-4 rounded-3xl border-amber-500/20 text-center relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-amber-500/10 rounded-full blur-xl"></div>
+                <span class="block text-3xl font-black text-amber-400 tracking-tight" id="count-remaining">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-amber-300/80 font-bold mt-1 block">⏳ Belum Discan</span>
+            </div>
+        </div>
+
+        <!-- KONTAINER UTAMA: RIWAYAT SUDAH DISCAN -->
+        <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
             <div class="flex justify-between items-center">
-                <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">📦 Riwayat Sudah Discan</h3>
-                <div class="flex gap-2">
-                    <label class="text-[11px] text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
-                        Galeri
+                <h3 class="text-xs font-extrabold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>📦</span> Riwayat Sudah Discan
+                </h3>
+                <div class="flex items-center gap-2">
+                    <label class="text-[11px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-500/20 transition active:scale-95">
+                        📁 Galeri
                         <input type="file" id="file-upload" accept="image/*" class="hidden">
                     </label>
-                    <span class="text-slate-600">|</span>
-                    <button id="btn-clear-history" class="text-[11px] text-rose-400 hover:text-rose-300 font-semibold underline">Hapus Sesi</button>
+                    <button id="btn-clear-history" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold underline bg-rose-500/10 px-2.5 py-1 rounded-xl border border-rose-500/20 transition active:scale-95">Hapus Sesi</button>
                 </div>
             </div>
 
-            <!-- Kotak Pencarian Cepat (Search Filter) -->
+            <!-- Kotak Pencarian Modern -->
             <div class="relative">
-                <input type="text" id="search-history" placeholder="🔍 Cari nomor resi atau nama toko..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50">
+                <input type="text" id="search-history" placeholder="🔍 Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Riwayat -->
-            <div class="grid grid-cols-3 gap-1.5">
-                <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[10px] font-semibold py-1.5 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
-                    <span>📋</span> Salin
+            <!-- Tombol Aksi Riwayat Estetik -->
+            <div class="grid grid-cols-3 gap-2">
+                <button id="btn-copy-valid" class="bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm flex items-center justify-center gap-1">
+                    <span>📋</span> Salin Valid
                 </button>
-                <button id="btn-export-xlsx" class="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 text-[10px] font-semibold py-1.5 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                <button id="btn-export-xlsx" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm flex items-center justify-center gap-1">
                     <span>📊</span> Export XLSX
                 </button>
-                <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[10px] font-semibold py-1.5 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                <button id="btn-copy-invalid" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm flex items-center justify-center gap-1">
                     <span>⚠️</span> Invalid
                 </button>
             </div>
 
-            <!-- List Sudah Discan -->
-            <ul id="result-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-44 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-4">Belum ada resi yang dipindai hari ini</li>
+            <!-- List Sudah Discan (Scrollable) -->
+            <ul id="result-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-48 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-5">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
 
-        <!-- PANEL TOMBOL & DAFTAR SISA BELUM DISCAN -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg space-y-2">
-            <div class="grid grid-cols-2 gap-1.5">
-                <button id="btn-toggle-remaining" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 text-[10px] font-bold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+        <!-- PANEL SISA BELUM DISCAN -->
+        <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+                <button id="btn-toggle-remaining" class="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
                     <span>🔍</span> <span id="toggle-text">Cek Sisa Belum Discan</span>
                 </button>
-                <button id="btn-copy-remaining" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[10px] font-bold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                <button id="btn-copy-remaining" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
                     <span>📋</span> Salin Semua Sisa
                 </button>
             </div>
 
-            <!-- Kontainer Daftar Sisa -->
-            <div id="remaining-container" class="hidden space-y-2 pt-1 border-t border-slate-800">
-                <ul id="remaining-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-40 overflow-y-auto border border-slate-800/80">
+            <!-- Kontainer Daftar Sisa Tersembunyi -->
+            <div id="remaining-container" class="hidden space-y-2 pt-2 border-t border-slate-800">
+                <ul id="remaining-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-40 overflow-y-auto border border-slate-800/80">
                     <li class="text-center text-slate-500 text-xs py-4">Memuat data...</li>
                 </ul>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-around items-center shadow-2xl">
-        <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-95">
-            <span class="text-lg bg-slate-800/80 p-2 rounded-xl border border-slate-700">🔄</span>
+    <!-- Bottom Navigation Bar Mengambang (Floating Navigation) -->
+    <nav class="fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
+        <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
+            <span class="text-base bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700/60 shadow-inner">🔄</span>
             <span class="text-[10px] font-bold tracking-wide">Muat Ulang</span>
         </button>
 
-        <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-blue-400 hover:text-blue-300 transition active:scale-95 -mt-3">
-            <span class="text-xl bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-600/50 border border-blue-400/40">📷</span>
-            <span class="text-[10px] font-bold tracking-wide text-white">Pindai</span>
+        <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition active:scale-90 -mt-6">
+            <span class="text-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white p-3.5 rounded-full shadow-xl shadow-cyan-500/40 border-2 border-cyan-300/30">📷</span>
+            <span class="text-[10px] font-extrabold tracking-wide text-cyan-400 mt-1">PINDAI</span>
         </button>
 
-        <button onclick="showToast('Sistem v3.0 Enterprise Aktif', 'success')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-95">
-            <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⚡</span>
-            <span class="text-[10px] font-bold tracking-wide">v3.0</span>
+        <button onclick="showToast('Antarmuka v3.1 Ultra-Modern Aktif', 'success')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
+            <span class="text-base bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700/60 shadow-inner">⚡</span>
+            <span class="text-[10px] font-bold tracking-wide">v3.1 UI</span>
         </button>
     </nav>
 
-    <!-- Area Utama Kamera Full Screen -->
+    <!-- Area Utama Kamera Full Screen (Immersive View) -->
     <main id="camera-wrapper" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
         <div class="relative w-full flex-1 bg-black overflow-hidden">
             <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-            <div class="absolute inset-0 border-2 border-emerald-400 border-dashed opacity-60 m-10 rounded-3xl pointer-events-none animate-pulse"></div>
+            <!-- Border Fokus Scanner Estetik -->
+            <div class="absolute inset-0 border-2 border-cyan-400/80 border-dashed opacity-75 m-12 rounded-3xl pointer-events-none animate-pulse shadow-[0_0_30px_rgba(6,182,212,0.3)]"></div>
         </div>
         <canvas id="canvas" class="hidden"></canvas>
 
-        <footer class="w-full bg-slate-900/95 backdrop-blur-md p-4 border-t border-slate-800 space-y-3">
-            <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+        <footer class="w-full bg-slate-900/95 backdrop-blur-2xl p-4 border-t border-slate-800 space-y-3 rounded-t-3xl shadow-2xl">
+            <div class="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between">
                 <div class="overflow-hidden pr-2">
-                    <span class="text-[10px] uppercase font-semibold text-slate-400 block">Resi Terakhir:</span>
-                    <span id="last-scanned-number" class="text-sm font-mono font-bold text-slate-200 tracking-wide">-</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Resi Terakhir:</span>
+                    <span id="last-scanned-number" class="text-sm font-mono font-bold text-cyan-300 tracking-wide">-</span>
                 </div>
                 <div id="last-scanned-badge">
-                    <span class="text-[10px] bg-slate-800 text-slate-400 px-3 py-1 rounded-xl font-medium">Belum ada scan</span>
+                    <span class="text-[10px] bg-slate-800 text-slate-400 px-3 py-1.5 rounded-xl font-medium">Belum ada scan</span>
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button id="btn-scan" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-2xl shadow-lg shadow-emerald-600/25 active:scale-95 transition text-sm flex items-center justify-center gap-2">
+            <div class="flex gap-2.5">
+                <button id="btn-scan" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 active:scale-95 transition text-sm flex items-center justify-center gap-2">
                     <span>🔍</span> AMBIL / SCAN RESI
                 </button>
-                <button id="btn-stop-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3.5 px-5 rounded-2xl text-xs transition">
+                <button id="btn-stop-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition active:scale-95 border border-slate-700">
                     Tutup
                 </button>
             </div>
         </footer>
     </main>
 
-    <div id="toast-container" class="fixed bottom-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-24 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmpw1m-seyf7ti699vmtQp32qSP8P1Ql2Ce8jtCdp5OWlUWWoUhvpd4WzjboBFHZtv/exec"; 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3cPX9zs1ypKEl1jvNqcI14ggKyGXQQuNNyP_VfiC9CTSoMpjAtIdTQWtHzoSotHBR/exec"; 
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -202,7 +218,7 @@
         function showToast(message, type = 'info') {
             toastContainer.innerHTML = '';
             const toast = document.createElement('div');
-            toast.className = `toast-animate pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold backdrop-blur-xl transition-all max-w-sm w-full`;
+            toast.className = `toast-animate pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-bold backdrop-blur-2xl transition-all max-w-sm w-full`;
             
             if(type === 'success') {
                 toast.className += ` bg-emerald-950/90 border-emerald-500/50 text-emerald-200`;
@@ -241,24 +257,24 @@
             );
 
             if(filteredData.length === 0) {
-                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-4">Tidak ada riwayat yang cocok</li>`;
+                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-5">Tidak ada riwayat yang cocok</li>`;
                 return;
             }
 
             filteredData.forEach(item => {
                 const li = document.createElement('li');
                 if (item.status === 'VALID') {
-                    li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-2.5 rounded-xl border border-emerald-500/30 text-xs shadow-sm space-y-1";
+                    li.className = "font-mono text-emerald-100 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/25 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
                     li.innerHTML = `
-                        <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-emerald-500/30 px-2 py-0.5 rounded font-sans text-emerald-200">VALID (${item.waktu})</span></div>
-                        <div class="text-[10px] text-emerald-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-emerald-500/20">
-                            <div>Toko: <b>${item.toko}</b></div>
-                            <div>Kurir: <b>${item.kurir}</b></div>
-                            <div class="col-span-2">Produk: <b>${item.produk}</b></div>
+                        <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-emerald-300">${item.resi}</span><span class="text-[9px] bg-emerald-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-emerald-200 border border-emerald-500/30">VALID (${item.waktu})</span></div>
+                        <div class="text-[10px] text-emerald-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-emerald-500/20">
+                            <div>Toko: <b class="text-white">${item.toko}</b></div>
+                            <div>Kurir: <b class="text-white">${item.kurir}</b></div>
+                            <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
                         </div>`;
                 } else {
-                    li.className = "font-mono text-rose-100 bg-rose-950/50 p-2.5 rounded-xl border border-rose-500/30 text-xs shadow-sm";
-                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-rose-500/30 px-2 py-0.5 rounded font-sans text-rose-200">TIDAK ADA (${item.waktu})</span></div>`;
+                    li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md";
+                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-rose-300">${item.resi}</span><span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30">TIDAK ADA (${item.waktu})</span></div>`;
                 }
                 resultList.appendChild(li);
             });
@@ -295,18 +311,18 @@
 
                 if(masterDatabase.size > 0) {
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
-                    dbStatus.className = "text-[11px] text-emerald-400 mt-0.5";
+                    dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
                     countValidSpan.innerText = validCount;
                     renderHistoryList();
                     updateRemainingDisplay();
-                    showToast("Database v3.0 berhasil disinkronkan!", "success");
+                    showToast("Database v3.1 tersinkronisasi!", "success");
                 } else {
                     dbStatus.innerText = "Database kosong / format salah";
-                    dbStatus.className = "text-[11px] text-amber-400 mt-0.5";
+                    dbStatus.className = "text-[11px] text-amber-400 font-bold mt-0.5";
                 }
             } catch (err) {
                 dbStatus.innerText = "Gagal memuat database online";
-                dbStatus.className = "text-[11px] text-rose-400 mt-0.5";
+                dbStatus.className = "text-[11px] text-rose-400 font-bold mt-0.5";
                 showToast("Gagal terhubung ke Google Sheets.", "error");
             }
         }
@@ -373,7 +389,7 @@
 
         async function processImage(imageSource) {
             lastScannedNumber.innerText = "Memproses...";
-            lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-xl font-medium animate-pulse">⏳ Membaca OCR...</span>`;
+            lastScannedBadge.innerHTML = `<span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-xl font-semibold animate-pulse">⏳ Membaca OCR...</span>`;
             
             try {
                 const result = await Tesseract.recognize(imageSource, 'eng');
@@ -398,8 +414,8 @@
                     if (isAlreadyScanned) {
                         playSound('warn');
                         lastScannedNumber.innerText = num;
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-bold">🔄 RESI DI-SCAN ULANG</span>`;
-                        showToast(`Resi ${num} di-scan ulang, memperbarui status Spreadsheet...`, "warn");
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-bold">🔄 DI-SCAN ULANG</span>`;
+                        showToast(`Resi ${num} di-scan ulang, memperbarui status...`, "warn");
                     } else {
                         scannedNumbers.add(num);
                         if (isInDb) {
@@ -424,7 +440,6 @@
 
                     lastScannedNumber.innerText = num;
                     
-                    // METODE ANTI-CORS: Menggunakan objek Image agar sinyal update ke Kolom E pasti terkirim
                     if(APPS_SCRIPT_URL && isInDb) {
                         const updateTrigger = new Image();
                         updateTrigger.src = `${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan&t=${new Date().getTime()}`;
@@ -432,15 +447,15 @@
 
                     if(isInDb) {
                         playSound('success');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-bold">✔ ADA (${meta.toko})</span>`;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-bold">✔ ADA (${meta.toko})</span>`;
                     } else {
                         playSound('error');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 px-3 py-1 rounded-bold">✖ TIDAK ADA</span>`;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-300 px-3 py-1 rounded-bold">✖ TIDAK ADA</span>`;
                     }
                 } else {
                     playSound('error');
                     lastScannedNumber.innerText = "Tidak Dikenali";
-                    lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 px-3 py-1 rounded-bold">❌ Gagal Deteksi</span>`;
+                    lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-300 px-3 py-1 rounded-bold">❌ Gagal Deteksi</span>`;
                 }
             } catch (error) {
                 lastScannedNumber.innerText = "Error Sistem";
@@ -479,19 +494,19 @@
             remainingList.innerHTML = '';
 
             if(remainingListArray.length === 0) {
-                remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-4 font-semibold">✨ Semua resi di database sudah selesai discan!</li>`;
+                remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-5 font-bold">✨ Semua resi di database sudah selesai discan!</li>`;
                 return;
             }
 
             remainingListArray.forEach(item => {
                 const li = document.createElement('li');
-                li.className = "font-mono text-amber-100 bg-amber-950/40 p-2.5 rounded-xl border border-amber-500/30 text-xs shadow-sm space-y-1";
+                li.className = "font-mono text-amber-100 bg-amber-950/30 p-3 rounded-2xl border border-amber-500/20 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
                 li.innerHTML = `
-                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${item.resi}</span><span class="text-[9px] bg-amber-500/30 px-2 py-0.5 rounded font-sans text-amber-200">BELUM</span></div>
-                    <div class="text-[10px] text-amber-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-amber-500/20">
-                        <div>Toko: <b>${item.toko}</b></div>
-                        <div>Kurir: <b>${item.kurir}</b></div>
-                        <div class="col-span-2">Produk: <b>${item.produk}</b></div>
+                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-amber-300">${item.resi}</span><span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30">BELUM</span></div>
+                    <div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20">
+                        <div>Toko: <b class="text-white">${item.toko}</b></div>
+                        <div>Kurir: <b class="text-white">${item.kurir}</b></div>
+                        <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
                     </div>`;
                 remainingList.appendChild(li);
             });
@@ -524,7 +539,7 @@
                 countValidSpan.innerText = "0";
                 renderHistoryList();
                 updateRemainingDisplay();
-                showToast("Riwayat dan memori sesi dibersihkan.", "success");
+                showToast("Riwayat sesi dibersihkan.", "success");
             }
         });
 
@@ -566,7 +581,7 @@
             }
 
             navigator.clipboard.writeText(remainingNumbers.join('\n')).then(() => {
-                showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi belum discan!`, "success");
+                showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi!`, "success");
             });
         });
 
@@ -588,10 +603,10 @@
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.0");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.1");
 
             const dateStr = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(workbook, `Laporan_Resi_v3_${dateStr}.xlsx`);
+            XLSX.writeFile(workbook, `Laporan_Resi_v3.1_${dateStr}.xlsx`);
             showToast("File XLSX berhasil diunduh!", "success");
         });
     </script>
