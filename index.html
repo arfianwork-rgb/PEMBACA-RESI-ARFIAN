@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Resi Web v2.2</title>
+    <title>Database Resi v2.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <!-- Pustaka untuk Ekspor Excel (.xlsx) -->
@@ -84,7 +84,7 @@
 
     <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-around items-center shadow-2xl">
-        <!-- Tombol Pengaturan Database (Pengganti Soon Kiri) -->
+        <!-- Tombol Pengaturan Database -->
         <button id="btn-open-settings" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-95">
             <span class="text-lg bg-slate-800/80 p-2 rounded-xl border border-slate-700">⚙️</span>
             <span class="text-[10px] font-bold tracking-wide">Database</span>
@@ -103,14 +103,14 @@
         </button>
     </nav>
 
-    <!-- Modal Pengaturan Database (Multi-Database Settings) -->
+    <!-- Modal Pengaturan Database -->
     <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl">
             <div class="flex justify-between items-center">
                 <h2 class="text-sm font-bold text-white">⚙️ Pengaturan Database Sheets</h2>
                 <button id="btn-close-settings" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
             </div>
-            <p class="text-[11px] text-slate-400">Masukkan link Publik CSV Google Sheets Anda yang baru di sini:</p>
+            <p class="text-[11px] text-slate-400">Masukkan link Publik CSV Google Sheets Anda:</p>
             <textarea id="input-sheets-url" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"></textarea>
             <div class="flex gap-2 pt-2">
                 <button id="btn-save-settings" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg">Simpan & Hubungkan</button>
@@ -153,8 +153,6 @@
 
     <script>
         const DEFAULT_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSEDsXuDSQyUoOSHH9_S_em73jCM2iYIlbBo9_A_B8EzHoLye9_TuYJqld9pcehq6iWb8qHQrRVjj4o/pub?output=csv";
-        
-        // Ambil link dari localStorage jika ada, atau gunakan default
         let activeSheetsUrl = localStorage.getItem('custom_sheets_url') || DEFAULT_SHEETS_URL;
 
         const video = document.getElementById('video');
@@ -183,7 +181,6 @@
         const lastScannedNumber = document.getElementById('last-scanned-number');
         const lastScannedBadge = document.getElementById('last-scanned-badge');
 
-        // Elemen Modal Settings
         const settingsModal = document.getElementById('settings-modal');
         const btnOpenSettings = document.getElementById('btn-open-settings');
         const btnCloseSettings = document.getElementById('btn-close-settings');
@@ -193,10 +190,10 @@
 
         let stream = null;
         let scannedNumbers = new Set();
-        let scanHistoryData = []; // Menyimpan objek data lengkap untuk export Excel
+        let scanHistoryData = []; 
         let validCount = 0;
         let invalidCount = 0;
-        let masterDatabase = new Map(); // Map menyimpan Resi -> { invoice, toko, kurir, produk }
+        let masterDatabase = new Map(); // Map menyimpan Resi -> { toko, kurir, produk }
         const orderRegex = /58[67]\d{15}/g; 
 
         function showToast(message, type = 'info') {
@@ -233,22 +230,21 @@
                 const lines = csvText.split(/\r?\n/);
 
                 lines.forEach((line, index) => {
-                    if (index === 0) return; // Lewati baris header jika ada
+                    if (index === 0) return; // Lewati baris header
                     const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
                     if (cols.length >= 1) {
                         const resi = cols[0];
-                        const invoice = cols[1] || "-";
-                        const toko = cols[2] || "-";
-                        const kurir = cols[3] || "-";
-                        const produk = cols[4] || "-";
+                        const toko = cols[1] || "-";
+                        const kurir = cols[2] || "-";
+                        const produk = cols[3] || "-";
 
                         const matches = resi.match(orderRegex);
                         if (matches) {
                             matches.forEach(m => {
-                                masterDatabase.set(m, { invoice, toko, kurir, produk });
+                                masterDatabase.set(m, { toko, kurir, produk });
                             });
                         } else if (resi.length >= 10) {
-                            masterDatabase.set(resi, { invoice, toko, kurir, produk });
+                            masterDatabase.set(resi, { toko, kurir, produk });
                         }
                     }
                 });
@@ -268,7 +264,6 @@
 
         window.addEventListener('DOMContentLoaded', autoSyncDatabase);
 
-        // Pengaturan Modal Multi-Database
         btnOpenSettings.addEventListener('click', () => {
             inputSheetsUrl.value = activeSheetsUrl;
             settingsModal.classList.remove('hidden');
@@ -353,13 +348,13 @@
                     let num = matches[0]; 
                     
                     let isInDb = false;
-                    let meta = { invoice: "-", toko: "-", kurir: "-", produk: "-" };
+                    let meta = { toko: "-", kurir: "-", produk: "-" };
 
                     if (masterDatabase.size > 0 && masterDatabase.has(num)) {
                         isInDb = true;
                         meta = masterDatabase.get(num);
                     } else if (masterDatabase.size === 0) {
-                        isInDb = true; // Jika database belum termuat, anggap valid sementara
+                        isInDb = true; 
                     }
 
                     if (!scannedNumbers.has(num)) {
@@ -372,10 +367,10 @@
                             countInvalidSpan.innerText = invalidCount;
                         }
 
-                        // Simpan ke riwayat memori objek
+                        // Otomatis jadikan nomor resi sebagai nomor invoice karena nilainya sama
                         scanHistoryData.unshift({
                             resi: num,
-                            invoice: meta.invoice,
+                            invoice: num,
                             toko: meta.toko,
                             kurir: meta.kurir,
                             produk: meta.produk,
@@ -434,10 +429,9 @@
                 li.innerHTML = `
                     <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-emerald-500/30 px-2 py-0.5 rounded font-sans text-emerald-200">VALID</span></div>
                     <div class="text-[10px] text-emerald-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-emerald-500/20">
-                        <div>Inv: <b>${meta.invoice}</b></div>
                         <div>Toko: <b>${meta.toko}</b></div>
                         <div>Kurir: <b>${meta.kurir}</b></div>
-                        <div>Produk: <b>${meta.produk}</b></div>
+                        <div class="col-span-2">Produk: <b>${meta.produk}</b></div>
                     </div>`;
             } else {
                 li.className = "font-mono text-rose-100 bg-rose-950/50 p-3 rounded-xl border border-rose-500/30 text-xs shadow-sm";
@@ -449,7 +443,6 @@
             resultList.prepend(li);
         }
 
-        // Tombol Hapus / Reset Sesi Riwayat
         btnClearHistory.addEventListener('click', () => {
             if(scannedNumbers.size === 0) {
                 showToast("Riwayat sudah kosong.", "info");
@@ -491,7 +484,6 @@
             });
         });
 
-        // Fitur Ekspor ke XLSX (Excel)
         btnExportXlsx.addEventListener('click', () => {
             if(scanHistoryData.length === 0) {
                 showToast("Belum ada data resi untuk diexport.", "error");
@@ -500,8 +492,7 @@
 
             const exportRows = scanHistoryData.map((item, idx) => ({
                 "No": idx + 1,
-                "Nomor Resi": item.resi,
-                "Nomor Invoice": item.invoice,
+                "Nomor Resi / Invoice": item.resi,
                 "Nama Toko": item.toko,
                 "Kurir Pickup": item.kurir,
                 "Nama Produk": item.produk,
@@ -513,7 +504,6 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi");
 
-            // Format nama file berdasarkan tanggal hari ini
             const dateStr = new Date().toISOString().slice(0,10);
             XLSX.writeFile(workbook, `Laporan_Resi_${dateStr}.xlsx`);
             showToast("File XLSX berhasil diunduh!", "success");
