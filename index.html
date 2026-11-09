@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <!-- ================= BAGIAN ATAS: RIWAYAT SUDAH DISCAN ================= -->
+        <!-- BAGIAN UTAMA: RIWAYAT SUDAH DISCAN -->
         <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">📦 Riwayat Sudah Discan</h3>
@@ -76,22 +76,28 @@
             </div>
 
             <!-- List Sudah Discan -->
-            <ul id="result-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-40 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-4">Belum ada resi yang dipindai hari ini</li>
+            <ul id="result-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-52 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-6">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
 
-        <!-- ================= BAGIAN BAWAH: CEK RESI BELUM DISCAN ================= -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">⏳ Daftar Sisa Belum Discan</h3>
-                <button id="btn-copy-remaining" class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline">Salin Sisa</button>
+        <!-- PANEL TOMBOL & DAFTAR SISA BELUM DISCAN (TERSEMBUNYI SECARA DEFAULT) -->
+        <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col shadow-lg space-y-2">
+            <div class="grid grid-cols-2 gap-1.5">
+                <button id="btn-toggle-remaining" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 text-[10px] font-bold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>🔍</span> <span id="toggle-text">Cek Sisa Belum Discan</span>
+                </button>
+                <button id="btn-copy-remaining" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[10px] font-bold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>📋</span> Salin Semua Sisa
+                </button>
             </div>
 
-            <!-- List Belum Discan -->
-            <ul id="remaining-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-40 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-4">Memuat data sisa resi...</li>
-            </ul>
+            <!-- Kontainer Daftar Sisa (Hidden secara default) -->
+            <div id="remaining-container" class="hidden space-y-2 pt-1 border-t border-slate-800">
+                <ul id="remaining-list" class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl max-h-44 overflow-y-auto border border-slate-800/80">
+                    <li class="text-center text-slate-500 text-xs py-4">Memuat data...</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -152,6 +158,8 @@
         const canvas = document.getElementById('canvas');
         const resultList = document.getElementById('result-list');
         const remainingList = document.getElementById('remaining-list');
+        const remainingContainer = document.getElementById('remaining-container');
+        const toggleText = document.getElementById('toggle-text');
         const toastContainer = document.getElementById('toast-container');
         
         const countValidSpan = document.getElementById('count-valid');
@@ -169,6 +177,7 @@
         const btnCopyValid = document.getElementById('btn-copy-valid');
         const btnCopyInvalid = document.getElementById('btn-copy-invalid');
         const btnCopyRemaining = document.getElementById('btn-copy-remaining');
+        const btnToggleRemaining = document.getElementById('btn-toggle-remaining');
         const btnExportXlsx = document.getElementById('btn-export-xlsx');
         const btnClearHistory = document.getElementById('btn-clear-history');
         
@@ -221,7 +230,7 @@
                 const lines = csvText.split(/\r?\n/);
 
                 lines.forEach((line, index) => {
-                    if (index === 0) return; // Lewati baris header
+                    if (index === 0) return;
                     const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
                     if (cols.length >= 1) {
                         const resi = cols[0];
@@ -357,7 +366,7 @@
                     });
 
                     tambahKeDaftar(num, isInDb, meta);
-                    updateRemainingDisplay(); // Update otomatis bagian bawah
+                    updateRemainingDisplay(); 
                     lastScannedNumber.innerText = num;
                     
                     if(isInDb) {
@@ -417,7 +426,6 @@
             resultList.prepend(li);
         }
 
-        // Fungsi memperbarui tampilan bagian bawah (Sisa Belum Discan) secara real-time
         function updateRemainingDisplay() {
             if(masterDatabase.size === 0) return;
 
@@ -450,6 +458,21 @@
             });
         }
 
+        // Tombol untuk memunculkan / menyembunyikan daftar sisa
+        btnToggleRemaining.addEventListener('click', () => {
+            if(masterDatabase.size === 0) {
+                showToast("Database belum termuat.", "error");
+                return;
+            }
+            if(remainingContainer.classList.contains('hidden')) {
+                remainingContainer.classList.remove('hidden');
+                toggleText.innerText = "Sembunyikan Sisa";
+            } else {
+                remainingContainer.classList.add('hidden');
+                toggleText.innerText = "Cek Sisa Belum Discan";
+            }
+        });
+
         btnClearHistory.addEventListener('click', () => {
             if(scannedNumbers.size === 0) {
                 showToast("Riwayat sudah kosong.", "info");
@@ -461,7 +484,7 @@
                 validCount = 0;
                 invalidCount = 0;
                 countValidSpan.innerText = "0";
-                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-4">Belum ada resi yang dipindai hari ini</li>`;
+                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-6">Belum ada resi yang dipindai hari ini</li>`;
                 updateRemainingDisplay();
                 showToast("Riwayat sesi berhasil dibersihkan.", "success");
             }
