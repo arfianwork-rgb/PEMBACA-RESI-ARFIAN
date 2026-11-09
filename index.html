@@ -123,12 +123,12 @@
         </div>
     </div>
 
-    <!-- Halaman Login USER (Wajib di awal jika belum login) -->
+    <!-- Halaman Login USER (Wajib Database ID & Password) -->
     <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
                 <h2 class="text-lg font-extrabold text-white tracking-tight">LOGIN USER</h2>
-                <p class="text-xs text-slate-400">Masukkan User ID dan Password untuk mengakses aplikasi</p>
+                <p class="text-xs text-slate-400">Masukkan User ID dan Password terdaftar</p>
             </div>
 
             <div class="space-y-3">
@@ -150,7 +150,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar Mengambang (Disembunyikan jika belum login) -->
+    <!-- Bottom Navigation Bar Mengambang -->
     <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">SYNC</span>
@@ -211,6 +211,14 @@
             lastTouchEnd = now;
         }, false);
 
+        // DATABASE USER & PASSWORD RESMI
+        // Anda dapat menambah, mengubah, atau menghapus daftar akun di bawah ini
+        const validUsers = {
+            "fian": "paiko098",
+            "admin": "admin123",
+            "march": "123456"
+        };
+
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzi1p28Rln8jTUB5crnNQ-MNsAcYFkZ1HPA68mjLjj_otb-wgIy6fTcTtGmvTEAG2Ib/exec"; 
 
@@ -263,15 +271,14 @@
 
         // CEK STATUS LOGIN SAAT HALAMAN DIMUAT
         window.addEventListener('DOMContentLoaded', () => {
-            if (currentUser) {
-                // Jika sudah login sebelumnya
+            if (currentUser && validUsers[currentUser]) {
                 navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
                 loginWrapper.classList.add('hidden');
                 mainDashboard.classList.remove('hidden');
                 bottomNav.classList.remove('hidden');
                 autoSyncDatabase();
             } else {
-                // Jika belum login, kunci/sembunyikan dashboard utama dan tampilkan form login
+                localStorage.removeItem('v3_currentUser');
                 loginWrapper.classList.remove('hidden');
                 mainDashboard.classList.add('hidden');
                 bottomNav.classList.add('hidden');
@@ -280,7 +287,6 @@
             renderHistoryList();
         });
 
-        // Tombol Buka Menu Ganti/Cek Akun dari Navigasi Bawah
         if(btnOpenLogin) {
             btnOpenLogin.addEventListener('click', () => {
                 loginWrapper.classList.remove('hidden');
@@ -289,29 +295,35 @@
             });
         }
 
+        // PROSES VERIFIKASI LOGIN DENGAN DATABASE ID & PASSWORD
         btnSubmitLogin.addEventListener('click', () => {
-            let uid = loginUseridInput.value.trim();
+            let uid = loginUseridInput.value.trim().toLowerCase();
             let pass = loginPassInput.value.trim();
 
-            if(!uid) {
-                showToast("User ID tidak boleh kosong", "error");
+            if(!uid || !pass) {
+                showToast("User ID dan Password harus diisi", "error");
                 return;
             }
 
-            currentUser = uid;
-            localStorage.setItem('v3_currentUser', currentUser);
-            navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
-            
-            showToast(`Login berhasil sebagai: ${currentUser}`, "success");
-            loginUseridInput.value = '';
-            loginPassInput.value = '';
+            // Periksa kecocokan dengan database internal
+            if (validUsers[uid] && validUsers[uid] === pass) {
+                currentUser = uid;
+                localStorage.setItem('v3_currentUser', currentUser);
+                navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                
+                showToast(`Login berhasil, selamat datang ${currentUser}!`, "success");
+                loginUseridInput.value = '';
+                loginPassInput.value = '';
 
-            // Buka kunci aplikasi setelah berhasil login
-            loginWrapper.classList.add('hidden');
-            mainDashboard.classList.remove('hidden');
-            bottomNav.classList.remove('hidden');
-            
-            autoSyncDatabase();
+                loginWrapper.classList.add('hidden');
+                mainDashboard.classList.remove('hidden');
+                bottomNav.classList.remove('hidden');
+                
+                autoSyncDatabase();
+            } else {
+                showToast("User ID atau Password salah!", "error");
+                loginPassInput.value = '';
+            }
         });
 
         function showToast(message, type = 'info') {
