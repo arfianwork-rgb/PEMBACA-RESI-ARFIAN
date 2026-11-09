@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner Resi 2.0 (Kamera & Suara)</title>
+    <title>Scanner Resi 2.1 (Kamera, Suara & Database)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,8 +14,21 @@
     <div class="max-w-3xl mx-auto w-full space-y-6">
         <!-- Header -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
-            <h1 class="text-2xl font-bold text-slate-900">Scanner Resi 2.0</h1>
-            <p class="text-sm text-slate-500 mt-1">Deteksi otomatis awalan 586 & 587</p>
+            <h1 class="text-2xl font-bold text-slate-900">Scanner Resi 2.1</h1>
+            <p class="text-sm text-slate-500 mt-1">Dilengkapi Validasi Database & Pemindai Kamera</p>
+        </div>
+
+        <!-- Database Master Section -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-sm font-semibold text-slate-700 mb-2">📋 Database Master (Nomor Order Valid)</h2>
+            <p class="text-xs text-slate-500 mb-3">Tempel daftar nomor order toko Anda di sini (satu nomor per baris atau teks bebas).</p>
+            <textarea id="db-input" rows="3" class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" placeholder="Tempel nomor-nomor referensi di sini..."></textarea>
+            <div class="flex justify-between items-center mt-2">
+                <span id="db-status" class="text-xs font-medium text-slate-500">Database kosong (Semua nomor dianggap baru)</span>
+                <button id="btn-save-db" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2 px-4 rounded-lg transition">
+                    Simpan Database
+                </button>
+            </div>
         </div>
 
         <!-- Camera Section -->
@@ -53,7 +66,7 @@
         <!-- Hasil Scan -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold">Daftar Nomor Pesanan (<span id="count">0</span>)</h2>
+                <h2 class="text-lg font-semibold">Hasil Pemindaian (<span id="count">0</span>)</h2>
                 <button id="btn-copy" class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2 px-4 rounded-lg transition">
                     Salin Semua
                 </button>
@@ -77,11 +90,43 @@
         const btnStop = document.getElementById('btn-stop-camera');
         const fileUpload = document.getElementById('file-upload');
         const btnCopy = document.getElementById('btn-copy');
+        const dbInput = document.getElementById('db-input');
+        const btnSaveDb = document.getElementById('btn-save-db');
+        const dbStatus = document.getElementById('db-status');
 
         let stream = null;
         let scannedNumbers = new Set();
-        // Regex untuk awalan 586 ATAU 587, diikuti 15 angka (total 18 digit)
+        let masterDatabase = new Set();
         const orderRegex = /58[67]\d{15}/g; 
+
+        // Simpan / Perbarui Database dari Textarea
+        btnSaveDb.addEventListener('click', () => {
+            masterDatabase.clear();
+            const text = dbInput.value;
+            const matches = text.match(orderRegex);
+            
+            if (matches) {
+                matches.forEach(num => masterDatabase.add(num));
+                dbStatus.innerText = `✅ Berhasil memuat ${masterDatabase.size} nomor ke dalam Database Master.`;
+                dbStatus.className = "text-xs font-bold text-emerald-600";
+            } else if (text.trim() !== "") {
+                // Jika format regex tidak kaku untuk database, ambil berdasarkan baris/kata panjang
+                const lines = text.split(/\r?\n/);
+                let count = 0;
+                lines.forEach(line => {
+                    const cleanLine = line.trim();
+                    if(cleanLine.length >= 10) {
+                        masterDatabase.add(cleanLine);
+                        count++;
+                    }
+                });
+                dbStatus.innerText = `✅ Berhasil memuat ${count} data referensi.`;
+                dbStatus.className = "text-xs font-bold text-emerald-600";
+            } else {
+                dbStatus.innerText = "Database kosong.";
+                dbStatus.className = "text-xs font-medium text-slate-500";
+            }
+        });
 
         // Fungsi Audio (Ting & Tetot)
         function playSound(type) {
@@ -135,14 +180,14 @@
             statusText.innerText = "";
         });
 
-        // Proses Pemindaian (OCR)
+        // Proses Pemindaian (OCR) & Pencocokan Database
         async function processImage(imageSource) {
-            statusText.innerText = "⏳ Sedang membaca gambar, mohon tunggu...";
+            statusText.innerText = "⏳ Sedang membaca gambar & mencocokkan data...";
             statusText.className = "mt-4 text-sm font-medium text-orange-600 animate-pulse";
             
             try {
                 const result = await Tesseract.recognize(imageSource, 'eng');
-                const text = result.data.text.replace(/\s+/g, ''); // Bersihkan spasi
+                const text = result.data.text.replace(/\s+/g, ''); 
                 
                 const matches = text.match(orderRegex);
                 
@@ -151,24 +196,33 @@
                     matches.forEach(num => {
                         if (!scannedNumbers.has(num)) {
                             scannedNumbers.add(num);
-                            tambahKeDaftar(num);
+                            
+                            // Cek apakah ada di Database Master
+                            let isInDb = true;
+                            if (masterDatabase.size > 0) {
+                                isInDb = masterDatabase.has(num);
+                            }
+
+                            tambahKeDaftar(num, isInDb);
                             newFound = true;
+                            
+                            if(isInDb) {
+                                playSound('success');
+                            } else {
+                                playSound('error');
+                            }
                         } else {
-                            statusText.innerText = `⚠️ Nomor ${num} sudah ada di daftar!`;
+                            statusText.innerText = `⚠️ Nomor ${num} sudah pernah disan sebelumnya!`;
                         }
                     });
 
                     if(newFound) {
-                        playSound('success');
-                        statusText.innerText = "✅ Berhasil terbaca!";
+                        statusText.innerText = "✅ Pemindaian selesai!";
                         statusText.className = "mt-4 text-sm font-bold text-emerald-600";
-                    } else {
-                        playSound('error');
-                        statusText.className = "mt-4 text-sm font-medium text-red-600";
                     }
                 } else {
                     playSound('error');
-                    statusText.innerText = "❌ Gagal mendeteksi awalan 586/587 (18 digit). Coba lagi.";
+                    statusText.innerText = "❌ Gagal mendeteksi awalan 586/587 (18 digit).";
                     statusText.className = "mt-4 text-sm font-medium text-red-600";
                 }
             } catch (error) {
@@ -179,46 +233,5 @@
 
         // Ambil Foto dari Video
         btnScan.addEventListener('click', () => {
-            playSound('success'); // Bunyi 'klik' kecil
             canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = canvas.toDataURL('image/jpeg');
-            processImage(imageData);
-        });
-
-        // Ambil Foto dari File Upload (Cadangan)
-        fileUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => processImage(event.target.result);
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Update UI Daftar
-        function tambahKeDaftar(nomor) {
-            const li = document.createElement('li');
-            li.className = "font-mono text-slate-800 bg-white p-3 rounded-lg border border-slate-200 flex justify-between";
-            li.innerHTML = `<span>${nomor}</span> <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md">Valid</span>`;
-            resultList.prepend(li);
-            countSpan.innerText = scannedNumbers.size;
-        }
-
-        // Copy Semua
-        btnCopy.addEventListener('click', () => {
-            const listData = Array.from(scannedNumbers).join('\n');
-            navigator.clipboard.writeText(listData).then(() => {
-                const btnAsli = btnCopy.innerText;
-                btnCopy.innerText = "Tersalin!";
-                btnCopy.classList.replace('bg-slate-800', 'bg-emerald-600');
-                setTimeout(() => {
-                    btnCopy.innerText = btnAsli;
-                    btnCopy.classList.replace('bg-emerald-600', 'bg-slate-800');
-                }, 2000);
-            });
-        });
-    </script>
-</body>
-</html>
+            canvas.height = video
