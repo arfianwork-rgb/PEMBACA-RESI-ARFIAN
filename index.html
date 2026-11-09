@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    <!-- Halaman Login USER (Hanya muncul saat pertama kali akses atau belum login) -->
+    <!-- Halaman Login USER (Wajib) -->
     <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
@@ -150,7 +150,29 @@
         </div>
     </div>
 
-    <!-- Halaman Ubah Password (Muncul saat tombol Akun/USER di bawah ditekan) -->
+    <!-- Menu Pilihan Akun (Logout & Ubah Password) -->
+    <div id="account-menu-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-4 shadow-2xl border border-slate-800 text-center">
+            <div class="space-y-1">
+                <h2 class="text-lg font-extrabold text-white tracking-tight">PENGATURAN AKUN</h2>
+                <p class="text-xs text-slate-400">Masuk sebagai: <span id="menu-user-display" class="text-cyan-400 font-bold"></span></p>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <button id="btn-goto-changepass" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold py-3 px-4 rounded-2xl transition border border-slate-700 text-xs uppercase tracking-wider">
+                    Ubah Password
+                </button>
+                <button id="btn-logout" class="w-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold py-3 px-4 rounded-2xl transition text-xs uppercase tracking-wider">
+                    Logout (Keluar Akun)
+                </button>
+                <button id="btn-close-menu" class="w-full bg-transparent hover:bg-slate-900 text-slate-400 font-semibold py-2.5 px-4 rounded-2xl transition text-xs">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Ubah Password -->
     <div id="changepass-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
@@ -191,7 +213,7 @@
             <span class="text-xs font-extrabold bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/40 border border-cyan-300/30 uppercase tracking-widest">PINDAI</span>
         </button>
 
-        <button id="btn-open-changepass" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
+        <button id="btn-open-menu" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
             <span id="nav-user-label" class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
             <span class="text-[9px] font-bold tracking-wider uppercase">Akun</span>
         </button>
@@ -241,7 +263,7 @@
             lastTouchEnd = now;
         }, false);
 
-        // DATABASE USER & PASSWORD (Tersimpan di localStorage agar perubahan password bersifat permanen pada perangkat)
+        // DATABASE USER & PASSWORD
         let validUsers = JSON.parse(localStorage.getItem('v3_validUsers') || JSON.stringify({
             "fian": "paiko098",
             "admin": "admin123",
@@ -284,14 +306,20 @@
         const loginUseridInput = document.getElementById('login-userid');
         const loginPassInput = document.getElementById('login-pass');
         
-        // Elemen Ubah Password
+        // Elemen Menu Akun & Ubah Password & Logout
+        const accountMenuWrapper = document.getElementById('account-menu-wrapper');
+        const btnOpenMenu = document.getElementById('btn-open-menu');
+        const btnCloseMenu = document.getElementById('btn-close-menu');
+        const btnGotoChangepass = document.getElementById('btn-goto-changepass');
+        const btnLogout = document.getElementById('btn-logout');
+        
         const changepassWrapper = document.getElementById('changepass-wrapper');
-        const btnOpenChangepass = document.getElementById('btn-open-changepass');
         const btnCloseChangepass = document.getElementById('btn-close-changepass');
         const btnSubmitChangepass = document.getElementById('btn-submit-changepass');
         const oldPassInput = document.getElementById('old-pass');
         const newPassInput = document.getElementById('new-pass');
         const currentUserDisplay = document.getElementById('current-user-display');
+        const menuUserDisplay = document.getElementById('menu-user-display');
         
         const navUserLabel = document.getElementById('nav-user-label');
         const dbStatus = document.getElementById('db-status');
@@ -306,10 +334,10 @@
         let masterDatabase = new Map(); 
         const orderRegex = /58[67]\d{15}/g; 
 
-        // CEK STATUS LOGIN SAAT HALAMAN DIMUAT
         window.addEventListener('DOMContentLoaded', () => {
             if (currentUser && validUsers[currentUser]) {
                 navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                menuUserDisplay.innerText = currentUser;
                 currentUserDisplay.innerText = currentUser;
                 loginWrapper.classList.add('hidden');
                 mainDashboard.classList.remove('hidden');
@@ -325,13 +353,43 @@
             renderHistoryList();
         });
 
-        // TOMBOL BAWAH: Buka Menu Ubah Password
-        if(btnOpenChangepass) {
-            btnOpenChangepass.addEventListener('click', () => {
+        // Tombol Akun di Bawah (Membuka Menu Pilihan: Ubah Password / Logout)
+        if(btnOpenMenu) {
+            btnOpenMenu.addEventListener('click', () => {
+                menuUserDisplay.innerText = currentUser;
+                accountMenuWrapper.classList.remove('hidden');
+            });
+        }
+
+        if(btnCloseMenu) {
+            btnCloseMenu.addEventListener('click', () => {
+                accountMenuWrapper.classList.add('hidden');
+            });
+        }
+
+        // Pilihan Menu: Menuju ke Ubah Password
+        if(btnGotoChangepass) {
+            btnGotoChangepass.addEventListener('click', () => {
+                accountMenuWrapper.classList.add('hidden');
                 currentUserDisplay.innerText = currentUser;
                 oldPassInput.value = '';
                 newPassInput.value = '';
                 changepassWrapper.classList.remove('hidden');
+            });
+        }
+
+        // Pilihan Menu: LOGOUT (Keluar Akun)
+        if(btnLogout) {
+            btnLogout.addEventListener('click', () => {
+                if(confirm("Yakin ingin keluar dari akun ini?")) {
+                    localStorage.removeItem('v3_currentUser');
+                    currentUser = '';
+                    accountMenuWrapper.classList.add('hidden');
+                    mainDashboard.classList.add('hidden');
+                    bottomNav.classList.add('hidden');
+                    loginWrapper.classList.remove('hidden');
+                    showToast("Berhasil logout", "info");
+                }
             });
         }
 
@@ -341,7 +399,6 @@
             });
         }
 
-        // PROSES SIMPAN PERUBAHAN PASSWORD
         btnSubmitChangepass.addEventListener('click', () => {
             let oldPass = oldPassInput.value.trim();
             let newPass = newPassInput.value.trim();
@@ -361,7 +418,6 @@
             }
         });
 
-        // PROSES VERIFIKASI LOGIN
         btnSubmitLogin.addEventListener('click', () => {
             let uid = loginUseridInput.value.trim().toLowerCase();
             let pass = loginPassInput.value.trim();
@@ -375,6 +431,7 @@
                 currentUser = uid;
                 localStorage.setItem('v3_currentUser', currentUser);
                 navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                menuUserDisplay.innerText = currentUser;
                 currentUserDisplay.innerText = currentUser;
                 
                 showToast(`Login berhasil, selamat datang ${currentUser}!`, "success");
