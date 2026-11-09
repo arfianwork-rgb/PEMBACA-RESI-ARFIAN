@@ -56,7 +56,7 @@
             </div>
             <div class="glass-panel p-4 rounded-3xl border-amber-500/20 text-center relative overflow-hidden group">
                 <span class="block text-3xl font-black text-amber-400 tracking-tight" id="count-remaining">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-amber-300/80 font-bold mt-1 block">Belum Discan</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold mt-1 block">Belum Discan</span>
             </div>
         </div>
 
@@ -200,6 +200,9 @@
 
     <script>
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
+        
+        // URL Apps Script Anda untuk memperbarui status di Google Sheets secara otomatis
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmpw1m-seyf7ti699vmtQp32qSP8P1Ql2Ce8jtCdp5OWlUWWoUhvpd4WzjboBFHZtv/exec"; 
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -210,7 +213,6 @@
         const searchHistory = document.getElementById('search-history');
         const toastContainer = document.getElementById('toast-container');
         
-        // Elemen Statistik UI yang sebelumnya terlewat
         const countValidSpan = document.getElementById('count-valid');
         const countRemainingSpan = document.getElementById('count-remaining');
         
@@ -509,6 +511,14 @@
                     }
 
                     lastScannedNumber.innerText = num;
+                    
+                    // Mengirim pembaruan status ke Google Sheets secara otomatis melalui Apps Script
+                    if(APPS_SCRIPT_URL && isInDb) {
+                        fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, {
+                            method: 'GET',
+                            redirect: 'follow'
+                        }).catch(err => console.log("Gagal memperbarui Sheets:", err));
+                    }
 
                     if(isInDb) {
                         playSound('success');
