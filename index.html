@@ -66,7 +66,7 @@
                 </button>
             </div>
 
-            <!-- Daftar Riwayat (Lencana ADA/TIDAK ADA di dalam list sudah dihapus) -->
+            <!-- Daftar Riwayat (Tanpa lencana teks ADA/TIDAK ADA di sebelah kanan) -->
             <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[180px] max-h-72 overflow-y-auto border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
             </ul>
@@ -296,15 +296,15 @@
                     
                     if(isInDb) {
                         playSound('success');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl font-bold">✔ ADA DI DATA</span>`;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-bold">✔ ADA DI DATA</span>`;
                     } else {
                         playSound('error');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1 rounded-xl font-bold">✖ TIDAK ADA</span>`;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1 rounded-bold">✖ TIDAK ADA</span>`;
                     }
                 } else {
                     playSound('error');
                     lastScannedNumber.innerText = "Tidak Dikenali";
-                    lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 px-3 py-1 rounded-xl font-bold">❌ Gagal Deteksi</span>`;
+                    lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 px-3 py-1 rounded-bold">❌ Gagal Deteksi</span>`;
                 }
             } catch (error) {
                 lastScannedNumber.innerText = "Error Sistem";
@@ -336,7 +336,7 @@
 
             const li = document.createElement('li');
             
-            // Lencana teks ADA/TIDAK ADA sudah dihapus, kini hanya menampilkan nomor dengan latar belakang warna kartu
+            // Kartu riwayat resi bersih tanpa lencana teks di kanan
             if (isInDb) {
                 li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-3 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs shadow-sm";
             } else {
