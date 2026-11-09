@@ -15,29 +15,37 @@
 
     <!-- Header & Dashboard Utama (Tampil saat kamera tertutup) -->
     <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
-        <!-- Header Atas -->
-        <div class="bg-slate-900/90 backdrop-blur-md p-5 rounded-3xl border border-slate-800 flex justify-between items-center shadow-lg">
+        <!-- Header Atas (Tanpa kotak total kanan) -->
+        <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-3xl border border-slate-800 flex justify-between items-center shadow-lg">
             <div>
                 <h1 class="text-base font-bold text-white tracking-tight">Database Resi Web</h1>
                 <p id="db-status" class="text-[11px] text-amber-400 mt-0.5">Menghubungkan Google Sheets...</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700/80 px-4 py-2 rounded-2xl text-center min-w-[70px]">
-                <span class="block text-base font-extrabold text-emerald-400" id="count">0</span>
-                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Total</span>
+        </div>
+
+        <!-- Panel Total Valid & Tidak Valid di Tengah -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-emerald-500/30 text-center shadow-lg">
+                <span class="block text-2xl font-extrabold text-emerald-400" id="count-valid">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-400/80 font-bold">✔ Total Valid</span>
+            </div>
+            <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-rose-500/30 text-center shadow-lg">
+                <span class="block text-2xl font-extrabold text-rose-400" id="count-invalid">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-rose-400/80 font-bold">✖ Tidak Valid</span>
             </div>
         </div>
 
         <!-- Tombol Buka Kamera & Upload -->
-        <div class="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-800 flex flex-col items-center text-center shadow-lg">
-            <div class="w-14 h-14 bg-blue-600/20 border border-blue-500/40 rounded-full flex items-center justify-center mb-3 text-blue-400 text-xl shadow-inner">
+        <div class="bg-slate-900/80 backdrop-blur-md p-5 rounded-3xl border border-slate-800 flex flex-col items-center text-center shadow-lg">
+            <div class="w-12 h-12 bg-blue-600/20 border border-blue-500/40 rounded-full flex items-center justify-center mb-2.5 text-blue-400 text-lg shadow-inner">
                 📸
             </div>
             <h2 class="text-base font-bold text-white mb-1">Siap Memindai Resi</h2>
-            <p class="text-xs text-slate-400 max-w-xs mb-5">Arahkan kamera ke nomor resi pengiriman untuk validasi otomatis dengan database.</p>
+            <p class="text-xs text-slate-400 max-w-xs mb-4">Arahkan kamera ke nomor resi pengiriman untuk validasi otomatis dengan database.</p>
             <button id="btn-start-camera" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-600/30 active:scale-95 transition text-sm flex items-center justify-center gap-2">
                 <span>📷</span> Buka Kamera Full Screen
             </button>
-            <div class="mt-4">
+            <div class="mt-3">
                 <label class="text-xs text-slate-400 cursor-pointer hover:text-slate-200 underline">
                     Atau unggah foto dari galeri
                     <input type="file" id="file-upload" accept="image/*" class="hidden">
@@ -50,7 +58,7 @@
             <div class="flex justify-between items-center mb-3">
                 <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Resi Terpindai</h3>
                 <button id="btn-copy" class="text-xs text-blue-400 hover:text-blue-300 font-semibold underline">
-                    Salin Semua
+                    Salin Semua Valid
                 </button>
             </div>
             <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[140px] max-h-60 overflow-y-auto border border-slate-800/80">
@@ -97,7 +105,9 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const resultList = document.getElementById('result-list');
-        const countSpan = document.getElementById('count');
+        
+        const countValidSpan = document.getElementById('count-valid');
+        const countInvalidSpan = document.getElementById('count-invalid');
         
         const mainDashboard = document.getElementById('main-dashboard');
         const cameraWrapper = document.getElementById('camera-wrapper');
@@ -114,6 +124,8 @@
 
         let stream = null;
         let scannedNumbers = new Set();
+        let validCount = 0;
+        let invalidCount = 0;
         let masterDatabase = new Set();
         const orderRegex = /58[67]\d{15}/g; 
 
@@ -217,6 +229,13 @@
 
                     if (!scannedNumbers.has(num)) {
                         scannedNumbers.add(num);
+                        if (isInDb) {
+                            validCount++;
+                            countValidSpan.innerText = validCount;
+                        } else {
+                            invalidCount++;
+                            countInvalidSpan.innerText = invalidCount;
+                        }
                         tambahKeDaftar(num, isInDb);
                     }
 
@@ -264,6 +283,8 @@
 
             const li = document.createElement('li');
             li.className = "font-mono text-slate-200 bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs shadow-sm";
+            li.dataset.number = nomor;
+            li.dataset.status = isInDb ? 'ada' : 'tidak';
             
             let badge = isInDb 
                 ? `<span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-sans font-bold">✔ ADA</span>`
@@ -271,25 +292,23 @@
 
             li.innerHTML = `<span class="tracking-wide">${nomor}</span> ${badge}`;
             resultList.prepend(li);
-            countSpan.innerText = scannedNumbers.size;
         }
 
-     btnCopy.addEventListener('click', () => {
-            // Ambil hanya elemen li yang memiliki status 'ada' (valid)
+        // Tombol Salin khusus resi yang valid (✔ ADA) saja
+        btnCopy.addEventListener('click', () => {
             const validItems = resultList.querySelectorAll('li[data-status="ada"]');
             
             if(validItems.length === 0) {
-                alert("Tidak ada resi yang valid (✔ ADA) untuk disalin.");
+                alert("Tidak ada resi valid untuk disalin.");
                 return;
             }
 
-            // Ekstrak nomor resinya saja
             const validNumbers = Array.from(validItems).map(li => li.dataset.number);
             const listData = validNumbers.join('\n');
 
             navigator.clipboard.writeText(listData).then(() => {
                 const textAsli = btnCopy.innerText;
-                btnCopy.innerText = `Berhasil Menyalin ${validNumbers.length} Resi Valid!`;
+                btnCopy.innerText = `Berhasil Menyalin ${validNumbers.length} Resi!`;
                 setTimeout(() => {
                     btnCopy.innerText = textAsli;
                 }, 2000);
