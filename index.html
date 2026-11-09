@@ -424,9 +424,10 @@
 
                     lastScannedNumber.innerText = num;
                     
-                    // Mengirim sinyal otomatis ke Google Apps Script untuk update Kolom E (meskipun di-scan ulang)
+                  // Mengirim sinyal otomatis ke Google Apps Script menggunakan teknik Background Image (Anti-CORS)
                     if(APPS_SCRIPT_URL && isInDb) {
-                        fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, { mode: 'no-cors' }).catch(e => console.log(e));
+                        const img = new Image();
+                        img.src = `${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan&t=${new Date().getTime()}`;
                     }
 
                     if(isInDb) {
