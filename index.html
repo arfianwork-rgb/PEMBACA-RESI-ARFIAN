@@ -424,10 +424,10 @@
 
                     lastScannedNumber.innerText = num;
                     
-                  // Mengirim sinyal otomatis ke Google Apps Script menggunakan teknik Background Image (Anti-CORS)
+                    // METODE ANTI-CORS: Menggunakan objek Image agar sinyal update ke Kolom E pasti terkirim
                     if(APPS_SCRIPT_URL && isInDb) {
-                        const img = new Image();
-                        img.src = `${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan&t=${new Date().getTime()}`;
+                        const updateTrigger = new Image();
+                        updateTrigger.src = `${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan&t=${new Date().getTime()}`;
                     }
 
                     if(isInDb) {
