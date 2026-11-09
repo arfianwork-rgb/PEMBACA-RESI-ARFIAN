@@ -155,7 +155,7 @@
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-4 shadow-2xl border border-slate-800 text-center">
             <div class="space-y-1">
                 <h2 class="text-lg font-extrabold text-white tracking-tight">PENGATURAN AKUN</h2>
-                <p class="text-xs text-slate-400">Masuk sebagai: <span id="menu-user-display" class="text-cyan-400 font-bold"></span></p>
+                <p class="text-xs text-slate-400">Masuk sebagai: <span id="menu-user-display" class="text-cyan-400 font-bold uppercase"></span></p>
             </div>
 
             <div class="space-y-2 pt-2">
@@ -177,7 +177,7 @@
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
                 <h2 class="text-lg font-extrabold text-white tracking-tight">UBAH PASSWORD</h2>
-                <p class="text-xs text-slate-400">Perbarui kata sandi akun <span id="current-user-display" class="text-cyan-400 font-bold"></span></p>
+                <p class="text-xs text-slate-400">Perbarui kata sandi akun <span id="current-user-display" class="text-cyan-400 font-bold uppercase"></span></p>
             </div>
 
             <div class="space-y-3">
@@ -214,7 +214,7 @@
         </button>
 
         <button id="btn-open-menu" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
-            <span id="nav-user-label" class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
+            <span id="nav-user-label" class="text-xs font-bold uppercase bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
             <span class="text-[9px] font-bold tracking-wider uppercase">Akun</span>
         </button>
     </nav>
@@ -306,7 +306,6 @@
         const loginUseridInput = document.getElementById('login-userid');
         const loginPassInput = document.getElementById('login-pass');
         
-        // Elemen Menu Akun & Ubah Password & Logout
         const accountMenuWrapper = document.getElementById('account-menu-wrapper');
         const btnOpenMenu = document.getElementById('btn-open-menu');
         const btnCloseMenu = document.getElementById('btn-close-menu');
@@ -336,9 +335,12 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             if (currentUser && validUsers[currentUser]) {
-                navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
-                menuUserDisplay.innerText = currentUser;
-                currentUserDisplay.innerText = currentUser;
+                // Mengubah nama user menjadi huruf besar (uppercase) otomatis
+                let upperUser = currentUser.toUpperCase();
+                navUserLabel.innerText = upperUser.length > 5 ? upperUser.substring(0, 5) + '..' : upperUser;
+                menuUserDisplay.innerText = upperUser;
+                currentUserDisplay.innerText = upperUser;
+                
                 loginWrapper.classList.add('hidden');
                 mainDashboard.classList.remove('hidden');
                 bottomNav.classList.remove('hidden');
@@ -353,10 +355,9 @@
             renderHistoryList();
         });
 
-        // Tombol Akun di Bawah (Membuka Menu Pilihan: Ubah Password / Logout)
         if(btnOpenMenu) {
             btnOpenMenu.addEventListener('click', () => {
-                menuUserDisplay.innerText = currentUser;
+                menuUserDisplay.innerText = currentUser.toUpperCase();
                 accountMenuWrapper.classList.remove('hidden');
             });
         }
@@ -367,18 +368,16 @@
             });
         }
 
-        // Pilihan Menu: Menuju ke Ubah Password
         if(btnGotoChangepass) {
             btnGotoChangepass.addEventListener('click', () => {
                 accountMenuWrapper.classList.add('hidden');
-                currentUserDisplay.innerText = currentUser;
+                currentUserDisplay.innerText = currentUser.toUpperCase();
                 oldPassInput.value = '';
                 newPassInput.value = '';
                 changepassWrapper.classList.remove('hidden');
             });
         }
 
-        // Pilihan Menu: LOGOUT (Keluar Akun)
         if(btnLogout) {
             btnLogout.addEventListener('click', () => {
                 if(confirm("Yakin ingin keluar dari akun ini?")) {
@@ -430,11 +429,13 @@
             if (validUsers[uid] && validUsers[uid] === pass) {
                 currentUser = uid;
                 localStorage.setItem('v3_currentUser', currentUser);
-                navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
-                menuUserDisplay.innerText = currentUser;
-                currentUserDisplay.innerText = currentUser;
                 
-                showToast(`Login berhasil, selamat datang ${currentUser}!`, "success");
+                let upperUser = currentUser.toUpperCase();
+                navUserLabel.innerText = upperUser.length > 5 ? upperUser.substring(0, 5) + '..' : upperUser;
+                menuUserDisplay.innerText = upperUser;
+                currentUserDisplay.innerText = upperUser;
+                
+                showToast(`Login berhasil, selamat datang ${upperUser}!`, "success");
                 loginUseridInput.value = '';
                 loginPassInput.value = '';
 
