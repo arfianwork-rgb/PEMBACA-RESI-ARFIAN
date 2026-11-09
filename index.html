@@ -3,76 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner Resi 2.1 (Kamera, Suara & Database)</title>
+    <title>Scanner Resi Pro 2.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style> 
+        body { font-family: 'Plus Jakarta Sans', sans-serif; } 
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col p-4 sm:p-8">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col p-4 sm:p-8">
 
     <div class="max-w-3xl mx-auto w-full space-y-6">
         <!-- Header -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
-            <h1 class="text-2xl font-bold text-slate-900">Scanner Resi 2.1</h1>
-            <p class="text-sm text-slate-500 mt-1">Dilengkapi Validasi Database & Pemindai Kamera</p>
+        <div class="bg-slate-800/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <div class="inline-block px-3 py-1 bg-blue-500/10 text-blue-400 rounded-full text-xs font-semibold mb-2">PRO EDITION 2.1</div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">Scanner Resi & Database</h1>
+                <p class="text-xs text-slate-400 mt-1">Ekstraksi otomatis awalan 586/587 dengan verifikasi data</p>
+            </div>
+            <div class="bg-slate-900/60 border border-slate-700 px-5 py-3 rounded-2xl text-center min-w-[120px]">
+                <span class="block text-2xl font-extrabold text-emerald-400" id="count">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Total Resi</span>
+            </div>
         </div>
 
         <!-- Database Master Section -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 class="text-sm font-semibold text-slate-700 mb-2">📋 Database Master (Nomor Order Valid)</h2>
-            <p class="text-xs text-slate-500 mb-3">Tempel daftar nomor order toko Anda di sini (satu nomor per baris atau teks bebas).</p>
-            <textarea id="db-input" rows="3" class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" placeholder="Tempel nomor-nomor referensi di sini..."></textarea>
-            <div class="flex justify-between items-center mt-2">
-                <span id="db-status" class="text-xs font-medium text-slate-500">Database kosong (Semua nomor dianggap baru)</span>
-                <button id="btn-save-db" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2 px-4 rounded-lg transition">
+        <div class="bg-slate-800/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                    <span>📋</span> Database Master (Nomor Order Valid)
+                </h2>
+                <span id="db-badge" class="text-[10px] bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium">Kosong</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-3">Tempel daftar nomor order referensi toko Anda di bawah ini:</p>
+            <textarea id="db-input" rows="3" class="w-full p-3.5 text-sm bg-slate-900/80 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-slate-200 placeholder-slate-500 transition" placeholder="Tempel nomor order di sini..."></textarea>
+            <div class="flex justify-between items-center mt-3">
+                <span id="db-status" class="text-xs text-slate-400">Belum ada database dimuat</span>
+                <button id="btn-save-db" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2.5 px-5 rounded-xl transition shadow-lg shadow-blue-600/20 active:scale-95">
                     Simpan Database
                 </button>
             </div>
         </div>
 
         <!-- Camera Section -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center">
-            <h2 class="text-lg font-semibold mb-4">Pemindai Langsung</h2>
+        <div class="bg-slate-800/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50 flex flex-col items-center">
+            <h2 class="text-base font-semibold text-slate-200 mb-4">Pemindai Kamera Langsung</h2>
             
-            <div id="camera-container" class="hidden w-full max-w-sm rounded-xl overflow-hidden bg-black mb-4 aspect-[3/4] relative">
+            <div id="camera-container" class="hidden w-full max-w-sm rounded-2xl overflow-hidden bg-black mb-5 aspect-[3/4] relative shadow-inner border border-slate-700">
                 <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-                <div class="absolute inset-0 border-4 border-emerald-500 border-dashed opacity-50 m-8 rounded-lg pointer-events-none"></div>
+                <div class="absolute inset-0 border-2 border-emerald-400 border-dashed opacity-60 m-6 rounded-xl pointer-events-none animate-pulse"></div>
             </div>
 
             <canvas id="canvas" class="hidden"></canvas>
 
             <div class="flex flex-wrap gap-3 justify-center w-full">
-                <button id="btn-start-camera" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition w-full sm:w-auto shadow-sm">
-                    📸 Buka Kamera
+                <button id="btn-start-camera" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 px-6 rounded-2xl transition w-full sm:w-auto shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2">
+                    <span>📸</span> Buka Kamera
                 </button>
-                <button id="btn-scan" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl transition w-full sm:w-auto shadow-md transform active:scale-95">
-                    🔍 SCAN SEKARANG
+                <button id="btn-scan" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-8 rounded-2xl transition w-full sm:w-auto shadow-lg shadow-emerald-600/25 active:scale-95 flex items-center justify-center gap-2">
+                    <span>🔍</span> SCAN SEKARANG
                 </button>
-                <button id="btn-stop-camera" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-3 px-6 rounded-xl transition w-full sm:w-auto">
+                <button id="btn-stop-camera" class="hidden bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-3.5 px-6 rounded-2xl transition w-full sm:w-auto">
                     Tutup Kamera
                 </button>
             </div>
             
-            <p id="status-text" class="mt-4 text-sm font-medium text-slate-600"></p>
+            <p id="status-text" class="mt-4 text-xs font-medium text-slate-400 text-center min-h-[20px]"></p>
         </div>
 
         <!-- Fallback File Upload -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
-            <p class="text-sm text-slate-500 mb-3">Atau unggah foto dari galeri:</p>
-            <input type="file" id="file-upload" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        <div class="bg-slate-800/80 backdrop-blur-md p-5 rounded-3xl shadow-xl border border-slate-700/50 text-center">
+            <p class="text-xs text-slate-400 mb-3">Atau unggah gambar resi dari galeri perangkat:</p>
+            <input type="file" id="file-upload" accept="image/*" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-blue-400 hover:file:bg-slate-600 cursor-pointer transition">
         </div>
 
         <!-- Hasil Scan -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="bg-slate-800/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold">Hasil Pemindaian (<span id="count">0</span>)</h2>
-                <button id="btn-copy" class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2 px-4 rounded-lg transition">
+                <h2 class="text-base font-semibold text-slate-200">Riwayat Pemindaian</h2>
+                <button id="btn-copy" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition shadow-sm">
                     Salin Semua
                 </button>
             </div>
-            <ul id="result-list" class="space-y-2 bg-slate-50 p-4 rounded-xl min-h-[150px] max-h-64 overflow-y-auto border border-slate-100">
-                <!-- Hasil masuk kesini -->
+            <ul id="result-list" class="space-y-2.5 bg-slate-900/60 p-4 rounded-2xl min-h-[160px] max-h-72 overflow-y-auto border border-slate-700/60">
+                <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
     </div>
@@ -93,13 +107,13 @@
         const dbInput = document.getElementById('db-input');
         const btnSaveDb = document.getElementById('btn-save-db');
         const dbStatus = document.getElementById('db-status');
+        const dbBadge = document.getElementById('db-badge');
 
         let stream = null;
         let scannedNumbers = new Set();
         let masterDatabase = new Set();
         const orderRegex = /58[67]\d{15}/g; 
 
-        // Simpan / Perbarui Database dari Textarea
         btnSaveDb.addEventListener('click', () => {
             masterDatabase.clear();
             const text = dbInput.value;
@@ -107,10 +121,8 @@
             
             if (matches) {
                 matches.forEach(num => masterDatabase.add(num));
-                dbStatus.innerText = `✅ Berhasil memuat ${masterDatabase.size} nomor ke dalam Database Master.`;
-                dbStatus.className = "text-xs font-bold text-emerald-600";
+                updateDbUI(true, `Berhasil memuat ${masterDatabase.size} nomor order.`);
             } else if (text.trim() !== "") {
-                // Jika format regex tidak kaku untuk database, ambil berdasarkan baris/kata panjang
                 const lines = text.split(/\r?\n/);
                 let count = 0;
                 lines.forEach(line => {
@@ -120,15 +132,23 @@
                         count++;
                     }
                 });
-                dbStatus.innerText = `✅ Berhasil memuat ${count} data referensi.`;
-                dbStatus.className = "text-xs font-bold text-emerald-600";
+                updateDbUI(true, `Berhasil memuat ${count} data referensi.`);
             } else {
-                dbStatus.innerText = "Database kosong.";
-                dbStatus.className = "text-xs font-medium text-slate-500";
+                updateDbUI(false, "Database kosong.");
             }
         });
 
-        // Fungsi Audio (Ting & Tetot)
+        function updateDbUI(active, message) {
+            dbStatus.innerText = message;
+            if(active) {
+                dbBadge.innerText = `${masterDatabase.size} Data Aktif`;
+                dbBadge.className = "text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full font-semibold";
+            } else {
+                dbBadge.innerText = "Kosong";
+                dbBadge.className = "text-[10px] bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium";
+            }
+        }
+
         function playSound(type) {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
@@ -140,21 +160,20 @@
             if(type === 'success') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(900, ctx.currentTime);
-                gain.gain.setValueAtTime(1, ctx.currentTime);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.3);
             } else {
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(200, ctx.currentTime);
-                gain.gain.setValueAtTime(1, ctx.currentTime);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.5);
             }
         }
 
-        // Buka Kamera Belakang
         btnStart.addEventListener('click', async () => {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -164,13 +183,12 @@
                 btnScan.classList.remove('hidden');
                 btnStop.classList.remove('hidden');
                 statusText.innerText = "Kamera aktif. Arahkan ke resi lalu tekan Scan.";
-                statusText.className = "mt-4 text-sm font-medium text-blue-600";
+                statusText.className = "mt-4 text-xs font-medium text-blue-400 text-center";
             } catch (err) {
                 alert("Gagal membuka kamera: " + err.message);
             }
         });
 
-        // Tutup Kamera
         btnStop.addEventListener('click', () => {
             if (stream) stream.getTracks().forEach(track => track.stop());
             containerKamera.classList.add('hidden');
@@ -180,10 +198,9 @@
             statusText.innerText = "";
         });
 
-        // Proses Pemindaian (OCR) & Pencocokan Database
         async function processImage(imageSource) {
-            statusText.innerText = "⏳ Sedang membaca gambar & mencocokkan data...";
-            statusText.className = "mt-4 text-sm font-medium text-orange-600 animate-pulse";
+            statusText.innerText = "⏳ Sedang memproses gambar & mencocokkan data...";
+            statusText.className = "mt-4 text-xs font-medium text-amber-400 text-center animate-pulse";
             
             try {
                 const result = await Tesseract.recognize(imageSource, 'eng');
@@ -197,10 +214,13 @@
                         if (!scannedNumbers.has(num)) {
                             scannedNumbers.add(num);
                             
-                            // Cek apakah ada di Database Master
                             let isInDb = true;
                             if (masterDatabase.size > 0) {
                                 isInDb = masterDatabase.has(num);
+                            }
+
+                            if(scannedNumbers.size === 1) {
+                                resultList.innerHTML = ''; // Hapus teks placeholder awal
                             }
 
                             tambahKeDaftar(num, isInDb);
@@ -212,26 +232,73 @@
                                 playSound('error');
                             }
                         } else {
-                            statusText.innerText = `⚠️ Nomor ${num} sudah pernah disan sebelumnya!`;
+                            statusText.innerText = `⚠️ Nomor ${num} sudah pernah dipindai sebelumnya!`;
                         }
                     });
 
                     if(newFound) {
-                        statusText.innerText = "✅ Pemindaian selesai!";
-                        statusText.className = "mt-4 text-sm font-bold text-emerald-600";
+                        statusText.innerText = "✅ Berhasil dipindai!";
+                        statusText.className = "mt-4 text-xs font-bold text-emerald-400 text-center";
                     }
                 } else {
                     playSound('error');
                     statusText.innerText = "❌ Gagal mendeteksi awalan 586/587 (18 digit).";
-                    statusText.className = "mt-4 text-sm font-medium text-red-600";
+                    statusText.className = "mt-4 text-xs font-medium text-rose-400 text-center";
                 }
             } catch (error) {
-                statusText.innerText = "Terjadi kesalahan sistem.";
+                statusText.innerText = "Terjadi kesalahan sistem saat membaca gambar.";
                 console.error(error);
             }
         }
 
-        // Ambil Foto dari Video
         btnScan.addEventListener('click', () => {
             canvas.width = video.videoWidth;
-            canvas.height = video
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg');
+            processImage(imageData);
+        });
+
+        fileUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => processImage(event.target.result);
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function tambahKeDaftar(nomor, isInDb) {
+            const li = document.createElement('li');
+            li.className = "font-mono text-slate-200 bg-slate-800/90 p-3.5 rounded-xl border border-slate-700/80 flex justify-between items-center text-sm shadow-sm";
+            
+            let badge = '';
+            if (masterDatabase.size === 0) {
+                badge = `<span class="text-[10px] bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg font-sans font-medium">Terbaca</span>`;
+            } else if (isInDb) {
+                badge = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-lg font-sans font-bold">✔ ADA DI DATA</span>`;
+            } else {
+                badge = `<span class="text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2.5 py-1 rounded-lg font-sans font-bold">✖ TIDAK TERDAFTAR</span>`;
+            }
+
+            li.innerHTML = `<span class="tracking-wide">${nomor}</span> ${badge}`;
+            resultList.prepend(li);
+            countSpan.innerText = scannedNumbers.size;
+        }
+
+        btnCopy.addEventListener('click', () => {
+            if(scannedNumbers.size === 0) return;
+            const listData = Array.from(scannedNumbers).join('\n');
+            navigator.clipboard.writeText(listData).then(() => {
+                const btnAsli = btnCopy.innerText;
+                btnCopy.innerText = "Tersalin!";
+                btnCopy.className = "bg-emerald-600 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition shadow-sm";
+                setTimeout(() => {
+                    btnCopy.innerText = btnAsli;
+                    btnCopy.className = "bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition shadow-sm";
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
