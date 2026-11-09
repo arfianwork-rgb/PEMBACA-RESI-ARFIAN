@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Resi Web</title>
+    <title>Database Resi Web v2.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
+    <!-- Pustaka untuk Ekspor Excel (.xlsx) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Plus Jakarta Sans', sans-serif; } 
@@ -25,7 +27,7 @@
         <!-- Header Atas ala Android App Bar -->
         <div class="bg-slate-900/90 backdrop-blur-md px-4 py-3.5 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
             <div>
-                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi Web</h1>
+                <h1 class="text-sm font-bold text-white tracking-tight">Database Resi v2.2</h1>
                 <p id="db-status" class="text-[11px] text-amber-400 mt-0.5">Menghubungkan Google Sheets...</p>
             </div>
             <div class="flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1 rounded-full border border-slate-800">
@@ -46,27 +48,34 @@
             </div>
         </div>
 
-        <!-- Bagian Bawah: Daftar Riwayat Resi yang Sudah Disken -->
+        <!-- Bagian Bawah: Daftar Riwayat Resi & Aksi -->
         <div class="bg-slate-900/80 backdrop-blur-md p-4 rounded-3xl border border-slate-800 flex-1 flex flex-col shadow-lg">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Resi</h3>
-                <label class="text-xs text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
-                    Unggah Galeri
-                    <input type="file" id="file-upload" accept="image/*" class="hidden">
-                </label>
+                <div class="flex gap-2">
+                    <label class="text-xs text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer">
+                        Galeri
+                        <input type="file" id="file-upload" accept="image/*" class="hidden">
+                    </label>
+                    <span class="text-slate-600">|</span>
+                    <button id="btn-clear-history" class="text-xs text-rose-400 hover:text-rose-300 font-semibold underline">Hapus Sesi</button>
+                </div>
             </div>
 
-            <!-- Tombol Salin -->
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[11px] font-semibold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+            <!-- Tombol Salin & Ekspor Excel -->
+            <div class="grid grid-cols-3 gap-1.5 mb-3">
+                <button id="btn-copy-valid" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📋</span> Salin Valid
                 </button>
-                <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[11px] font-semibold py-2 px-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                <button id="btn-copy-invalid" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
                     <span>📋</span> Salin Invalid
+                </button>
+                <button id="btn-export-xlsx" class="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 text-[10px] font-semibold py-2 px-1 rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                    <span>📊</span> Export XLSX
                 </button>
             </div>
 
-            <!-- Daftar Riwayat (Tanpa lencana teks ADA/TIDAK ADA di sebelah kanan) -->
+            <!-- Daftar Riwayat -->
             <ul id="result-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl flex-1 min-h-[180px] max-h-72 overflow-y-auto border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>
             </ul>
@@ -75,21 +84,40 @@
 
     <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-around items-center shadow-2xl">
-        <button onclick="showToast('Fitur segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
-            <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
-            <span class="text-[10px] font-bold tracking-wide">Soon</span>
+        <!-- Tombol Pengaturan Database (Pengganti Soon Kiri) -->
+        <button id="btn-open-settings" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-95">
+            <span class="text-lg bg-slate-800/80 p-2 rounded-xl border border-slate-700">⚙️</span>
+            <span class="text-[10px] font-bold tracking-wide">Database</span>
         </button>
 
+        <!-- Tombol Utama Pindai (Tengah) -->
         <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-blue-400 hover:text-blue-300 transition active:scale-95 -mt-3">
             <span class="text-xl bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-600/50 border border-blue-400/40">📷</span>
             <span class="text-[10px] font-bold tracking-wide text-white">Pindai</span>
         </button>
 
-        <button onclick="showToast('Fitur segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
+        <!-- Tombol Soon Kanan -->
+        <button onclick="showToast('Fitur laporan lanjutan segera hadir!', 'info')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-400 transition active:scale-95">
             <span class="text-lg bg-slate-800/50 p-2 rounded-xl border border-slate-700/50">⏳</span>
             <span class="text-[10px] font-bold tracking-wide">Soon</span>
         </button>
     </nav>
+
+    <!-- Modal Pengaturan Database (Multi-Database Settings) -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h2 class="text-sm font-bold text-white">⚙️ Pengaturan Database Sheets</h2>
+                <button id="btn-close-settings" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+            </div>
+            <p class="text-[11px] text-slate-400">Masukkan link Publik CSV Google Sheets Anda yang baru di sini:</p>
+            <textarea id="input-sheets-url" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"></textarea>
+            <div class="flex gap-2 pt-2">
+                <button id="btn-save-settings" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg">Simpan & Hubungkan</button>
+                <button id="btn-reset-settings" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-2.5 rounded-xl transition">Default</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Area Utama Kamera Full Screen -->
     <main id="camera-wrapper" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
@@ -124,7 +152,10 @@
     <div id="toast-container" class="fixed bottom-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
-        const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSEDsXuDSQyUoOSHH9_S_em73jCM2iYIlbBo9_A_B8EzHoLye9_TuYJqld9pcehq6iWb8qHQrRVjj4o/pub?output=csv";
+        const DEFAULT_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSEDsXuDSQyUoOSHH9_S_em73jCM2iYIlbBo9_A_B8EzHoLye9_TuYJqld9pcehq6iWb8qHQrRVjj4o/pub?output=csv";
+        
+        // Ambil link dari localStorage jika ada, atau gunakan default
+        let activeSheetsUrl = localStorage.getItem('custom_sheets_url') || DEFAULT_SHEETS_URL;
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -145,21 +176,31 @@
         
         const btnCopyValid = document.getElementById('btn-copy-valid');
         const btnCopyInvalid = document.getElementById('btn-copy-invalid');
+        const btnExportXlsx = document.getElementById('btn-export-xlsx');
+        const btnClearHistory = document.getElementById('btn-clear-history');
         
         const dbStatus = document.getElementById('db-status');
         const lastScannedNumber = document.getElementById('last-scanned-number');
         const lastScannedBadge = document.getElementById('last-scanned-badge');
 
+        // Elemen Modal Settings
+        const settingsModal = document.getElementById('settings-modal');
+        const btnOpenSettings = document.getElementById('btn-open-settings');
+        const btnCloseSettings = document.getElementById('btn-close-settings');
+        const btnSaveSettings = document.getElementById('btn-save-settings');
+        const btnResetSettings = document.getElementById('btn-reset-settings');
+        const inputSheetsUrl = document.getElementById('input-sheets-url');
+
         let stream = null;
         let scannedNumbers = new Set();
+        let scanHistoryData = []; // Menyimpan objek data lengkap untuk export Excel
         let validCount = 0;
         let invalidCount = 0;
-        let masterDatabase = new Set();
+        let masterDatabase = new Map(); // Map menyimpan Resi -> { invoice, toko, kurir, produk }
         const orderRegex = /58[67]\d{15}/g; 
 
         function showToast(message, type = 'info') {
             toastContainer.innerHTML = '';
-            
             const toast = document.createElement('div');
             toast.className = `toast-animate pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold backdrop-blur-xl transition-all max-w-sm w-full`;
             
@@ -175,7 +216,6 @@
             }
             
             toastContainer.appendChild(toast);
-
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(10px)';
@@ -185,30 +225,39 @@
 
         async function autoSyncDatabase() {
             try {
-                const response = await fetch(FIXED_SHEETS_URL);
+                dbStatus.innerText = "Memuat database...";
+                const response = await fetch(activeSheetsUrl);
                 const csvText = await response.text();
                 
                 masterDatabase.clear();
                 const lines = csvText.split(/\r?\n/);
 
-                lines.forEach(line => {
-                    const cols = line.split(',');
-                    cols.forEach(col => {
-                        const cleanVal = col.replace(/["']/g, "").trim();
-                        const matches = cleanVal.match(orderRegex);
+                lines.forEach((line, index) => {
+                    if (index === 0) return; // Lewati baris header jika ada
+                    const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
+                    if (cols.length >= 1) {
+                        const resi = cols[0];
+                        const invoice = cols[1] || "-";
+                        const toko = cols[2] || "-";
+                        const kurir = cols[3] || "-";
+                        const produk = cols[4] || "-";
+
+                        const matches = resi.match(orderRegex);
                         if (matches) {
-                            matches.forEach(m => masterDatabase.add(m));
-                        } else if (cleanVal.length >= 10) {
-                            masterDatabase.add(cleanVal);
+                            matches.forEach(m => {
+                                masterDatabase.set(m, { invoice, toko, kurir, produk });
+                            });
+                        } else if (resi.length >= 10) {
+                            masterDatabase.set(resi, { invoice, toko, kurir, produk });
                         }
-                    });
+                    }
                 });
 
                 if(masterDatabase.size > 0) {
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
                     dbStatus.className = "text-[11px] text-emerald-400 mt-0.5";
                 } else {
-                    dbStatus.innerText = "Database kosong";
+                    dbStatus.innerText = "Database kosong / format salah";
                     dbStatus.className = "text-[11px] text-amber-400 mt-0.5";
                 }
             } catch (err) {
@@ -218,6 +267,35 @@
         }
 
         window.addEventListener('DOMContentLoaded', autoSyncDatabase);
+
+        // Pengaturan Modal Multi-Database
+        btnOpenSettings.addEventListener('click', () => {
+            inputSheetsUrl.value = activeSheetsUrl;
+            settingsModal.classList.remove('hidden');
+        });
+        btnCloseSettings.addEventListener('click', () => settingsModal.classList.add('hidden'));
+        
+        btnSaveSettings.addEventListener('click', () => {
+            const newUrl = inputSheetsUrl.value.trim();
+            if(newUrl) {
+                activeSheetsUrl = newUrl;
+                localStorage.setItem('custom_sheets_url', newUrl);
+                settingsModal.classList.add('hidden');
+                autoSyncDatabase();
+                showToast("Database berhasil diperbarui!", "success");
+            } else {
+                showToast("Link Sheets tidak boleh kosong!", "error");
+            }
+        });
+
+        btnResetSettings.addEventListener('click', () => {
+            activeSheetsUrl = DEFAULT_SHEETS_URL;
+            localStorage.removeItem('custom_sheets_url');
+            inputSheetsUrl.value = DEFAULT_SHEETS_URL;
+            settingsModal.classList.add('hidden');
+            autoSyncDatabase();
+            showToast("Database dikembalikan ke default.", "info");
+        });
 
         function playSound(type) {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -247,7 +325,6 @@
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 video.srcObject = stream;
-                
                 mainDashboard.classList.add('hidden');
                 bottomNav.classList.add('hidden'); 
                 cameraWrapper.classList.remove('hidden');
@@ -275,9 +352,14 @@
                 if (matches && matches.length > 0) {
                     let num = matches[0]; 
                     
-                    let isInDb = true;
-                    if (masterDatabase.size > 0) {
-                        isInDb = masterDatabase.has(num);
+                    let isInDb = false;
+                    let meta = { invoice: "-", toko: "-", kurir: "-", produk: "-" };
+
+                    if (masterDatabase.size > 0 && masterDatabase.has(num)) {
+                        isInDb = true;
+                        meta = masterDatabase.get(num);
+                    } else if (masterDatabase.size === 0) {
+                        isInDb = true; // Jika database belum termuat, anggap valid sementara
                     }
 
                     if (!scannedNumbers.has(num)) {
@@ -289,14 +371,26 @@
                             invalidCount++;
                             countInvalidSpan.innerText = invalidCount;
                         }
-                        tambahKeDaftar(num, isInDb);
+
+                        // Simpan ke riwayat memori objek
+                        scanHistoryData.unshift({
+                            resi: num,
+                            invoice: meta.invoice,
+                            toko: meta.toko,
+                            kurir: meta.kurir,
+                            produk: meta.produk,
+                            status: isInDb ? 'VALID' : 'TIDAK VALID',
+                            waktu: new Date().toLocaleTimeString()
+                        });
+
+                        tambahKeDaftar(num, isInDb, meta);
                     }
 
                     lastScannedNumber.innerText = num;
                     
                     if(isInDb) {
                         playSound('success');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-bold">✔ ADA DI DATA</span>`;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-bold">✔ ADA (${meta.toko})</span>`;
                     } else {
                         playSound('error');
                         lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1 rounded-bold">✖ TIDAK ADA</span>`;
@@ -329,49 +423,100 @@
             }
         });
 
-        function tambahKeDaftar(nomor, isInDb) {
+        function tambahKeDaftar(nomor, isInDb, meta) {
             if(scannedNumbers.size === 1) {
                 resultList.innerHTML = ''; 
             }
 
             const li = document.createElement('li');
-            
-            // Kartu riwayat resi bersih tanpa lencana teks di kanan
             if (isInDb) {
-                li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-3 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs shadow-sm";
+                li.className = "font-mono text-emerald-100 bg-emerald-950/50 p-3 rounded-xl border border-emerald-500/30 text-xs shadow-sm space-y-1";
+                li.innerHTML = `
+                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-emerald-500/30 px-2 py-0.5 rounded font-sans text-emerald-200">VALID</span></div>
+                    <div class="text-[10px] text-emerald-300/80 font-sans grid grid-cols-2 gap-1 pt-1 border-t border-emerald-500/20">
+                        <div>Inv: <b>${meta.invoice}</b></div>
+                        <div>Toko: <b>${meta.toko}</b></div>
+                        <div>Kurir: <b>${meta.kurir}</b></div>
+                        <div>Produk: <b>${meta.produk}</b></div>
+                    </div>`;
             } else {
-                li.className = "font-mono text-rose-100 bg-rose-950/50 p-3 rounded-xl border border-rose-500/30 flex justify-between items-center text-xs shadow-sm";
+                li.className = "font-mono text-rose-100 bg-rose-950/50 p-3 rounded-xl border border-rose-500/30 text-xs shadow-sm";
+                li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold">${nomor}</span><span class="text-[9px] bg-rose-500/30 px-2 py-0.5 rounded font-sans text-rose-200">TIDAK ADA</span></div>`;
             }
 
             li.dataset.number = nomor;
             li.dataset.status = isInDb ? 'ada' : 'tidak';
-            
-            li.innerHTML = `<span class="tracking-wide font-bold">${nomor}</span>`;
             resultList.prepend(li);
         }
 
+        // Tombol Hapus / Reset Sesi Riwayat
+        btnClearHistory.addEventListener('click', () => {
+            if(scannedNumbers.size === 0) {
+                showToast("Riwayat sudah kosong.", "info");
+                return;
+            }
+            if(confirm("Yakin ingin menghapus semua riwayat sesi ini?")) {
+                scannedNumbers.clear();
+                scanHistoryData = [];
+                validCount = 0;
+                invalidCount = 0;
+                countValidSpan.innerText = "0";
+                countInvalidSpan.innerText = "0";
+                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-10">Belum ada resi yang dipindai hari ini</li>`;
+                showToast("Riwayat sesi berhasil dibersihkan.", "success");
+            }
+        });
+
         btnCopyValid.addEventListener('click', () => {
-            const validItems = resultList.querySelectorAll('li[data-status="ada"]');
+            const validItems = scanHistoryData.filter(item => item.status === 'VALID');
             if(validItems.length === 0) {
                 showToast("Tidak ada resi valid untuk disalin.", "error");
                 return;
             }
-            const validNumbers = Array.from(validItems).map(li => li.dataset.number);
+            const validNumbers = validItems.map(item => item.resi);
             navigator.clipboard.writeText(validNumbers.join('\n')).then(() => {
                 showToast(`Berhasil menyalin ${validNumbers.length} resi valid!`, "success");
             });
         });
 
         btnCopyInvalid.addEventListener('click', () => {
-            const invalidItems = resultList.querySelectorAll('li[data-status="tidak"]');
+            const invalidItems = scanHistoryData.filter(item => item.status === 'TIDAK VALID');
             if(invalidItems.length === 0) {
                 showToast("Tidak ada resi tidak valid untuk disalin.", "error");
                 return;
             }
-            const invalidNumbers = Array.from(invalidItems).map(li => li.dataset.number);
+            const invalidNumbers = invalidItems.map(item => item.resi);
             navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => {
                 showToast(`Berhasil menyalin ${invalidNumbers.length} resi tidak valid!`, "success");
             });
+        });
+
+        // Fitur Ekspor ke XLSX (Excel)
+        btnExportXlsx.addEventListener('click', () => {
+            if(scanHistoryData.length === 0) {
+                showToast("Belum ada data resi untuk diexport.", "error");
+                return;
+            }
+
+            const exportRows = scanHistoryData.map((item, idx) => ({
+                "No": idx + 1,
+                "Nomor Resi": item.resi,
+                "Nomor Invoice": item.invoice,
+                "Nama Toko": item.toko,
+                "Kurir Pickup": item.kurir,
+                "Nama Produk": item.produk,
+                "Status Scan": item.status,
+                "Waktu Scan": item.waktu
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi");
+
+            // Format nama file berdasarkan tanggal hari ini
+            const dateStr = new Date().toISOString().slice(0,10);
+            XLSX.writeFile(workbook, `Laporan_Resi_${dateStr}.xlsx`);
+            showToast("File XLSX berhasil diunduh!", "success");
         });
     </script>
 </body>
