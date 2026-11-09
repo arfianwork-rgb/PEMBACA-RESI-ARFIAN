@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Ekstraksi & Penyimpanan Nomor Order Massal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-md">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900">Ekstrak & Simpan Nomor Order (AI Vision)</h1>
+                    <p class="text-xs text-slate-500">Dibaca langsung oleh AI Vision untuk akurasi tinggi tanpa salah baca</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <button onclick="app.copyAllOrders()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    Salin (586/587)
+                </button>
+                <button onclick="app.exportCSV()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Ekspor CSV
+                </button>
+                <button onclick="app.clearAll()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-medium px-3 py-2 rounded-xl transition">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Panel: Upload Area -->
+        <div class="lg:col-span-1 space-y-6">
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Unggah Foto Resi
+                </h2>
+                
+                <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-6 text-center cursor-pointer transition bg-slate-50 hover:bg-blue-50/50 flex flex-col items-center justify-center relative">
+                    <input type="file" id="file-input" multiple accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                    <div class="bg-white p-3 rounded-full shadow-sm border border-slate-100 mb-3 text-blue-600">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    </div>
+                    <p class="text-sm font-medium text-slate-700">Seret foto ke sini atau <span class="text-blue-600 underline">pilih file</span></p>
+                    <p class="text-xs text-slate-400 mt-1">Mendukung upload massal (Banyak foto sekaligus)</p>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progress-container" class="mt-5 hidden space-y-2">
+                    <div class="flex justify-between text-xs font-medium text-slate-600">
+                        <span id="progress-status">Memproses gambar...</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistik Singkat -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-2 gap-4 text-center">
+                <div class="p-3 bg-blue-50 rounded-xl">
+                    <span class="block text-2xl font-bold text-blue-600" id="stat-total">0</span>
+                    <span class="text-xs text-slate-600 font-medium">Total Foto</span>
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-xl">
+                    <span class="block text-2xl font-bold text-emerald-600" id="stat-valid">0</span>
+                    <span class="text-xs text-slate-600 font-medium">Valid (586 / 587)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Data Table -->
+        <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[450px]">
+                
+                <!-- Table Header & Filters -->
+                <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <h3 class="font-semibold text-slate-800">Daftar Hasil Ekstraksi</h3>
+                        <span id="badge-count" class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-medium">0 item</span>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <select id="filter-status" onchange="app.filterTable()" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">Semua Status</option>
+                            <option value="valid">Valid (Diawali 586/587)</option>
+                            <option value="error">Perlu Cek (Kurang Jelas)</option>
+                        </select>
+                        <input type="text" id="search-input" oninput="app.filterTable()" placeholder="Cari nomor order..." class="text-xs border border-slate-300 rounded-xl px-3 py-2 w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Table Content -->
+                <div class="overflow-x-auto flex-grow">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                <th class="p-3.5">Pratinjau</th>
+                                <th class="p-3.5">Nama File</th>
+                                <th class="p-3.5">Nomor Order (586 / 587)</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Data rows will be inserted here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="flex flex-col items-center justify-center p-12 text-center my-auto">
+                    <div class="bg-slate-100 p-4 rounded-full text-slate-400 mb-3">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                    </div>
+                    <p class="text-sm font-medium text-slate-600">Belum ada foto yang diunggah</p>
+                    <p class="text-xs text-slate-400 mt-1">Silakan pilih atau seret foto resi Anda ke area sebelah kiri.</p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-28 opacity-0 transition-all duration-300 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
+        <span id="toast-msg">Berhasil disalin!</span>
+    </div>
+
+    <!-- Script Utama -->
+    <script>
+        class BulkOrderExtractor {
+            constructor() {
+                this.items = [];
+                this.initEventListeners();
+            }
+
+            initEventListeners() {
+                const dropZone = document.getElementById('drop-zone');
+                const fileInput = document.getElementById('file-input');
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        dropZone.classList.add('border-blue-500', 'bg-blue-50/50');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        dropZone.classList.remove('border-blue-500', 'bg-blue-50/50');
+                    }, false);
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) this.handleFiles(files);
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    const files = e.target.files;
+                    if (files.length > 0) this.handleFiles(files);
+                    fileInput.value = '';
+                });
+            }
+
+            async handleFiles(files) {
+                const progressContainer = document.getElementById('progress-container');
+                const progressBar = document.getElementById('progress-bar');
+                const progressStatus = document.getElementById('progress-status');
+                const progressPercent = document.getElementById('progress-percent');
+
+                progressContainer.classList.remove('hidden');
+                
+                const fileArray = Array.from(files || []).filter(file => file && (file.type ? file.type.startsWith('image/') : true));
+                const totalFiles = fileArray.length;
+
+                if (totalFiles === 0) {
+                    this.showToast('Tidak ada file gambar yang valid dipilih!');
+                    progressContainer.classList.add('hidden');
+                    return;
+                }
+
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = fileArray[i];
+                    const percent = Math.round(((i) / totalFiles) * 100);
+                    progressBar.style.width = `${percent}%`;
+                    progressPercent.textContent = `${percent}%`;
+                    progressStatus.textContent = `AI sedang membaca (${i + 1}/${totalFiles}): ${file.name || 'Gambar'}`;
+
+                    try {
+                        const result = await this.processImageWithAI(file);
+                        this.items.push(result);
+                    } catch (err) {
+                        console.error('Error AI Vision:', err);
+                        this.items.push({
+                            id: Date.now() + Math.random(),
+                            name: file.name || 'unknown.jpg',
+                            url: URL.createObjectURL(file),
+                            orderNumber: '',
+                            isValid: false,
+                            status: 'error'
+                        });
+                    }
+                    this.updateUI();
+                }
+
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                progressStatus.textContent = 'Selesai dibaca AI!';
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 1500);
+            }
+
+            async fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64String = reader.result.split(',')[1];
+                        resolve(base64String);
+                    };
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            async fetchWithRetry(url, options, maxRetries = 3) {
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const response = await fetch(url, options);
+                        if (response.status === 429) {
+                            // Exponential backoff jika server Google sibuk (Throttling)
+                            const delay = Math.pow(2, i) * 1000;
+                            await new Promise(r => setTimeout(r, delay));
+                            continue;
+                        }
+                        return response;
+                    } catch (error) {
+                        if (i === maxRetries - 1) throw error;
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(r => setTimeout(r, delay));
+                    }
+                }
+            }
+
+            async processImageWithAI(file) {
+                const originalUrl = URL.createObjectURL(file);
+                const base64Data = await this.fileToBase64(file);
+                let mimeType = file.type || 'image/jpeg';
+
+                // Memperbaiki prompt agar lebih tahan banting dan mencakup 586 maupun 587
+                const prompt = "Ekstrak nomor pesanan dari gambar resi pengiriman ini. Nomor tersebut selalu diawali dengan angka '586' atau '587' dan memiliki total 18 digit. Jawab HANYA dengan 18 digit angka tersebut tanpa tambahan spasi, titik, atau huruf. Jika tidak ada, jawab NOT_FOUND.";
+
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: mimeType,
+                                        data: base64Data
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                };
+
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                let orderNumber = '';
+                try {
+                    const response = await this.fetchWithRetry(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        let textResp = candidate.content.parts[0].text;
+                        // Bersihkan semua karakter selain angka
+                        let cleanNumbers = textResp.replace(/[^0-9]/g, '');
+                        
+                        // Cari pola yang diawali 586 atau 587 dan diikuti 15 angka (total 18 digit)
+                        const match = cleanNumbers.match(/58[67]\d{15}/);
+                        if (match) {
+                            orderNumber = match[0];
+                        }
+                    }
+                } catch (e) {
+                    console.warn('API Gemini error:', e);
+                }
+
+                // TIER 2: Fallback ke Tesseract OCR lokal jika AI Gemini gagal atau tidak menemukan nomor
+                if (!orderNumber && window.Tesseract) {
+                    console.log('Gemini gagal membaca utuh, mencoba Tesseract OCR cadangan...');
+                    try {
+                        const workerResult = await Tesseract.recognize(file, 'eng');
+                        const cleanText = workerResult.data.text.replace(/[^0-9]/g, '');
+                        const match = cleanText.match(/58[67]\d{15}/);
+                        if (match) {
+                            orderNumber = match[0];
+                        }
+                    } catch (err) {
+                        console.warn('Tesseract fallback error:', err);
+                    }
+                }
+
+                // TIER 3: Fallback ke nama file jika semua AI gagal
+                if (!orderNumber) {
+                    const cleanFileName = (file.name || '').replace(/[^0-9]/g, '');
+                    const fileMatch = cleanFileName.match(/58[67]\d{15}/);
+                    if (fileMatch) {
+                        orderNumber = fileMatch[0];
+                    }
+                }
+
+                const isValid = (orderNumber.startsWith('586') || orderNumber.startsWith('587')) && orderNumber.length === 18;
+
+                return {
+                    id: Date.now() + Math.random(),
+                    name: file.name || 'foto_resi.jpg',
+                    url: originalUrl,
+                    orderNumber: orderNumber,
+                    isValid: isValid,
+                    status: isValid ? 'valid' : 'error'
+                };
+            }
+
+            updateUI() {
+                const tableBody = document.getElementById('table-body');
+                const emptyState = document.getElementById('empty-state');
+                const badgeCount = document.getElementById('badge-count');
+                const statTotal = document.getElementById('stat-total');
+                const statValid = document.getElementById('stat-valid');
+
+                const filterStatus = document.getElementById('filter-status').value;
+                const searchQuery = document.getElementById('search-input').value.toLowerCase();
+
+                const filteredItems = this.items.filter(item => {
+                    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+                    const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.orderNumber.toLowerCase().includes(searchQuery);
+                    return matchesStatus && matchesSearch;
+                });
+
+                statTotal.textContent = this.items.length;
+                statValid.textContent = this.items.filter(i => i.isValid).length;
+                badgeCount.textContent = `${filteredItems.length} item`;
+
+                if (this.items.length === 0) {
+                    tableBody.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                    return;
+                }
+
+                emptyState.classList.remove('flex');
+                emptyState.classList.add('hidden');
+
+                tableBody.innerHTML = filteredItems.map(item => `
+                    <tr class="hover:bg-slate-50/80 transition border-b border-slate-100">
+                        <td class="p-3.5 w-16">
+                            <img src="${item.url}" alt="Resi" class="w-12 h-12 object-cover rounded-xl border border-slate-200 cursor-pointer shadow-sm hover:scale-105 transition" onclick="window.open('${item.url}', '_blank')">
+                        </td>
+                        <td class="p-3.5 text-slate-700 font-medium text-xs max-w-[180px] truncate" title="${item.name}">${item.name}</td>
+                        <td class="p-3.5">
+                            <div class="flex flex-col gap-1">
+                                <input type="text" value="${item.orderNumber}" onchange="app.updateOrderNumber('${item.id}', this.value)" class="text-xs border ${item.isValid ? 'border-slate-300 bg-white text-slate-800' : 'border-rose-300 bg-rose-50 text-rose-700'} rounded-lg px-2.5 py-1.5 w-44 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="18 digit (586/587...)">
+                                <span class="text-[10px] ${item.isValid ? 'text-slate-400' : 'text-rose-500 font-semibold'}">Panjang: ${item.orderNumber.length}/18 digit</span>
+                            </div>
+                        </td>
+                        <td class="p-3.5">
+                            ${item.isValid 
+                                ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Valid</span>' 
+                                : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">Perlu Cek</span>'
+                            }
+                        </td>
+                        <td class="p-3.5 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="app.copyText('${item.orderNumber}')" class="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition" title="Salin Nomor">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                </button>
+                                <button onclick="app.deleteItem('${item.id}')" class="p-1.5 hover:bg-rose-100 rounded-lg text-rose-600 transition" title="Hapus">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            updateOrderNumber(id, newValue) {
+                const item = this.items.find(i => i.id == id);
+                if (item) {
+                    item.orderNumber = newValue.trim();
+                    item.isValid = (item.orderNumber.startsWith('586') || item.orderNumber.startsWith('587')) && item.orderNumber.length === 18;
+                    item.status = item.isValid ? 'valid' : 'error';
+                    this.updateUI();
+                }
+            }
+
+            deleteItem(id) {
+                this.items = this.items.filter(i => i.id != id);
+                this.updateUI();
+                this.showToast('Item berhasil dihapus');
+            }
+
+            clearAll() {
+                if (this.items.length === 0) {
+                    this.showToast('Daftar sudah kosong.');
+                    return;
+                }
+                this.items = [];
+                this.updateUI();
+                this.showToast('Semua data berhasil dibersihkan.');
+            }
+
+            filterTable() {
+                this.updateUI();
+            }
+
+            copyText(text) {
+                if (!text) {
+                    this.showToast('Tidak ada nomor order untuk disalin!');
+                    return;
+                }
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    this.showToast(`Berhasil disalin: ${text}`);
+                } catch (err) {
+                    this.showToast('Gagal menyalin teks');
+                }
+                document.body.removeChild(textarea);
+            }
+
+            copyAllOrders() {
+                const validOrders = this.items
+                    .filter(item => item.orderNumber)
+                    .map(item => item.orderNumber.trim());
+
+                if (validOrders.length === 0) {
+                    this.showToast('Tidak ada nomor order untuk disalin!');
+                    return;
+                }
+
+                // Hanya menyalin deretan nomor order secara bersih tersusun vertikal
+                const textToCopy = validOrders.join('\n');
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    this.showToast(`Berhasil menyalin ${validOrders.length} nomor order!`);
+                } catch (err) {
+                    this.showToast('Gagal menyalin data');
+                }
+                document.body.removeChild(textarea);
+            }
+
+            exportCSV() {
+                if (this.items.length === 0) {
+                    this.showToast('Belum ada data untuk diekspor!');
+                    return;
+                }
+
+                let csvContent = 'Nama File,Nomor Order,Status\n';
+                this.items.forEach(item => {
+                    csvContent += `"${item.name}","${item.orderNumber}","${item.isValid ? 'Valid' : 'Perlu Cek'}"\n`;
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('href', url);
+                a.setAttribute('download', `rekap_order_resi_${new Date().toISOString().slice(0,10)}.csv`);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                this.showToast('File CSV berhasil diunduh!');
+            }
+
+            showToast(message) {
+                const toast = document.getElementById('toast');
+                const toastMsg = document.getElementById('toast-msg');
+                toastMsg.textContent = message;
+                toast.classList.remove('translate-y-28', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-28', 'opacity-0');
+                }, 3000);
+            }
+        }
+
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new BulkOrderExtractor();
+        });
+    </script>
+</body>
+</html>
