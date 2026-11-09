@@ -158,8 +158,6 @@
 
     <script>
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
-        
-        // Link Web App Google Apps Script Anda yang terhubung otomatis ke Kolom E
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3cPX9zs1ypKEl1jvNqcI14ggKyGXQQuNNyP_VfiC9CTSoMpjAtIdTQWtHzoSotHBR/exec"; 
 
         const video = document.getElementById('video');
@@ -424,7 +422,6 @@
                     updateRemainingDisplay(); 
                     lastScannedNumber.innerText = num;
                     
-                    // Mengirim sinyal otomatis ke Google Apps Script untuk mengubah Kolom E menjadi "Berhasil Scan"
                     if(APPS_SCRIPT_URL && isInDb) {
                         fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, { mode: 'no-cors' }).catch(e => console.log(e));
                     }
