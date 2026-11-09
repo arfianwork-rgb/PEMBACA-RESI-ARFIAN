@@ -433,9 +433,15 @@
 
                     lastScannedNumber.innerText = num;
                     
+                    // Mengirim sinyal update ke Google Sheets secara asynchronous
                     if(APPS_SCRIPT_URL && isInDb) {
-                        const updateTrigger = new Image();
-                        updateTrigger.src = `${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan&t=${new Date().getTime()}`;
+                        fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, {
+                            method: 'GET',
+                            redirect: 'follow'
+                        })
+                        .then(response => response.text())
+                        .then(result => console.log("Update Google Sheets Berhasil:", result))
+                        .catch(error => console.log("Gagal Update:", error));
                     }
 
                     if(isInDb) {
