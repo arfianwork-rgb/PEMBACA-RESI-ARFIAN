@@ -451,7 +451,6 @@
             });
         });
 
-        // FITUR BARU: Menampilkan & Menyalin Resi yang Belum Discan dari Database
         btnCheckRemaining.addEventListener('click', () => {
             if(masterDatabase.size === 0) {
                 showToast("Database belum termuat.", "error");
@@ -487,7 +486,6 @@
                 resultList.appendChild(li);
             });
 
-            // Otomatis salin daftar resi yang belum diskan ke clipboard agar mudah diproses
             navigator.clipboard.writeText(justNumbers.join('\n')).then(() => {
                 showToast(`Menampilkan ${remainingList.length} resi belum diskan (Tersalin ke Clipboard)!`, "success");
             });
