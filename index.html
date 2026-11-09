@@ -158,8 +158,8 @@
 
     <script>
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmpw1m-seyf7ti699vmtQp32qSP8P1Ql2Ce8jtCdp5OWlUWWoUhvpd4WzjboBFHZtv/exec";
-        
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3cPX9zs1ypKEl1jvNqcI14ggKyGXQQuNNyP_VfiC9CTSoMpjAtIdTQWtHzoSotHBR/exec"; 
+
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const resultList = document.getElementById('result-list');
@@ -393,35 +393,38 @@
                         isInDb = true; 
                     }
 
-                    if (scannedNumbers.has(num)) {
+                    let isAlreadyScanned = scannedNumbers.has(num);
+
+                    if (isAlreadyScanned) {
                         playSound('warn');
                         lastScannedNumber.innerText = num;
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-bold">⚠️ SUDAH PERNAH DI-SCAN</span>`;
-                        showToast(`Resi ${num} sudah pernah di-scan sebelumnya!`, "warn");
-                        return;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-bold">🔄 RESI DI-SCAN ULANG</span>`;
+                        showToast(`Resi ${num} di-scan ulang, memperbarui status Spreadsheet...`, "warn");
+                    } else {
+                        scannedNumbers.add(num);
+                        if (isInDb) {
+                            validCount++;
+                            countValidSpan.innerText = validCount;
+                        }
+
+                        scanHistoryData.unshift({
+                            resi: num,
+                            invoice: num,
+                            toko: meta.toko,
+                            kurir: meta.kurir,
+                            produk: meta.produk,
+                            status: isInDb ? 'VALID' : 'TIDAK VALID',
+                            waktu: new Date().toLocaleTimeString()
+                        });
+
+                        saveToLocalStorage();
+                        renderHistoryList();
+                        updateRemainingDisplay(); 
                     }
 
-                    scannedNumbers.add(num);
-                    if (isInDb) {
-                        validCount++;
-                        countValidSpan.innerText = validCount;
-                    }
-
-                    scanHistoryData.unshift({
-                        resi: num,
-                        invoice: num,
-                        toko: meta.toko,
-                        kurir: meta.kurir,
-                        produk: meta.produk,
-                        status: isInDb ? 'VALID' : 'TIDAK VALID',
-                        waktu: new Date().toLocaleTimeString()
-                    });
-
-                    saveToLocalStorage();
-                    renderHistoryList();
-                    updateRemainingDisplay(); 
                     lastScannedNumber.innerText = num;
                     
+                    // Mengirim sinyal otomatis ke Google Apps Script untuk update Kolom E (meskipun di-scan ulang)
                     if(APPS_SCRIPT_URL && isInDb) {
                         fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, { mode: 'no-cors' }).catch(e => console.log(e));
                     }
