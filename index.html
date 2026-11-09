@@ -11,8 +11,8 @@
     <style> 
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            touch-action: pan-x pan-y; /* Mencegah geseran multi-touch bawaan browser */
-            -webkit-text-size-adjust: 100%; /* Mencegah teks otomatis membesar di HP tertentu */
+            touch-action: pan-x pan-y; 
+            -webkit-text-size-adjust: 100%; 
         } 
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
@@ -123,12 +123,12 @@
         </div>
     </div>
 
-    <!-- Halaman Login USER (Tersembunyi secara Default) -->
-    <div id="login-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
+    <!-- Halaman Login USER (Wajib di awal jika belum login) -->
+    <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
                 <h2 class="text-lg font-extrabold text-white tracking-tight">LOGIN USER</h2>
-                <p class="text-xs text-slate-400">Masukkan User ID dan Password untuk melanjutkan</p>
+                <p class="text-xs text-slate-400">Masukkan User ID dan Password untuk mengakses aplikasi</p>
             </div>
 
             <div class="space-y-3">
@@ -142,19 +142,16 @@
                 </div>
             </div>
 
-            <div class="flex gap-2 pt-2">
-                <button id="btn-submit-login" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
-                    Masuk
-                </button>
-                <button id="btn-close-login" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition border border-slate-700">
-                    Batal
+            <div class="pt-2">
+                <button id="btn-submit-login" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
+                    Masuk ke Aplikasi
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar Mengambang -->
-    <nav class="fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
+    <!-- Bottom Navigation Bar Mengambang (Disembunyikan jika belum login) -->
+    <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">SYNC</span>
             <span class="text-[9px] font-bold tracking-wider uppercase">Muat Ulang</span>
@@ -203,24 +200,14 @@
     <div id="toast-container" class="fixed bottom-24 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
-        // Mencegah Gestur Pinch-to-Zoom (Cubit dua jari) pada perangkat mobile modern
-        document.addEventListener('gesturestart', function (e) {
-            e.preventDefault();
-        });
-        document.addEventListener('gesturechange', function (e) {
-            e.preventDefault();
-        });
-        document.addEventListener('gestureend', function (e) {
-            e.preventDefault();
-        });
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+        document.addEventListener('gestureend', function (e) { e.preventDefault(); });
 
-        // Mencegah Double Tap to Zoom (ketuk dua kali layar)
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function (event) {
             let now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
+            if (now - lastTouchEnd <= 300) { event.preventDefault(); }
             lastTouchEnd = now;
         }, false);
 
@@ -241,7 +228,7 @@
         
         const mainDashboard = document.getElementById('main-dashboard');
         const cameraWrapper = document.getElementById('camera-wrapper');
-        const bottomNav = document.querySelector('nav');
+        const bottomNav = document.getElementById('bottom-nav');
         
         const btnStart = document.getElementById('btn-start-camera');
         const btnScan = document.getElementById('btn-scan');
@@ -257,7 +244,6 @@
         
         const loginWrapper = document.getElementById('login-wrapper');
         const btnOpenLogin = document.getElementById('btn-open-login');
-        const btnCloseLogin = document.getElementById('btn-close-login');
         const btnSubmitLogin = document.getElementById('btn-submit-login');
         const loginUseridInput = document.getElementById('login-userid');
         const loginPassInput = document.getElementById('login-pass');
@@ -275,21 +261,33 @@
         let masterDatabase = new Map(); 
         const orderRegex = /58[67]\d{15}/g; 
 
-        if(currentUser) {
-            navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+        // CEK STATUS LOGIN SAAT HALAMAN DIMUAT
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentUser) {
+                // Jika sudah login sebelumnya
+                navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                loginWrapper.classList.add('hidden');
+                mainDashboard.classList.remove('hidden');
+                bottomNav.classList.remove('hidden');
+                autoSyncDatabase();
+            } else {
+                // Jika belum login, kunci/sembunyikan dashboard utama dan tampilkan form login
+                loginWrapper.classList.remove('hidden');
+                mainDashboard.classList.add('hidden');
+                bottomNav.classList.add('hidden');
+            }
+            if(countValidSpan) countValidSpan.innerText = validCount;
+            renderHistoryList();
+        });
+
+        // Tombol Buka Menu Ganti/Cek Akun dari Navigasi Bawah
+        if(btnOpenLogin) {
+            btnOpenLogin.addEventListener('click', () => {
+                loginWrapper.classList.remove('hidden');
+                mainDashboard.classList.add('hidden');
+                bottomNav.classList.add('hidden');
+            });
         }
-
-        btnOpenLogin.addEventListener('click', () => {
-            loginWrapper.classList.remove('hidden');
-            mainDashboard.classList.add('hidden');
-            bottomNav.classList.add('hidden');
-        });
-
-        btnCloseLogin.addEventListener('click', () => {
-            loginWrapper.classList.add('hidden');
-            mainDashboard.classList.remove('hidden');
-            bottomNav.classList.remove('hidden');
-        });
 
         btnSubmitLogin.addEventListener('click', () => {
             let uid = loginUseridInput.value.trim();
@@ -308,9 +306,12 @@
             loginUseridInput.value = '';
             loginPassInput.value = '';
 
+            // Buka kunci aplikasi setelah berhasil login
             loginWrapper.classList.add('hidden');
             mainDashboard.classList.remove('hidden');
             bottomNav.classList.remove('hidden');
+            
+            autoSyncDatabase();
         });
 
         function showToast(message, type = 'info') {
@@ -421,12 +422,6 @@
                 showToast("Gagal terhubung ke Google Sheets", "error");
             }
         }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            autoSyncDatabase();
-            if(countValidSpan) countValidSpan.innerText = validCount;
-            renderHistoryList();
-        });
 
         searchHistory.addEventListener('input', (e) => {
             renderHistoryList(e.target.value);
