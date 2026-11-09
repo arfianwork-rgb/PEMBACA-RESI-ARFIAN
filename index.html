@@ -159,12 +159,8 @@
     <script>
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
         
-        // Opsional: Jika Anda nanti membuat Google Apps Script Web App untuk simpan 2-arah, masukkan URL-nya di sini
-
-        // Masukkan link Web App Anda di sini:
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3cPX9zs1ypKEl1jvNqcI14ggKyGXQQuNNyP_VfiC9CTSoMpjAtIdTQWtHzoSotHBR/exec";
-        
-        const APPS_SCRIPT_URL = ""; 
+        // Link Web App Google Apps Script Anda yang terhubung otomatis ke Kolom E
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3cPX9zs1ypKEl1jvNqcI14ggKyGXQQuNNyP_VfiC9CTSoMpjAtIdTQWtHzoSotHBR/exec"; 
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -232,14 +228,12 @@
             }, 3000);
         }
 
-        // Simpan state ke LocalStorage
         function saveToLocalStorage() {
             localStorage.setItem('v3_scannedNumbers', JSON.stringify(Array.from(scannedNumbers)));
             localStorage.setItem('v3_scanHistoryData', JSON.stringify(scanHistoryData));
             localStorage.setItem('v3_validCount', validCount.toString());
         }
 
-        // Render ulang daftar riwayat ke layar dengan dukungan Filter Pencarian
         function renderHistoryList(filterQuery = '') {
             resultList.innerHTML = '';
             const filteredData = scanHistoryData.filter(item => 
@@ -430,9 +424,9 @@
                     updateRemainingDisplay(); 
                     lastScannedNumber.innerText = num;
                     
-                    // Sinkronisasi opsional ke Google Apps Script (2-arah) jika URL diisi
-                    if(APPS_SCRIPT_URL) {
-                        fetch(APPS_SCRIPT_URL + `?resi=${num}&status=Berhasil Scan`, { mode: 'no-cors' }).catch(e => console.log(e));
+                    // Mengirim sinyal otomatis ke Google Apps Script untuk mengubah Kolom E menjadi "Berhasil Scan"
+                    if(APPS_SCRIPT_URL && isInDb) {
+                        fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, { mode: 'no-cors' }).catch(e => console.log(e));
                     }
 
                     if(isInDb) {
@@ -440,7 +434,7 @@
                         lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-bold">✔ ADA (${meta.toko})</span>`;
                     } else {
                         playSound('error');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1 rounded-bold">✖ TIDAK ADA</span>`;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-400 px-3 py-1 rounded-bold">✖ TIDAK ADA</span>`;
                     }
                 } else {
                     playSound('error');
