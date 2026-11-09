@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    <!-- Halaman Login USER (Wajib Database ID & Password) -->
+    <!-- Halaman Login USER (Hanya muncul saat pertama kali akses atau belum login) -->
     <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
@@ -150,6 +150,36 @@
         </div>
     </div>
 
+    <!-- Halaman Ubah Password (Muncul saat tombol Akun/USER di bawah ditekan) -->
+    <div id="changepass-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
+            <div class="text-center space-y-1">
+                <h2 class="text-lg font-extrabold text-white tracking-tight">UBAH PASSWORD</h2>
+                <p class="text-xs text-slate-400">Perbarui kata sandi akun <span id="current-user-display" class="text-cyan-400 font-bold"></span></p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password Lama</label>
+                    <input type="password" id="old-pass" placeholder="Masukkan password lama..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password Baru</label>
+                    <input type="password" id="new-pass" placeholder="Masukkan password baru..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button id="btn-submit-changepass" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
+                    Simpan
+                </button>
+                <button id="btn-close-changepass" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition border border-slate-700">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation Bar Mengambang -->
     <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
@@ -161,7 +191,7 @@
             <span class="text-xs font-extrabold bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/40 border border-cyan-300/30 uppercase tracking-widest">PINDAI</span>
         </button>
 
-        <button id="btn-open-login" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
+        <button id="btn-open-changepass" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
             <span id="nav-user-label" class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
             <span class="text-[9px] font-bold tracking-wider uppercase">Akun</span>
         </button>
@@ -211,13 +241,12 @@
             lastTouchEnd = now;
         }, false);
 
-        // DATABASE USER & PASSWORD RESMI
-        // Anda dapat menambah, mengubah, atau menghapus daftar akun di bawah ini
-        const validUsers = {
+        // DATABASE USER & PASSWORD (Tersimpan di localStorage agar perubahan password bersifat permanen pada perangkat)
+        let validUsers = JSON.parse(localStorage.getItem('v3_validUsers') || JSON.stringify({
             "fian": "paiko098",
             "admin": "admin123",
             "march": "123456"
-        };
+        }));
 
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzi1p28Rln8jTUB5crnNQ-MNsAcYFkZ1HPA68mjLjj_otb-wgIy6fTcTtGmvTEAG2Ib/exec"; 
@@ -251,12 +280,20 @@
         const btnClearHistory = document.getElementById('btn-clear-history');
         
         const loginWrapper = document.getElementById('login-wrapper');
-        const btnOpenLogin = document.getElementById('btn-open-login');
         const btnSubmitLogin = document.getElementById('btn-submit-login');
         const loginUseridInput = document.getElementById('login-userid');
         const loginPassInput = document.getElementById('login-pass');
+        
+        // Elemen Ubah Password
+        const changepassWrapper = document.getElementById('changepass-wrapper');
+        const btnOpenChangepass = document.getElementById('btn-open-changepass');
+        const btnCloseChangepass = document.getElementById('btn-close-changepass');
+        const btnSubmitChangepass = document.getElementById('btn-submit-changepass');
+        const oldPassInput = document.getElementById('old-pass');
+        const newPassInput = document.getElementById('new-pass');
+        const currentUserDisplay = document.getElementById('current-user-display');
+        
         const navUserLabel = document.getElementById('nav-user-label');
-
         const dbStatus = document.getElementById('db-status');
         const lastScannedNumber = document.getElementById('last-scanned-number');
         const lastScannedBadge = document.getElementById('last-scanned-badge');
@@ -273,6 +310,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             if (currentUser && validUsers[currentUser]) {
                 navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                currentUserDisplay.innerText = currentUser;
                 loginWrapper.classList.add('hidden');
                 mainDashboard.classList.remove('hidden');
                 bottomNav.classList.remove('hidden');
@@ -287,15 +325,43 @@
             renderHistoryList();
         });
 
-        if(btnOpenLogin) {
-            btnOpenLogin.addEventListener('click', () => {
-                loginWrapper.classList.remove('hidden');
-                mainDashboard.classList.add('hidden');
-                bottomNav.classList.add('hidden');
+        // TOMBOL BAWAH: Buka Menu Ubah Password
+        if(btnOpenChangepass) {
+            btnOpenChangepass.addEventListener('click', () => {
+                currentUserDisplay.innerText = currentUser;
+                oldPassInput.value = '';
+                newPassInput.value = '';
+                changepassWrapper.classList.remove('hidden');
             });
         }
 
-        // PROSES VERIFIKASI LOGIN DENGAN DATABASE ID & PASSWORD
+        if(btnCloseChangepass) {
+            btnCloseChangepass.addEventListener('click', () => {
+                changepassWrapper.classList.add('hidden');
+            });
+        }
+
+        // PROSES SIMPAN PERUBAHAN PASSWORD
+        btnSubmitChangepass.addEventListener('click', () => {
+            let oldPass = oldPassInput.value.trim();
+            let newPass = newPassInput.value.trim();
+
+            if(!oldPass || !newPass) {
+                showToast("Password lama dan baru harus diisi", "error");
+                return;
+            }
+
+            if(validUsers[currentUser] === oldPass) {
+                validUsers[currentUser] = newPass;
+                localStorage.setItem('v3_validUsers', JSON.stringify(validUsers));
+                showToast("Password berhasil diperbarui!", "success");
+                changepassWrapper.classList.add('hidden');
+            } else {
+                showToast("Password lama salah!", "error");
+            }
+        });
+
+        // PROSES VERIFIKASI LOGIN
         btnSubmitLogin.addEventListener('click', () => {
             let uid = loginUseridInput.value.trim().toLowerCase();
             let pass = loginPassInput.value.trim();
@@ -305,11 +371,11 @@
                 return;
             }
 
-            // Periksa kecocokan dengan database internal
             if (validUsers[uid] && validUsers[uid] === pass) {
                 currentUser = uid;
                 localStorage.setItem('v3_currentUser', currentUser);
                 navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                currentUserDisplay.innerText = currentUser;
                 
                 showToast(`Login berhasil, selamat datang ${currentUser}!`, "success");
                 loginUseridInput.value = '';
