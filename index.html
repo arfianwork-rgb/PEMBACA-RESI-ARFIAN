@@ -9,6 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Plus Jakarta Sans', sans-serif; } 
+        /* Animasi halus untuk toast notification */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-animate {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden">
@@ -107,12 +115,16 @@
         </footer>
     </main>
 
+    <!-- Custom Toast Notification Container (Pengganti Popup Bawaan Browser) -->
+    <div id="toast-container" class="fixed bottom-5 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
+
     <script>
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSEDsXuDSQyUoOSHH9_S_em73jCM2iYIlbBo9_A_B8EzHoLye9_TuYJqld9pcehq6iWb8qHQrRVjj4o/pub?output=csv";
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const resultList = document.getElementById('result-list');
+        const toastContainer = document.getElementById('toast-container');
         
         const countValidSpan = document.getElementById('count-valid');
         const countInvalidSpan = document.getElementById('count-invalid');
@@ -138,6 +150,33 @@
         let invalidCount = 0;
         let masterDatabase = new Set();
         const orderRegex = /58[67]\d{15}/g; 
+
+        // Fungsi Custom Toast Notification yang Elegan
+        function showToast(message, type = 'info') {
+            toastContainer.innerHTML = ''; // Hapus toast sebelumnya jika ada
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-animate pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold backdrop-blur-xl transition-all max-w-sm w-full`;
+            
+            if(type === 'success') {
+                toast.className += ` bg-emerald-950/90 border-emerald-500/50 text-emerald-200`;
+                toast.innerHTML = `<span class="text-base">✨</span> <span>${message}</span>`;
+            } else if(type === 'error') {
+                toast.className += ` bg-rose-950/90 border-rose-500/50 text-rose-200`;
+                toast.innerHTML = `<span class="text-base">⚠️</span> <span>${message}</span>`;
+            } else {
+                toast.className += ` bg-slate-900/90 border-slate-700 text-slate-200`;
+                toast.innerHTML = `<span class="text-base">📌</span> <span>${message}</span>`;
+            }
+            
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
         // Sinkronisasi otomatis Google Sheets CSV
         async function autoSyncDatabase() {
@@ -304,33 +343,29 @@
             resultList.prepend(li);
         }
 
-        // Tombol Salin Resi Valid (✔ ADA)
+        // Tombol Salin Resi Valid (✔ ADA) dengan Custom Toast
         btnCopyValid.addEventListener('click', () => {
             const validItems = resultList.querySelectorAll('li[data-status="ada"]');
             if(validItems.length === 0) {
-                alert("Tidak ada resi valid untuk disalin.");
+                showToast("Tidak ada resi valid untuk disalin.", "error");
                 return;
             }
             const validNumbers = Array.from(validItems).map(li => li.dataset.number);
             navigator.clipboard.writeText(validNumbers.join('\n')).then(() => {
-                const textAsli = btnCopyValid.innerText;
-                btnCopyValid.innerText = `✔ Tersalin (${validNumbers.length})`;
-                setTimeout(() => { btnCopyValid.innerText = textAsli; }, 2000);
+                showToast(`Berhasil menyalin ${validNumbers.length} resi valid!`, "success");
             });
         });
 
-        // Tombol Salin Resi Tidak Valid (✖ TIDAK ADA)
+        // Tombol Salin Resi Tidak Valid (✖ TIDAK ADA) dengan Custom Toast
         btnCopyInvalid.addEventListener('click', () => {
             const invalidItems = resultList.querySelectorAll('li[data-status="tidak"]');
             if(invalidItems.length === 0) {
-                alert("Tidak ada resi tidak valid untuk disalin.");
+                showToast("Tidak ada resi tidak valid untuk disalin.", "error");
                 return;
             }
             const invalidNumbers = Array.from(invalidItems).map(li => li.dataset.number);
             navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => {
-                const textAsli = btnCopyInvalid.innerText;
-                btnCopyInvalid.innerText = `✔ Tersalin (${invalidNumbers.length})`;
-                setTimeout(() => { btnCopyInvalid.innerText = textAsli; }, 2000);
+                showToast(`Berhasil menyalin ${invalidNumbers.length} resi tidak valid!`, "success");
             });
         });
     </script>
