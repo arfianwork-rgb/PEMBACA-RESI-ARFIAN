@@ -2,551 +2,242 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Database Resi v3.3 Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Resi Pro - Offline First</title>
+    <!-- Tailwind CSS untuk Desain Modern -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
+    <!-- SheetJS untuk Ekspor Excel (.xlsx) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; } 
-        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .toast-animate { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .glass-panel { background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8)); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0B0F19; color: #F8FAFC; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden pb-28">
+<body class="min-h-screen pb-20">
 
-    <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
-        <div class="glass-panel px-4 py-3.5 rounded-3xl flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-extrabold text-xs tracking-wider">v3.3</div>
-                <div>
-                    <h1 class="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                        Database Resi <span class="text-[9px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Pro</span>
-                    </h1>
-                    <p id="db-status" class="text-[11px] text-amber-400/90 font-medium mt-0.5">Menghubungkan Google Sheets...</p>
-                </div>
+    <!-- Header -->
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <span class="text-xs bg-cyan-500/10 text-cyan-400 font-semibold px-2 py-0.5 rounded-full border border-cyan-500/20">v3.4 Lokal</span>
+                <h1 class="text-lg font-bold text-white mt-0.5">Database Resi</h1>
             </div>
-            <div class="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span class="text-[10px] font-bold text-emerald-300">Live Cloud</span>
+            <div id="sync-status" class="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="sync-text">Siap Digunakan</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto p-4 space-y-4">
+
+        <!-- Statistik Cards -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg">
+                <p class="text-xs text-slate-400 font-medium">SUDAH DISCAN</p>
+                <h2 id="count-scanned" class="text-3xl font-extrabold text-emerald-400 mt-1">0</h2>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg">
+                <p class="text-xs text-slate-400 font-medium">BELUM DISCAN</p>
+                <h2 id="count-unscanned" class="text-3xl font-extrabold text-amber-400 mt-1">0</h2>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3.5">
-            <div class="glass-panel p-4 rounded-3xl border-emerald-500/20 text-center relative overflow-hidden group">
-                <span class="block text-3xl font-black text-emerald-400 tracking-tight" id="count-valid">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold mt-1 block">Sudah Discan</span>
-            </div>
-            <div class="glass-panel p-4 rounded-3xl border-amber-500/20 text-center relative overflow-hidden group">
-                <span class="block text-3xl font-black text-amber-400 tracking-tight" id="count-remaining">0</span>
-                <span class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold mt-1 block">Belum Discan</span>
-            </div>
-        </div>
-
-        <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xs font-extrabold text-cyan-400 uppercase tracking-wider">Riwayat Sudah Discan</h3>
-                <div class="flex items-center gap-2">
-                    <label class="text-[11px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer bg-blue-500/10 px-3 py-1 rounded-xl border border-blue-500/20 transition active:scale-95">
-                        Galeri
-                        <input type="file" id="file-upload" accept="image/*" class="hidden">
-                    </label>
-                    <button id="btn-clear-history" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold underline bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/20 transition active:scale-95">Hapus Sesi</button>
-                </div>
-            </div>
-
-            <div class="relative">
-                <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
-            </div>
-
-            <div class="grid grid-cols-3 gap-2">
-                <button id="btn-copy-valid" class="bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">Salin Valid</button>
-                <button id="btn-export-xlsx" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">Export XLSX</button>
-                <button id="btn-copy-invalid" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">Invalid</button>
-            </div>
-
-            <ul id="result-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-48 overflow-y-auto border border-slate-800/80">
-                <li class="text-center text-slate-500 text-xs py-5">Belum ada resi yang dipindai hari ini</li>
-            </ul>
-        </div>
-
-        <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
-            <div class="grid grid-cols-2 gap-2">
-                <button id="btn-toggle-remaining" class="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">
-                    <span id="toggle-text">Cek Sisa Belum Discan</span>
+        <!-- Input / Scanner Section -->
+        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg space-y-3">
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Input / Scan Nomor Resi</label>
+            <div class="flex gap-2">
+                <input type="text" id="resi-input" autofocus placeholder="Scan atau ketik nomor resi..." 
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-cyan-500 transition">
+                <button onclick="processScan()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-5 py-3 rounded-xl text-sm transition shadow-lg shadow-cyan-600/20">
+                    Proses
                 </button>
-                <button id="btn-copy-remaining" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">Salin Semua Sisa</button>
-            </div>
-
-            <div id="remaining-container" class="hidden space-y-2 pt-2 border-t border-slate-800">
-                <ul id="remaining-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-40 overflow-y-auto border border-slate-800/80">
-                    <li class="text-center text-slate-500 text-xs py-4">Memuat data...</li>
-                </ul>
             </div>
         </div>
-    </div>
 
-    <!-- Halaman Login -->
-    <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
-        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
-            <div class="text-center space-y-1">
-                <h2 class="text-lg font-extrabold text-white tracking-tight">LOGIN USER</h2>
-                <p class="text-xs text-slate-400">Masukkan User ID dan Password terdaftar</p>
-            </div>
-            <div class="space-y-3">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID</label>
-                    <input type="text" id="login-userid" placeholder="Masukkan ID User..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                    <input type="password" id="login-pass" placeholder="Masukkan Password..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
-                </div>
-            </div>
-            <div class="pt-2">
-                <button id="btn-submit-login" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">Masuk ke Aplikasi</button>
+        <!-- Tombol Aksi & Export -->
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="exportToExcel()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                📥 Export ke XLSX
+            </button>
+            <button onclick="resetSession()" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-medium py-2.5 px-4 rounded-xl text-xs transition">
+                🗑️ Hapus Sesi Scan
+            </button>
+        </div>
+
+        <!-- Riwayat / Daftar Terakhir -->
+        <div class="space-y-2">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">Riwayat Scan Terbaru</h3>
+            <div id="scan-history" class="space-y-2">
+                <!-- Log item akan muncul di sini secara dinamis -->
+                <div class="text-center py-6 text-slate-500 text-xs">Belum ada resi yang dipindai pada sesi ini.</div>
             </div>
         </div>
-    </div>
 
-    <!-- Menu Pilihan Akun -->
-    <div id="account-menu-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
-        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-4 shadow-2xl border border-slate-800 text-center">
-            <div class="space-y-1">
-                <h2 class="text-lg font-extrabold text-white tracking-tight">PENGATURAN AKUN</h2>
-                <p class="text-xs text-slate-400">Masuk sebagai: <span id="menu-user-display" class="text-cyan-400 font-bold uppercase"></span></p>
-            </div>
-            <div class="space-y-2 pt-2">
-                <button id="btn-goto-changepass" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold py-3 px-4 rounded-2xl transition border border-slate-700 text-xs uppercase tracking-wider">Ubah Password</button>
-                <button id="btn-logout" class="w-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold py-3 px-4 rounded-2xl transition text-xs uppercase tracking-wider">Logout (Keluar Akun)</button>
-                <button id="btn-close-menu" class="w-full bg-transparent hover:bg-slate-900 text-slate-400 font-semibold py-2.5 px-4 rounded-2xl transition text-xs">Tutup</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Halaman Ubah Password -->
-    <div id="changepass-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
-        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
-            <div class="text-center space-y-1">
-                <h2 class="text-lg font-extrabold text-white tracking-tight">UBAH PASSWORD</h2>
-                <p class="text-xs text-slate-400">Perbarui kata sandi akun <span id="current-user-display" class="text-cyan-400 font-bold uppercase"></span></p>
-            </div>
-            <div class="space-y-3">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password Lama</label>
-                    <input type="password" id="old-pass" placeholder="Masukkan password lama..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password Baru</label>
-                    <input type="password" id="new-pass" placeholder="Masukkan password baru..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
-                </div>
-            </div>
-            <div class="flex gap-2 pt-2">
-                <button id="btn-submit-changepass" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">Simpan</button>
-                <button id="btn-close-changepass" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition border border-slate-700">Batal</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Navigation Bar Bawah -->
-    <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
-        <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
-            <span class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">SYNC</span>
-            <span class="text-[9px] font-bold tracking-wider uppercase">Muat Ulang</span>
-        </button>
-        <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition active:scale-90 -mt-6">
-            <span class="text-xs font-extrabold bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/40 border border-cyan-300/30 uppercase tracking-widest">PINDAI</span>
-        </button>
-        <button id="btn-open-menu" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
-            <span id="nav-user-label" class="text-xs font-bold uppercase bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
-            <span class="text-[9px] font-bold tracking-wider uppercase">Akun</span>
-        </button>
-    </nav>
-
-    <!-- Kamera Full Screen -->
-    <main id="camera-wrapper" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
-        <div class="relative w-full flex-1 bg-black overflow-hidden">
-            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-            <div class="absolute inset-0 border-2 border-cyan-400/80 border-dashed opacity-75 m-12 rounded-3xl pointer-events-none animate-pulse"></div>
-        </div>
-        <canvas id="canvas" class="hidden"></canvas>
-        <footer class="w-full bg-slate-900/95 backdrop-blur-2xl p-4 border-t border-slate-800 space-y-3 rounded-t-3xl shadow-2xl">
-            <div class="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between">
-                <div class="overflow-hidden pr-2">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Resi Terakhir:</span>
-                    <span id="last-scanned-number" class="text-sm font-mono font-bold text-cyan-300 tracking-wide">-</span>
-                </div>
-                <div id="last-scanned-badge"><span class="text-[10px] bg-slate-800 text-slate-400 px-3 py-1.5 rounded-xl font-medium">Belum ada scan</span></div>
-            </div>
-            <div class="flex gap-2.5">
-                <button id="btn-scan" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 active:scale-95 transition text-sm flex items-center justify-center uppercase tracking-wider">Ambil / Scan Resi</button>
-                <button id="btn-stop-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition active:scale-95 border border-slate-700">Tutup</button>
-            </div>
-        </footer>
     </main>
 
-    <div id="toast-container" class="fixed bottom-24 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
-
+    <!-- Script Logika Client-Side -->
     <script>
-        let validUsers = JSON.parse(localStorage.getItem('v3_validUsers') || JSON.stringify({
-            "fian": "paiko098", "admin": "admin123", "march": "123456"
-        }));
+        // Masukkan URL Publik CSV Google Sheets Anda di sini
+        // Cara ambil: File > Share > Publish to web > Format: Comma-separated values (.csv)
+        const CSV_URL = "GANTI_DENGAN_LINK_CSV_GOOGLE_SHEETS_ANDA";
 
-        const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
-        
-        // Ganti URL di bawah ini jika Anda melakukan deployment ulang baru di Apps Script
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyawdftOB2ZDHo0jQCRmcaU1Pp4wmpLLYfo_FonDc67_g3uFED95-dpZS_UA7h-twfa/exec"; 
+        let masterData = []; // Menyimpan data dari Sheets
+        let scannedData = JSON.parse(localStorage.getItem('scanned_resis') || '{}');
 
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const resultList = document.getElementById('result-list');
-        const remainingList = document.getElementById('remaining-list');
-        const remainingContainer = document.getElementById('remaining-container');
-        const toggleText = document.getElementById('toggle-text');
-        const searchHistory = document.getElementById('search-history');
-        const toastContainer = document.getElementById('toast-container');
-        const countValidSpan = document.getElementById('count-valid');
-        const countRemainingSpan = document.getElementById('count-remaining');
-        const mainDashboard = document.getElementById('main-dashboard');
-        const cameraWrapper = document.getElementById('camera-wrapper');
-        const bottomNav = document.getElementById('bottom-nav');
-        const btnStart = document.getElementById('btn-start-camera');
-        const btnScan = document.getElementById('btn-scan');
-        const btnStop = document.getElementById('btn-stop-camera');
-        const fileUpload = document.getElementById('file-upload');
-        const btnCopyValid = document.getElementById('btn-copy-valid');
-        const btnCopyInvalid = document.getElementById('btn-copy-invalid');
-        const btnCopyRemaining = document.getElementById('btn-copy-remaining');
-        const btnToggleRemaining = document.getElementById('btn-toggle-remaining');
-        const btnExportXlsx = document.getElementById('btn-export-xlsx');
-        const btnClearHistory = document.getElementById('btn-clear-history');
-        const loginWrapper = document.getElementById('login-wrapper');
-        const btnSubmitLogin = document.getElementById('btn-submit-login');
-        const loginUseridInput = document.getElementById('login-userid');
-        const loginPassInput = document.getElementById('login-pass');
-        const accountMenuWrapper = document.getElementById('account-menu-wrapper');
-        const btnOpenMenu = document.getElementById('btn-open-menu');
-        const btnCloseMenu = document.getElementById('btn-close-menu');
-        const btnGotoChangepass = document.getElementById('btn-goto-changepass');
-        const btnLogout = document.getElementById('btn-logout');
-        const changepassWrapper = document.getElementById('changepass-wrapper');
-        const btnCloseChangepass = document.getElementById('btn-close-changepass');
-        const btnSubmitChangepass = document.getElementById('btn-submit-changepass');
-        const oldPassInput = document.getElementById('old-pass');
-        const newPassInput = document.getElementById('new-pass');
-        const currentUserDisplay = document.getElementById('current-user-display');
-        const menuUserDisplay = document.getElementById('menu-user-display');
-        const navUserLabel = document.getElementById('nav-user-label');
-        const dbStatus = document.getElementById('db-status');
-        const lastScannedNumber = document.getElementById('last-scanned-number');
-        const lastScannedBadge = document.getElementById('last-scanned-badge');
-
-        let stream = null;
-        let scannedNumbers = new Set(JSON.parse(localStorage.getItem('v3_scannedNumbers') || '[]'));
-        let scanHistoryData = JSON.parse(localStorage.getItem('v3_scanHistoryData') || '[]'); 
-        let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
-        let currentUser = localStorage.getItem('v3_currentUser') || '';
-        let masterDatabase = new Map(); 
-        const orderRegex = /58[67]\d{15}/g; 
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (currentUser && validUsers[currentUser]) {
-                let upperUser = currentUser.toUpperCase();
-                navUserLabel.innerText = upperUser.length > 5 ? upperUser.substring(0, 5) + '..' : upperUser;
-                menuUserDisplay.innerText = upperUser;
-                currentUserDisplay.innerText = upperUser;
-                loginWrapper.classList.add('hidden');
-                mainDashboard.classList.remove('hidden');
-                bottomNav.classList.remove('hidden');
-                autoSyncDatabase();
-            } else {
-                localStorage.removeItem('v3_currentUser');
-                loginWrapper.classList.remove('hidden');
-                mainDashboard.classList.add('hidden');
-                bottomNav.classList.add('hidden');
-            }
-            if(countValidSpan) countValidSpan.innerText = validCount;
-            renderHistoryList();
-        });
-
-        if(btnOpenMenu) btnOpenMenu.addEventListener('click', () => { menuUserDisplay.innerText = currentUser.toUpperCase(); accountMenuWrapper.classList.remove('hidden'); });
-        if(btnCloseMenu) btnCloseMenu.addEventListener('click', () => { accountMenuWrapper.classList.add('hidden'); });
-        if(btnGotoChangepass) btnGotoChangepass.addEventListener('click', () => { accountMenuWrapper.classList.add('hidden'); currentUserDisplay.innerText = currentUser.toUpperCase(); oldPassInput.value = ''; newPassInput.value = ''; changepassWrapper.classList.remove('hidden'); });
-        if(btnLogout) btnLogout.addEventListener('click', () => { if(confirm("Yakin ingin keluar dari akun ini?")) { localStorage.removeItem('v3_currentUser'); currentUser = ''; accountMenuWrapper.classList.add('hidden'); mainDashboard.classList.add('hidden'); bottomNav.classList.add('hidden'); loginWrapper.classList.remove('hidden'); showToast("Berhasil logout", "info"); } });
-        if(btnCloseChangepass) btnCloseChangepass.addEventListener('click', () => { changepassWrapper.classList.add('hidden'); });
-
-        btnSubmitChangepass.addEventListener('click', () => {
-            let oldPass = oldPassInput.value.trim();
-            let newPass = newPassInput.value.trim();
-            if(!oldPass || !newPass) { showToast("Password lama dan baru harus diisi", "error"); return; }
-            if(validUsers[currentUser] === oldPass) {
-                validUsers[currentUser] = newPass;
-                localStorage.setItem('v3_validUsers', JSON.stringify(validUsers));
-                showToast("Password berhasil diperbarui!", "success");
-                changepassWrapper.classList.add('hidden');
-            } else { showToast("Password lama salah!", "error"); }
-        });
-
-        btnSubmitLogin.addEventListener('click', () => {
-            let uid = loginUseridInput.value.trim().toLowerCase();
-            let pass = loginPassInput.value.trim();
-            if(!uid || !pass) { showToast("User ID dan Password harus diisi", "error"); return; }
-            if (validUsers[uid] && validUsers[uid] === pass) {
-                currentUser = uid;
-                localStorage.setItem('v3_currentUser', currentUser);
-                let upperUser = currentUser.toUpperCase();
-                navUserLabel.innerText = upperUser.length > 5 ? upperUser.substring(0, 5) + '..' : upperUser;
-                menuUserDisplay.innerText = upperUser;
-                currentUserDisplay.innerText = upperUser;
-                showToast(`Login berhasil, selamat datang ${upperUser}!`, "success");
-                loginUseridInput.value = ''; loginPassInput.value = '';
-                loginWrapper.classList.add('hidden'); mainDashboard.classList.remove('hidden'); bottomNav.classList.remove('hidden');
-                autoSyncDatabase();
-            } else { showToast("User ID atau Password salah!", "error"); loginPassInput.value = ''; }
-        });
-
-        function showToast(message, type = 'info') {
-            toastContainer.innerHTML = '';
-            const toast = document.createElement('div');
-            toast.className = `toast-animate pointer-events-auto flex items-center justify-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-bold backdrop-blur-2xl transition-all max-w-sm w-full`;
-            if(type === 'success') toast.className += ` bg-emerald-950/90 border-emerald-500/50 text-emerald-200`;
-            else if(type === 'error') toast.className += ` bg-rose-950/90 border-rose-500/50 text-rose-200`;
-            else if(type === 'warn') toast.className += ` bg-amber-950/90 border-amber-500/50 text-amber-200`;
-            else toast.className += ` bg-slate-900/90 border-slate-700 text-slate-200`;
-            toast.innerText = message;
-            toastContainer.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; setTimeout(() => toast.remove(), 300); }, 3000);
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('v3_scannedNumbers', JSON.stringify(Array.from(scannedNumbers)));
-            localStorage.setItem('v3_scanHistoryData', JSON.stringify(scanHistoryData));
-            localStorage.setItem('v3_validCount', validCount.toString());
-        }
-
-        function renderHistoryList(filterQuery = '') {
-            resultList.innerHTML = '';
-            const filteredData = scanHistoryData.filter(item => item.resi.toLowerCase().includes(filterQuery.toLowerCase()) || item.toko.toLowerCase().includes(filterQuery.toLowerCase()) || item.produk.toLowerCase().includes(filterQuery.toLowerCase()));
-            if(filteredData.length === 0) { resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-5">Tidak ada riwayat yang cocok</li>`; return; }
-            filteredData.forEach(item => {
-                const li = document.createElement('li');
-                if (item.status === 'VALID') {
-                    li.className = "font-mono text-emerald-100 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/25 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
-                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-emerald-300">${item.resi}</span><span class="text-[9px] bg-emerald-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-emerald-200 border border-emerald-500/30 uppercase">VALID (${item.waktu})</span></div><div class="text-[10px] text-emerald-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-emerald-500/20"><div>Toko: <b class="text-white">${item.toko}</b></div><div>Kurir: <b class="text-white">${item.kurir}</b></div><div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div></div>`;
-                } else {
-                    li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md";
-                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-rose-300">${item.resi}</span><span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30 uppercase">TIDAK ADA (${item.waktu})</span></div>`;
-                }
-                resultList.appendChild(li);
-            });
-        }
-
-        async function autoSyncDatabase() {
+        async function loadMasterData() {
             try {
-                dbStatus.innerText = "Memuat database...";
-                const response = await fetch(FIXED_SHEETS_URL);
+                document.getElementById('sync-text').innerText = "Memuat Data...";
+                const response = await fetch(CSV_URL);
                 const csvText = await response.text();
-                masterDatabase.clear();
-                const lines = csvText.split(/\r?\n/);
-                lines.forEach((line, index) => {
-                    if (index === 0) return;
-                    const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
-                    if (cols.length >= 1) {
-                        const resi = cols[0];
-                        const toko = cols[1] || "-";
-                        const kurir = cols[2] || "-";
-                        const produk = cols[3] || "-";
-                        const matches = resi.match(orderRegex);
-                        if (matches) { matches.forEach(m => masterDatabase.set(m, { toko, kurir, produk })); }
-                        else if (resi.length >= 10) { masterDatabase.set(resi, { toko, kurir, produk }); }
-                    }
-                });
-                if(masterDatabase.size > 0) {
-                    dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
-                    dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
-                    if(countValidSpan) countValidSpan.innerText = validCount;
-                    renderHistoryList();
-                    updateRemainingDisplay();
-                    showToast("Database tersinkronisasi", "success");
-                } else {
-                    dbStatus.innerText = "Database kosong";
-                    dbStatus.className = "text-[11px] text-amber-400 font-bold mt-0.5";
-                }
-            } catch (err) {
-                dbStatus.innerText = "Gagal memuat database online";
-                dbStatus.className = "text-[11px] text-rose-400 font-bold mt-0.5";
-                showToast("Gagal terhubung ke Google Sheets", "error");
-            }
-        }
-
-        searchHistory.addEventListener('input', (e) => { renderHistoryList(e.target.value); });
-
-        function playSound(type) {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain); gain.connect(ctx.destination);
-            if(type === 'success') { osc.type = 'sine'; osc.frequency.setValueAtTime(900, ctx.currentTime); gain.gain.setValueAtTime(0.5, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); }
-            else if(type === 'warn') { osc.type = 'triangle'; osc.frequency.setValueAtTime(500, ctx.currentTime); gain.gain.setValueAtTime(0.4, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); }
-            else { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, ctx.currentTime); gain.gain.setValueAtTime(0.5, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5); }
-            osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
-        }
-
-        btnStart.addEventListener('click', async () => {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = stream;
-                mainDashboard.classList.add('hidden');
-                bottomNav.classList.add('hidden'); 
-                cameraWrapper.classList.remove('hidden');
-            } catch (err) { showToast("Gagal membuka kamera: " + err.message, "error"); }
-        });
-
-        btnStop.addEventListener('click', () => {
-            if (stream) stream.getTracks().forEach(track => track.stop());
-            cameraWrapper.classList.add('hidden');
-            mainDashboard.classList.remove('hidden');
-            bottomNav.classList.remove('hidden'); 
-        });
-
-        async function processImage(imageSource) {
-            lastScannedNumber.innerText = "Memproses...";
-            lastScannedBadge.innerHTML = `<span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-xl font-semibold uppercase animate-pulse">Membaca OCR...</span>`;
-            try {
-                const result = await Tesseract.recognize(imageSource, 'eng');
-                const text = result.data.text.replace(/\s+/g, ''); 
-                const matches = text.match(orderRegex);
-                if (matches && matches.length > 0) {
-                    let num = matches[0]; 
-                    let isInDb = false;
-                    let meta = { toko: "-", kurir: "-", produk: "-" };
-                    if (masterDatabase.size > 0 && masterDatabase.has(num)) {
-                        isInDb = true;
-                        meta = masterDatabase.get(num);
-                    } else if (masterDatabase.size === 0) { isInDb = true; }
-
-                    let isAlreadyScanned = scannedNumbers.has(num);
-                    if (isAlreadyScanned) {
-                        playSound('warn');
-                        lastScannedNumber.innerText = num;
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-bold uppercase">Di-scan Ulang</span>`;
-                        showToast(`Resi ${num} di-scan ulang`, "warn");
-                    } else {
-                        scannedNumbers.add(num);
-                        if (isInDb) { validCount++; if(countValidSpan) countValidSpan.innerText = validCount; }
-                        scanHistoryData.unshift({
-                            resi: num, invoice: num, toko: meta.toko, kurir: meta.kurir, produk: meta.produk,
-                            status: isInDb ? 'VALID' : 'TIDAK VALID', waktu: new Date().toLocaleTimeString()
+                
+                // Parse CSV sederhana
+                const rows = csvText.split('\n').map(row => row.split(','));
+                masterData = [];
+                
+                // Asumsi: Kolom A = Resi, Kolom B = Toko, Kolom C = Kurir, Kolom D = Produk
+                for (let i = 1; i < rows.length; i++) {
+                    const cols = rows[i];
+                    if (cols && cols[0]) {
+                        masterData.push({
+                            resi: cols[0].replace(/["r]/g, "").trim(),
+                            toko: cols[1] ? cols[1].replace(/["r]/g, "").trim() : "-",
+                            kurir: cols[2] ? cols[2].replace(/["r]/g, "").trim() : "-",
+                            produk: cols[3] ? cols[3].replace(/["r]/g, "").trim() : "-"
                         });
-                        saveToLocalStorage();
-                        renderHistoryList();
-                        updateRemainingDisplay(); 
                     }
-
-                    lastScannedNumber.innerText = num;
-                    
-                    // Trigger pengiriman data otomatis ke Apps Script untuk update Kolom E
-                    if(APPS_SCRIPT_URL && isInDb) {
-                        fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, {
-                            method: 'GET',
-                            redirect: 'follow'
-                        }).catch(err => console.log("Gagal memperbarui Sheets:", err));
-                    }
-
-                    if(isInDb) {
-                        playSound('success');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-bold uppercase">Ada (${meta.toko})</span>`;
-                    } else {
-                        playSound('error');
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-300 px-3 py-1 rounded-bold uppercase">Tidak Ada</span>`;
-                    }
-                } else {
-                    playSound('error');
-                    lastScannedNumber.innerText = "Tidak Dikenali";
-                    lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-300 px-3 py-1 rounded-bold uppercase">Gagal Deteksi</span>`;
                 }
-            } catch (error) { lastScannedNumber.innerText = "Error Sistem"; }
+
+                document.getElementById('sync-text').innerText = `Terhubung (${masterData.length} Resi)`;
+                updateCounters();
+            } catch (error) {
+                console.error("Gagal memuat CSV:", error);
+                document.getElementById('sync-text').innerText = "Mode Offline (Cache)";
+                document.getElementById('sync-status').className = "flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20";
+                // Tetap hitung counter dari data lokal jika ada
+                updateCounters();
+            }
         }
 
-        btnScan.addEventListener('click', () => {
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            processImage(canvas.toDataURL('image/jpeg'));
-        });
-
-        fileUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => processImage(event.target.result);
-                reader.readAsDataURL(file);
+        document.getElementById('resi-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                processScan();
             }
         });
 
-        function updateRemainingDisplay() {
-            if(masterDatabase.size === 0) return;
-            let remainingListArray = [];
-            masterDatabase.forEach((meta, resi) => { if(!scannedNumbers.has(resi)) remainingListArray.push({ resi, ...meta }); });
-            if(countRemainingSpan) countRemainingSpan.innerText = remainingListArray.length;
-            remainingList.innerHTML = '';
-            if(remainingListArray.length === 0) { remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-5 font-bold">Semua resi di database sudah selesai discan</li>`; return; }
-            remainingListArray.forEach(item => {
-                const li = document.createElement('li');
-                li.className = "font-mono text-amber-100 bg-amber-950/30 p-3 rounded-2xl border border-amber-500/20 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
-                li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-amber-300">${item.resi}</span><span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span></div><div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20"><div>Toko: <b class="text-white">${item.toko}</b></div><div>Kurir: <b class="text-white">${item.kurir}</b></div><div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div></div>`;
-                remainingList.appendChild(li);
+        function processScan() {
+            const inputEl = document.getElementById('resi-input');
+            const resiVal = inputEl.value.trim();
+            if (!resiVal) return;
+
+            const timeString = new Date().toLocaleTimeString('id-ID');
+            
+            // Cek apakah resi ada di master data
+            const found = masterData.find(item => item.resi === resiVal);
+
+            if (found) {
+                scannedData[resiVal] = {
+                    status: "Berhasil Scan",
+                    time: timeString,
+                    toko: found.toko,
+                    kurir: found.kurir,
+                    produk: found.produk
+                };
+            } else {
+                // Tetap catat meskipun tidak ada di sheet (sebagai invalid/manual)
+                scannedData[resiVal] = {
+                    status: "Tidak Ada di Master",
+                    time: timeString,
+                    toko: "-",
+                    kurir: "-",
+                    produk: "-"
+                };
+            }
+
+            localStorage.setItem('scanned_resis', JSON.stringify(scannedData));
+            inputEl.value = "";
+            updateCounters();
+            renderHistory(resiVal);
+        }
+
+        function updateCounters() {
+            const totalMaster = masterData.length;
+            const scannedCount = Object.keys(scannedData).length;
+            
+            document.getElementById('count-scanned').innerText = scannedCount;
+            document.getElementById('count-unscanned').innerText = Math.max(0, totalMaster - scannedCount);
+        }
+
+        function renderHistory(latestResi) {
+            const historyContainer = document.getElementById('scan-history');
+            historyContainer.innerHTML = "";
+
+            const entries = Object.entries(scannedData).reverse().slice(0, 10); // Ambil 10 terakhir
+            
+            if (entries.length === 0) {
+                historyContainer.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Belum ada resi yang dipindai pada sesi ini.</div>`;
+                return;
+            }
+
+            entries.forEach(([resi, data]) => {
+                const isValid = data.status === "Berhasil Scan";
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-xl border ${isValid ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'} flex flex-col gap-1`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-white text-sm">${resi}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${isValid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${data.status} (${data.time})</span>
+                    </div>
+                    <div class="text-xs text-slate-400">Toko: ${data.toko} | Kurir: ${data.kurir}</div>
+                    <div class="text-xs text-slate-300 font-medium">Produk: ${data.produk}</div>
+                `;
+                historyContainer.appendChild(card);
             });
         }
 
-        btnToggleRemaining.addEventListener('click', () => {
-            if(masterDatabase.size === 0) { showToast("Database belum termuat", "error"); return; }
-            if(remainingContainer.classList.contains('hidden')) { remainingContainer.classList.remove('hidden'); toggleText.innerText = "Sembunyikan Sisa"; }
-            else { remainingContainer.classList.add('hidden'); toggleText.innerText = "Cek Sisa Belum Discan"; }
-        });
-
-        btnClearHistory.addEventListener('click', () => {
-            if(scannedNumbers.size === 0) { showToast("Riwayat sudah kosong", "info"); return; }
-            if(confirm("Yakin ingin menghapus seluruh riwayat dan cache sesi ini?")) {
-                scannedNumbers.clear(); scanHistoryData = []; validCount = 0; localStorage.clear();
-                if(countValidSpan) countValidSpan.innerText = "0";
-                renderHistoryList(); updateRemainingDisplay();
-                showToast("Riwayat sesi dibersihkan", "success");
+        function exportToExcel() {
+            if (masterData.length === 0) {
+                alert("Data master belum termuat. Pastikan URL CSV Google Sheets sudah benar.");
+                return;
             }
-        });
 
-        btnCopyValid.addEventListener('click', () => {
-            const validNumbers = scanHistoryData.filter(item => item.status === 'VALID').map(item => item.resi);
-            if(validNumbers.length === 0) { showToast("Tidak ada resi valid", "error"); return; }
-            navigator.clipboard.writeText(validNumbers.join('\n')).then(() => showToast(`Berhasil menyalin ${validNumbers.length} resi`, "success"));
-        });
+            // Gabungkan master data dengan status scan lokal
+            const exportRows = masterData.map((item, index) => {
+                const scanInfo = scannedData[item.resi];
+                return {
+                    "No": index + 1,
+                    "Nomor Resi / Invoice": item.resi,
+                    "Nama Toko": item.toko,
+                    "Kurir": item.kurir,
+                    "Produk": item.produk,
+                    "Status Scan": scanInfo ? "Berhasil Scan" : "Belum Discan",
+                    "Waktu Scan": scanInfo ? scanInfo.time : "-"
+                };
+            });
 
-        btnCopyInvalid.addEventListener('click', () => {
-            const invalidNumbers = scanHistoryData.filter(item => item.status === 'TIDAK VALID').map(item => item.resi);
-            if(invalidNumbers.length === 0) { showToast("Tidak ada resi invalid", "error"); return; }
-            navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => showToast(`Berhasil menyalin ${invalidNumbers.length} resi invalid`, "success"));
-        });
-
-        btnCopyRemaining.addEventListener('click', () => {
-            let remainingNumbers = [];
-            masterDatabase.forEach((meta, resi) => { if(!scannedNumbers.has(resi)) remainingNumbers.push(resi); });
-            if(remainingNumbers.length === 0) { showToast("Tidak ada sisa resi", "info"); return; }
-            navigator.clipboard.writeText(remainingNumbers.join('\n')).then(() => showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi`, "success"));
-        });
-
-        btnExportXlsx.addEventListener('click', () => {
-            if(scanHistoryData.length === 0) { showToast("Belum ada data", "error"); return; }
-            const exportRows = scanHistoryData.map((item, idx) => ({
-                "No": idx + 1, "Nomor Resi": item.resi, "Nama Toko": item.toko, "Kurir": item.kurir,
-                "Produk": item.produk, "Status Scan": item.status, "Waktu": item.waktu, "User ID": currentUser || "-"
-            }));
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan");
-            XLSX.writeFile(workbook, `Laporan_Resi_${new Date().toISOString().slice(0,10)}.xlsx`);
-            showToast("File XLSX berhasil diunduh", "success");
-        });
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
+
+            // Download file .xlsx
+            XLSX.writeFile(workbook, "Laporan_Status_Resi_Shopee.xlsx");
+        }
+
+        function resetSession() {
+            if (confirm("Yakin ingin menghapus seluruh riwayat scan sesi ini?")) {
+                localStorage.removeItem('scanned_resis');
+                scannedData = {};
+                updateCounters();
+                renderHistory();
+            }
+        }
+
+        // Jalankan saat pertama kali dibuka
+        window.onload = () => {
+            loadMasterData();
+            renderHistory();
+        };
     </script>
 </body>
 </html>
