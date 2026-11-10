@@ -99,27 +99,37 @@
             </div>
 
             <!-- List Sudah Discan -->
-            <ul id="result-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-48 overflow-y-auto border border-slate-800/80">
+            <ul id="result-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-64 overflow-y-auto border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-5">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
+    </div>
 
-        <!-- PANEL SISA BELUM DISCAN -->
-        <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
-            <div class="grid grid-cols-2 gap-2">
-                <button id="btn-toggle-remaining" class="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">
-                    <span id="toggle-text">Cek Sisa Belum Discan</span>
-                </button>
-                <button id="btn-copy-remaining" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">
-                    Salin Semua Sisa
-                </button>
+    <!-- POPUP ANDROID STYLE (BOTTOM SHEET) UNTUK SISA RESI -->
+    <div id="remaining-popup" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end p-2 transition-all">
+        <div class="glass-panel w-full max-w-md mx-auto p-5 rounded-t-3xl space-y-4 shadow-2xl border-t border-slate-700/80 toast-animate max-h-[80vh] flex flex-col">
+            <!-- Header Popup -->
+            <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+                <div>
+                    <h3 class="text-sm font-extrabold text-amber-400 uppercase tracking-wider">Sisa Belum Discan</h3>
+                    <p class="text-[10px] text-slate-400">Daftar resi dari Google Sheets yang belum dipindai</p>
+                </div>
+                <button onclick="closeRemainingPopup()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white transition">✕</button>
             </div>
 
-            <!-- Kontainer Daftar Sisa Tersembunyi -->
-            <div id="remaining-container" class="hidden space-y-2 pt-2 border-t border-slate-800">
-                <ul id="remaining-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-40 overflow-y-auto border border-slate-800/80">
-                    <li class="text-center text-slate-500 text-xs py-4">Memuat data...</li>
-                </ul>
+            <!-- Daftar Sisa Resi di dalam Popup -->
+            <ul id="popup-remaining-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl overflow-y-auto flex-1 border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-5">Memuat data...</li>
+            </ul>
+
+            <!-- Tombol Aksi Popup -->
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                <button id="btn-copy-remaining-popup" class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold py-3 px-3 rounded-2xl transition active:scale-95">
+                    Salin Semua Sisa
+                </button>
+                <button onclick="closeRemainingPopup()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-3 px-3 rounded-2xl transition active:scale-95 border border-slate-700">
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
@@ -203,21 +213,19 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar Melengkung Modern (Gaya Custom sesuai Referensi Anda) -->
+    <!-- Bottom Navigation Bar Melengkung Modern -->
     <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 backdrop-blur-2xl border border-slate-800/90 px-4 py-2.5 rounded-full flex justify-between items-center shadow-2xl max-w-md mx-auto">
-        <!-- 1. Sync / Muat Ulang -->
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             <span class="text-[9px] font-bold tracking-wider uppercase">SYNC</span>
         </button>
 
-        <!-- 2. Sisa Belum Discan -->
-        <button onclick="document.getElementById('btn-toggle-remaining').click()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-amber-400 transition active:scale-90 px-2">
+        <!-- Tombol SISA di Navigasi Membuka Popup -->
+        <button onclick="openRemainingPopup()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-amber-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span class="text-[9px] font-bold tracking-wider uppercase">SISA</span>
         </button>
 
-        <!-- 3. Tombol Tengah Utama: PINDAI (Menonjol ke Atas) -->
         <button id="btn-start-camera" class="flex flex-col items-center justify-center -mt-7 text-white transition active:scale-90 group">
             <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-xl shadow-cyan-500/50 border-4 border-slate-950 group-hover:scale-105 transition">
                 <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -225,13 +233,11 @@
             <span class="text-[9px] font-extrabold tracking-wider uppercase text-cyan-400 mt-0.5">PINDAI</span>
         </button>
 
-        <!-- 4. Export XLSX -->
-        <button onclick="document.getElementById('btn-export-xlsx').click()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-400 transition active:scale-90 px-2">
+        <button id="btn-export-xlsx" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             <span class="text-[9px] font-bold tracking-wider uppercase">EXPORT</span>
         </button>
 
-        <!-- 5. Akun / User -->
         <button id="btn-open-menu" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
             <span id="nav-user-label" class="text-[9px] font-bold tracking-wider uppercase">AKUN</span>
@@ -294,9 +300,8 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const resultList = document.getElementById('result-list');
-        const remainingList = document.getElementById('remaining-list');
-        const remainingContainer = document.getElementById('remaining-container');
-        const toggleText = document.getElementById('toggle-text');
+        const popupRemainingList = document.getElementById('popup-remaining-list');
+        const remainingPopup = document.getElementById('remaining-popup');
         const searchHistory = document.getElementById('search-history');
         const toastContainer = document.getElementById('toast-container');
         
@@ -313,8 +318,7 @@
         
         const btnCopyValid = document.getElementById('btn-copy-valid');
         const btnCopyInvalid = document.getElementById('btn-copy-invalid');
-        const btnCopyRemaining = document.getElementById('btn-copy-remaining');
-        const btnToggleRemaining = document.getElementById('btn-toggle-remaining');
+        const btnCopyRemainingPopup = document.getElementById('btn-copy-remaining-popup');
         const btnExportXlsx = document.getElementById('btn-export-xlsx');
         const btnClearHistory = document.getElementById('btn-clear-history');
         
@@ -746,10 +750,10 @@
             });
 
             if(countRemainingSpan) countRemainingSpan.innerText = remainingListArray.length;
-            remainingList.innerHTML = '';
+            popupRemainingList.innerHTML = '';
 
             if(remainingListArray.length === 0) {
-                remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-5 font-bold">Semua resi di database sudah selesai discan</li>`;
+                popupRemainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-5 font-bold">Semua resi di database sudah selesai discan</li>`;
                 return;
             }
 
@@ -763,23 +767,22 @@
                         <div>Kurir: <b class="text-white">${item.kurir}</b></div>
                         <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
                     </div>`;
-                remainingList.appendChild(li);
+                popupRemainingList.appendChild(li);
             });
         }
 
-        btnToggleRemaining.addEventListener('click', () => {
+        function openRemainingPopup() {
             if(masterDatabase.size === 0) {
                 showToast("Database belum termuat", "error");
                 return;
             }
-            if(remainingContainer.classList.contains('hidden')) {
-                remainingContainer.classList.remove('hidden');
-                toggleText.innerText = "Sembunyikan Sisa";
-            } else {
-                remainingContainer.classList.add('hidden');
-                toggleText.innerText = "Cek Sisa Belum Discan";
-            }
-        });
+            updateRemainingDisplay();
+            remainingPopup.classList.remove('hidden');
+        }
+
+        function closeRemainingPopup() {
+            remainingPopup.classList.add('hidden');
+        }
 
         btnClearHistory.addEventListener('click', () => {
             if(scannedNumbers.size === 0) {
@@ -822,7 +825,7 @@
             });
         });
 
-        btnCopyRemaining.addEventListener('click', () => {
+        btnCopyRemainingPopup.addEventListener('click', () => {
             let remainingNumbers = [];
             masterDatabase.forEach((meta, resi) => {
                 if(!scannedNumbers.has(resi)) {
@@ -837,6 +840,7 @@
 
             navigator.clipboard.writeText(remainingNumbers.join('\n')).then(() => {
                 showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi`, "success");
+                closeRemainingPopup();
             });
         });
 
