@@ -71,10 +71,10 @@
                     Riwayat Sudah Discan
                 </h3>
                 <div class="flex items-center gap-2">
-                    <label class="text-[11px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer bg-blue-500/10 px-3 py-1 rounded-xl border border-blue-500/20 transition active:scale-95">
-                        Galeri
-                        <input type="file" id="file-upload" accept="image/*" class="hidden">
-                    </label>
+                    <!-- Tombol Galeri Diganti Menjadi Tombol Sync Ulang -->
+                    <button onclick="autoSyncDatabase()" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold underline bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-500/20 transition active:scale-95">
+                        Sync Ulang
+                    </button>
                     <button id="btn-clear-history" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold underline bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/20 transition active:scale-95">Hapus Sesi</button>
                 </div>
             </div>
@@ -292,7 +292,6 @@
         const btnStart = document.getElementById('btn-start-camera');
         const btnScan = document.getElementById('btn-scan');
         const btnStop = document.getElementById('btn-stop-camera');
-        const fileUpload = document.getElementById('file-upload');
         
         const btnCopyValid = document.getElementById('btn-copy-valid');
         const btnCopyInvalid = document.getElementById('btn-copy-invalid');
@@ -694,15 +693,6 @@
             processImage(imageData);
         });
 
-        fileUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => processImage(event.target.result);
-                reader.readAsDataURL(file);
-            }
-        });
-
         function updateRemainingDisplay() {
             if(masterDatabase.size === 0) return;
 
@@ -808,72 +798,66 @@
             });
         });
 
-btnExportXlsx.addEventListener('click', () => {
-    if(masterDatabase.size === 0) {
-        showToast("Database master belum termuat", "error");
-        return;
-    }
+        btnExportXlsx.addEventListener('click', () => {
+            if(masterDatabase.size === 0) {
+                showToast("Database master belum termuat", "error");
+                return;
+            }
 
-    let exportRows = [];
-    let index = 1;
+            let exportRows = [];
+            let index = 1;
 
-    // Masukkan judul laporan di baris pertama
-    exportRows.push({ "No": "LAPORAN REKAPITULASI PEMINDAIAN RESI SHOPEE" });
-    exportRows.push({ "No": `Dicetak oleh: ${currentUser.toUpperCase()} | Tanggal: ${new Date().toLocaleDateString('id-ID')}` });
-    exportRows.push({}); // Baris kosong untuk spasi
+            exportRows.push({ "No": "LAPORAN REKAPITULASI PEMINDAIAN RESI SHOPEE" });
+            exportRows.push({ "No": `Dicetak oleh: ${currentUser.toUpperCase()} | Tanggal: ${new Date().toLocaleDateString('id-ID')}` });
+            exportRows.push({});
 
-    // Header Kolom
-    exportRows.push({
-        "No": "No",
-        "Nomor Resi / Invoice": "Nomor Resi / Invoice",
-        "Nama Toko": "Nama Toko",
-        "Kurir Pickup": "Kurir Pickup",
-        "Nama Produk": "Nama Produk",
-        "Status Scan": "Status Scan",
-        "Waktu Scan": "Waktu Scan",
-        "User ID": "User ID"
-    });
+            exportRows.push({
+                "No": "No",
+                "Nomor Resi / Invoice": "Nomor Resi / Invoice",
+                "Nama Toko": "Nama Toko",
+                "Kurir Pickup": "Kurir Pickup",
+                "Nama Produk": "Nama Produk",
+                "Status Scan": "Status Scan",
+                "Waktu Scan": "Waktu Scan",
+                "User ID": "User ID"
+            });
 
-    // Isi Data Master & Status Lokal
-    masterDatabase.forEach((meta, resi) => {
-        let isScanned = scannedNumbers.has(resi);
-        let historyItem = scanHistoryData.find(item => item.resi === resi);
-        let waktuScan = historyItem ? historyItem.waktu : "-";
+            masterDatabase.forEach((meta, resi) => {
+                let isScanned = scannedNumbers.has(resi);
+                let historyItem = scanHistoryData.find(item => item.resi === resi);
+                let waktuScan = historyItem ? historyItem.waktu : "-";
 
-        exportRows.push({
-            "No": index++,
-            "Nomor Resi / Invoice": String(resi), // Pastikan terbaca sebagai teks/string agar tidak dibulatkan Excel
-            "Nama Toko": meta.toko,
-            "Kurir Pickup": meta.kurir,
-            "Nama Produk": meta.produk,
-            "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
-            "Waktu Scan": waktuScan,
-            "User ID": currentUser || "-"
+                exportRows.push({
+                    "No": index++,
+                    "Nomor Resi / Invoice": String(resi),
+                    "Nama Toko": meta.toko,
+                    "Kurir Pickup": meta.kurir,
+                    "Nama Produk": meta.produk,
+                    "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
+                    "Waktu Scan": waktuScan,
+                    "User ID": currentUser || "-"
+                });
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(exportRows, { skipHeader: true });
+            worksheet['!cols'] = [
+                { wch: 6 },  
+                { wch: 22 }, 
+                { wch: 18 }, 
+                { wch: 15 }, 
+                { wch: 30 }, 
+                { wch: 16 }, 
+                { wch: 14 }, 
+                { wch: 12 }  
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
+
+            const dateStr = new Date().toISOString().slice(0,10);
+            XLSX.writeFile(workbook, `Laporan_Resi_Pro_${dateStr}.xlsx`);
+            showToast("File XLSX rapi berhasil diunduh", "success");
         });
-    });
-
-    // Buat worksheet dari JSON
-    const worksheet = XLSX.utils.json_to_sheet(exportRows, { skipHeader: true });
-
-    // Pengaturan lebar kolom agar rapi dan tidak terpotong
-    worksheet['!cols'] = [
-        { wch: 6 },  // No
-        { wch: 22 }, // Nomor Resi
-        { wch: 18 }, // Nama Toko
-        { wch: 15 }, // Kurir
-        { wch: 30 }, // Produk
-        { wch: 16 }, // Status
-        { wch: 14 }, // Waktu
-        { wch: 12 }  // User ID
-    ];
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
-
-    const dateStr = new Date().toISOString().slice(0,10);
-    XLSX.writeFile(workbook, `Laporan_Resi_Pro_${dateStr}.xlsx`);
-    showToast("File XLSX rapi berhasil diunduh", "success");
-    });
     </script>
 </body>
 </html>
