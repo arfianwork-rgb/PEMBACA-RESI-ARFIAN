@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Resi Pro</title>
+    <title>Database Resi Pro v3.1</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS untuk Export XLSX -->
@@ -16,20 +16,20 @@
 <body class="min-h-screen pb-24">
 
     <!-- Header -->
-    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
+    <header class="bg-slate-900/85 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <span class="text-xs bg-cyan-500/10 text-cyan-400 font-semibold px-2.5 py-1 rounded-full border border-cyan-500/20">v3.3</span>
+                <span class="text-xs bg-cyan-500/10 text-cyan-400 font-semibold px-2.5 py-1 rounded-full border border-cyan-500/20">v3.1</span>
                 <div>
                     <h1 class="text-base font-bold text-white flex items-center gap-1.5">
                         Database Resi 
-                        <span class="text-[10px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded font-medium border border-indigo-500/30">PRO</span>
+                        <span class="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-medium border border-cyan-500/30">PRO</span>
                     </h1>
                 </div>
             </div>
             <div id="sync-status" class="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-sm">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="sync-text">Live Cloud</span>
+                <span id="sync-text">Terhubung (Lokal)</span>
             </div>
         </div>
     </header>
@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- Toolbar Navigasi / Kontrol -->
+        <!-- Toolbar Kontrol -->
         <div class="bg-slate-900/90 border border-slate-800/80 p-3 rounded-2xl shadow-xl space-y-3">
             <div class="flex items-center justify-between gap-2">
                 <div class="text-xs font-bold text-slate-300 uppercase tracking-wide">RIWAYAT SUDAH DISCAN</div>
@@ -79,9 +79,8 @@
             </div>
         </div>
 
-        <!-- Daftar Riwayat Scan / Log Kartu -->
+        <!-- Daftar Riwayat Scan -->
         <div id="scan-history" class="space-y-2.5">
-            <!-- Kartu riwayat akan dirender dinamis di sini -->
             <div class="text-center py-8 text-slate-500 text-xs">Belum ada riwayat pemindaian.</div>
         </div>
 
@@ -112,7 +111,7 @@
         </div>
     </nav>
 
-    <!-- Modal Input / Scan Manual -->
+    <!-- Modal Input / Scan -->
     <div id="scan-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center">
@@ -128,27 +127,24 @@
         </div>
     </div>
 
-    <!-- Modal Daftar Sisa Belum Discan -->
+    <!-- Modal Daftar Sisa -->
     <div id="unscanned-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center">
                 <h3 class="text-sm font-bold text-amber-400">Daftar Sisa Belum Discan</h3>
                 <button onclick="closeUnscannedModal()" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
             </div>
-            <div id="unscanned-list" class="overflow-y-auto space-y-1.5 flex-1 pr-1 text-xs text-slate-300">
-                <!-- List items -->
-            </div>
+            <div id="unscanned-list" class="overflow-y-auto space-y-1.5 flex-1 pr-1 text-xs text-slate-300"></div>
             <button onclick="closeUnscannedModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2.5 rounded-xl text-xs font-semibold transition">Tutup</button>
         </div>
     </div>
 
-    <!-- Script Logika & Tampilan Lengkap -->
     <script>
         // Masukkan URL Publik CSV Google Sheets Anda di sini
         const CSV_URL = "GANTI_DENGAN_LINK_CSV_GOOGLE_SHEETS_ANDA";
 
         let masterData = []; 
-        let scannedData = JSON.parse(localStorage.getItem('scanned_resis') || '{}');
+        let scannedData = JSON.parse(localStorage.getItem('scanned_resis_v31') || '{}');
 
         async function loadMasterData() {
             try {
@@ -177,7 +173,6 @@
             } catch (error) {
                 console.error("Gagal memuat:", error);
                 document.getElementById('sync-text').innerText = "Offline Mode";
-                document.getElementById('sync-status').className = "flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20";
                 updateCounters();
                 renderHistory();
             }
@@ -229,7 +224,7 @@
                 };
             }
 
-            localStorage.setItem('scanned_resis', JSON.stringify(scannedData));
+            localStorage.setItem('scanned_resis_v31', JSON.stringify(scannedData));
             inputEl.value = "";
             closeScanModal();
             updateCounters();
@@ -292,7 +287,7 @@
             if (unscanned.length === 0) {
                 listEl.innerHTML = `<div class="text-center py-4 text-slate-400">Semua resi sudah selesai discan! 🎉</div>`;
             } else {
-                unscanned.forEach((item, idx) => {
+                unscanned.forEach((item) => {
                     const row = document.createElement('div');
                     row.className = "bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center";
                     row.innerHTML = `<span class="font-mono text-white">${item.resi}</span><span class="text-[10px] text-slate-400">${item.toko}</span>`;
@@ -353,7 +348,7 @@
 
         function resetSession() {
             if (confirm("Yakin ingin mereset seluruh sesi scan saat ini?")) {
-                localStorage.removeItem('scanned_resis');
+                localStorage.removeItem('scanned_resis_v31');
                 scannedData = {};
                 updateCounters();
                 renderHistory();
