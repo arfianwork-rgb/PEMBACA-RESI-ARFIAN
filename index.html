@@ -71,7 +71,7 @@
                     Riwayat Sudah Discan
                 </h3>
                 <div class="flex items-center gap-2">
-                    <!-- Tombol Galeri Diganti Menjadi Tombol Sync Ulang -->
+                    <!-- Tombol Sync Ulang -->
                     <button onclick="autoSyncDatabase()" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold underline bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-500/20 transition active:scale-95">
                         Sync Ulang
                     </button>
@@ -343,6 +343,7 @@
                 autoSyncDatabase();
             } else {
                 localStorage.removeItem('v3_currentUser');
+                loginWrapper.classList.add('hidden'); // default hidden or show login
                 loginWrapper.classList.remove('hidden');
                 mainDashboard.classList.add('hidden');
                 bottomNav.classList.add('hidden');
@@ -506,6 +507,7 @@
             });
         }
 
+        // FUNGSI SYNC ULANG YANG MENGEVALUASI ULANG RIWAYAT SCAN
         async function autoSyncDatabase() {
             try {
                 dbStatus.innerText = "Memuat database...";
@@ -536,12 +538,37 @@
                 });
 
                 if(masterDatabase.size > 0) {
+                    // RE-EVALUASI RIWAYAT SCAN (MENGUBAH STATUS JIKA SEKARANG ADA DI DATABASE)
+                    validCount = 0;
+                    scannedNumbers.clear();
+
+                    scanHistoryData.forEach(item => {
+                        let resiNum = item.resi;
+                        if (masterDatabase.has(resiNum)) {
+                            let meta = masterDatabase.get(resiNum);
+                            item.status = 'VALID';
+                            item.toko = meta.toko;
+                            item.kurir = meta.kurir;
+                            item.produk = meta.produk;
+                            validCount++;
+                        } else {
+                            item.status = 'TIDAK VALID';
+                            item.toko = '-';
+                            item.kurir = '-';
+                            item.produk = '-';
+                        }
+                        scannedNumbers.add(resiNum);
+                    });
+
+                    saveToLocalStorage();
+
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
                     dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
                     if(countValidSpan) countValidSpan.innerText = validCount;
+                    
                     renderHistoryList();
                     updateRemainingDisplay();
-                    showToast("Database v3.1 tersinkronisasi", "success");
+                    showToast("Sync Ulang Berhasil: Riwayat telah diperbarui!", "success");
                 } else {
                     dbStatus.innerText = "Database kosong / format salah";
                     dbStatus.className = "text-[11px] text-amber-400 font-bold mt-0.5";
