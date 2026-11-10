@@ -71,11 +71,14 @@
                     Riwayat Sudah Discan
                 </h3>
                 <div class="flex items-center gap-2">
-                    <!-- Tombol Sync Ulang -->
-                    <button onclick="autoSyncDatabase()" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold underline bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-500/20 transition active:scale-95">
+                    <!-- Tombol Sync Ulang (Tanpa Underline, Model Kapsul Elegan) -->
+                    <button onclick="autoSyncDatabase()" class="text-[11px] text-cyan-300 font-bold bg-cyan-500/15 hover:bg-cyan-500/25 px-3 py-1.5 rounded-xl border border-cyan-500/30 transition active:scale-95 shadow-sm">
                         Sync Ulang
                     </button>
-                    <button id="btn-clear-history" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold underline bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/20 transition active:scale-95">Hapus Sesi</button>
+                    <!-- Tombol Hapus Sesi (Tanpa Underline) -->
+                    <button id="btn-clear-history" class="text-[11px] text-rose-300 font-bold bg-rose-500/15 hover:bg-rose-500/25 px-3 py-1.5 rounded-xl border border-rose-500/30 transition active:scale-95 shadow-sm">
+                        Hapus Sesi
+                    </button>
                 </div>
             </div>
 
@@ -263,7 +266,6 @@
             lastTouchEnd = now;
         }, false);
 
-        // DATABASE USER & PASSWORD
         let validUsers = JSON.parse(localStorage.getItem('v3_validUsers') || JSON.stringify({
             "fian": "paiko098",
             "admin": "admin123",
@@ -343,7 +345,6 @@
                 autoSyncDatabase();
             } else {
                 localStorage.removeItem('v3_currentUser');
-                loginWrapper.classList.add('hidden'); // default hidden or show login
                 loginWrapper.classList.remove('hidden');
                 mainDashboard.classList.add('hidden');
                 bottomNav.classList.add('hidden');
@@ -507,7 +508,6 @@
             });
         }
 
-        // FUNGSI SYNC ULANG YANG MENGEVALUASI ULANG RIWAYAT SCAN
         async function autoSyncDatabase() {
             try {
                 dbStatus.innerText = "Memuat database...";
@@ -538,7 +538,6 @@
                 });
 
                 if(masterDatabase.size > 0) {
-                    // RE-EVALUASI RIWAYAT SCAN (MENGUBAH STATUS JIKA SEKARANG ADA DI DATABASE)
                     validCount = 0;
                     scannedNumbers.clear();
 
