@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Database Resi v3.1 Pro</title>
+    <title>Database Resi v3.3 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -37,7 +37,7 @@
         <div class="glass-panel px-4 py-3.5 rounded-3xl flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-extrabold text-xs tracking-wider">
-                    v3.1
+                    v3.3
                 </div>
                 <div>
                     <h1 class="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
@@ -271,6 +271,8 @@
         }));
 
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
+        
+        // URL Apps Script v3.3 Terbaru
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyawdftOB2ZDHo0jQCRmcaU1Pp4wmpLLYfo_FonDc67_g3uFED95-dpZS_UA7h-twfa/exec"; 
 
         const video = document.getElementById('video');
@@ -335,7 +337,6 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             if (currentUser && validUsers[currentUser]) {
-                // Mengubah nama user menjadi huruf besar (uppercase) otomatis
                 let upperUser = currentUser.toUpperCase();
                 navUserLabel.innerText = upperUser.length > 5 ? upperUser.substring(0, 5) + '..' : upperUser;
                 menuUserDisplay.innerText = upperUser;
@@ -547,7 +548,7 @@
                     if(countValidSpan) countValidSpan.innerText = validCount;
                     renderHistoryList();
                     updateRemainingDisplay();
-                    showToast("Database v3.1 tersinkronisasi", "success");
+                    showToast("Database v3.3 tersinkronisasi", "success");
                 } else {
                     dbStatus.innerText = "Database kosong / format salah";
                     dbStatus.className = "text-[11px] text-amber-400 font-bold mt-0.5";
@@ -832,10 +833,10 @@
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.1");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.3");
 
             const dateStr = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(workbook, `Laporan_Resi_v3.1_${dateStr}.xlsx`);
+            XLSX.writeFile(workbook, `Laporan_Resi_v3.3_${dateStr}.xlsx`);
             showToast("File XLSX berhasil diunduh", "success");
         });
     </script>
