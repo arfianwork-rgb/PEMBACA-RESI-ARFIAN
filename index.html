@@ -808,40 +808,72 @@
             });
         });
 
-        btnExportXlsx.addEventListener('click', () => {
-            if(masterDatabase.size === 0) {
-                showToast("Database master belum termuat", "error");
-                return;
-            }
+btnExportXlsx.addEventListener('click', () => {
+    if(masterDatabase.size === 0) {
+        showToast("Database master belum termuat", "error");
+        return;
+    }
 
-            let exportRows = [];
-            let index = 1;
+    let exportRows = [];
+    let index = 1;
 
-            masterDatabase.forEach((meta, resi) => {
-                let isScanned = scannedNumbers.has(resi);
-                let historyItem = scanHistoryData.find(item => item.resi === resi);
-                let waktuScan = historyItem ? historyItem.waktu : "-";
+    // Masukkan judul laporan di baris pertama
+    exportRows.push({ "No": "LAPORAN REKAPITULASI PEMINDAIAN RESI SHOPEE" });
+    exportRows.push({ "No": `Dicetak oleh: ${currentUser.toUpperCase()} | Tanggal: ${new Date().toLocaleDateString('id-ID')}` });
+    exportRows.push({}); // Baris kosong untuk spasi
 
-                exportRows.push({
-                    "No": index++,
-                    "Nomor Resi / Invoice": resi,
-                    "Nama Toko": meta.toko,
-                    "Kurir Pickup": meta.kurir,
-                    "Nama Produk": meta.produk,
-                    "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
-                    "Waktu Scan": isScanned ? waktuScan : "-",
-                    "User ID": currentUser || "-"
-                });
-            });
+    // Header Kolom
+    exportRows.push({
+        "No": "No",
+        "Nomor Resi / Invoice": "Nomor Resi / Invoice",
+        "Nama Toko": "Nama Toko",
+        "Kurir Pickup": "Kurir Pickup",
+        "Nama Produk": "Nama Produk",
+        "Status Scan": "Status Scan",
+        "Waktu Scan": "Waktu Scan",
+        "User ID": "User ID"
+    });
 
-            const worksheet = XLSX.utils.json_to_sheet(exportRows);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi Lengkap");
+    // Isi Data Master & Status Lokal
+    masterDatabase.forEach((meta, resi) => {
+        let isScanned = scannedNumbers.has(resi);
+        let historyItem = scanHistoryData.find(item => item.resi === resi);
+        let waktuScan = historyItem ? historyItem.waktu : "-";
 
-            const dateStr = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(workbook, `Laporan_Full_Resi_${dateStr}.xlsx`);
-            showToast("File XLSX lengkap berhasil diunduh", "success");
+        exportRows.push({
+            "No": index++,
+            "Nomor Resi / Invoice": String(resi), // Pastikan terbaca sebagai teks/string agar tidak dibulatkan Excel
+            "Nama Toko": meta.toko,
+            "Kurir Pickup": meta.kurir,
+            "Nama Produk": meta.produk,
+            "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
+            "Waktu Scan": waktuScan,
+            "User ID": currentUser || "-"
         });
+    });
+
+    // Buat worksheet dari JSON
+    const worksheet = XLSX.utils.json_to_sheet(exportRows, { skipHeader: true });
+
+    // Pengaturan lebar kolom agar rapi dan tidak terpotong
+    worksheet['!cols'] = [
+        { wch: 6 },  // No
+        { wch: 22 }, // Nomor Resi
+        { wch: 18 }, // Nama Toko
+        { wch: 15 }, // Kurir
+        { wch: 30 }, // Produk
+        { wch: 16 }, // Status
+        { wch: 14 }, // Waktu
+        { wch: 12 }  // User ID
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
+
+    const dateStr = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(workbook, `Laporan_Resi_Pro_${dateStr}.xlsx`);
+    showToast("File XLSX rapi berhasil diunduh", "success");
+    });
     </script>
 </body>
 </html>
