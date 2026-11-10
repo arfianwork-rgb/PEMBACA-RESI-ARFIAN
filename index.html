@@ -9,36 +9,18 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style> 
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            touch-action: pan-x pan-y; 
-            -webkit-text-size-adjust: 100%; 
-        } 
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .toast-animate {
-            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .glass-panel {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; } 
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast-animate { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .glass-panel { background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8)); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden pb-28">
 
-    <!-- Header & Dashboard Utama -->
     <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
-        <!-- Header Atas -->
         <div class="glass-panel px-4 py-3.5 rounded-3xl flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-extrabold text-xs tracking-wider">
-                    v3.3
-                </div>
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-extrabold text-xs tracking-wider">v3.3</div>
                 <div>
                     <h1 class="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
                         Database Resi <span class="text-[9px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Pro</span>
@@ -52,7 +34,6 @@
             </div>
         </div>
 
-        <!-- Panel Total Statistik -->
         <div class="grid grid-cols-2 gap-3.5">
             <div class="glass-panel p-4 rounded-3xl border-emerald-500/20 text-center relative overflow-hidden group">
                 <span class="block text-3xl font-black text-emerald-400 tracking-tight" id="count-valid">0</span>
@@ -64,12 +45,9 @@
             </div>
         </div>
 
-        <!-- KONTAINER UTAMA: RIWAYAT SUDAH DISCAN -->
         <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
             <div class="flex justify-between items-center">
-                <h3 class="text-xs font-extrabold text-cyan-400 uppercase tracking-wider">
-                    Riwayat Sudah Discan
-                </h3>
+                <h3 class="text-xs font-extrabold text-cyan-400 uppercase tracking-wider">Riwayat Sudah Discan</h3>
                 <div class="flex items-center gap-2">
                     <label class="text-[11px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer bg-blue-500/10 px-3 py-1 rounded-xl border border-blue-500/20 transition active:scale-95">
                         Galeri
@@ -79,42 +57,29 @@
                 </div>
             </div>
 
-            <!-- Kotak Pencarian -->
             <div class="relative">
                 <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Riwayat -->
             <div class="grid grid-cols-3 gap-2">
-                <button id="btn-copy-valid" class="bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
-                    Salin Valid
-                </button>
-                <button id="btn-export-xlsx" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
-                    Export XLSX
-                </button>
-                <button id="btn-copy-invalid" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
-                    Invalid
-                </button>
+                <button id="btn-copy-valid" class="bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">Salin Valid</button>
+                <button id="btn-export-xlsx" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">Export XLSX</button>
+                <button id="btn-copy-invalid" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">Invalid</button>
             </div>
 
-            <!-- List Sudah Discan -->
             <ul id="result-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-48 overflow-y-auto border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-5">Belum ada resi yang dipindai hari ini</li>
             </ul>
         </div>
 
-        <!-- PANEL SISA BELUM DISCAN -->
         <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
             <div class="grid grid-cols-2 gap-2">
                 <button id="btn-toggle-remaining" class="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">
                     <span id="toggle-text">Cek Sisa Belum Discan</span>
                 </button>
-                <button id="btn-copy-remaining" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">
-                    Salin Semua Sisa
-                </button>
+                <button id="btn-copy-remaining" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">Salin Semua Sisa</button>
             </div>
 
-            <!-- Kontainer Daftar Sisa Tersembunyi -->
             <div id="remaining-container" class="hidden space-y-2 pt-2 border-t border-slate-800">
                 <ul id="remaining-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-40 overflow-y-auto border border-slate-800/80">
                     <li class="text-center text-slate-500 text-xs py-4">Memuat data...</li>
@@ -123,14 +88,13 @@
         </div>
     </div>
 
-    <!-- Halaman Login USER (Wajib) -->
+    <!-- Halaman Login -->
     <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
                 <h2 class="text-lg font-extrabold text-white tracking-tight">LOGIN USER</h2>
                 <p class="text-xs text-slate-400">Masukkan User ID dan Password terdaftar</p>
             </div>
-
             <div class="space-y-3">
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID</label>
@@ -141,33 +105,23 @@
                     <input type="password" id="login-pass" placeholder="Masukkan Password..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
                 </div>
             </div>
-
             <div class="pt-2">
-                <button id="btn-submit-login" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
-                    Masuk ke Aplikasi
-                </button>
+                <button id="btn-submit-login" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">Masuk ke Aplikasi</button>
             </div>
         </div>
     </div>
 
-    <!-- Menu Pilihan Akun (Logout & Ubah Password) -->
+    <!-- Menu Pilihan Akun -->
     <div id="account-menu-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-4 shadow-2xl border border-slate-800 text-center">
             <div class="space-y-1">
                 <h2 class="text-lg font-extrabold text-white tracking-tight">PENGATURAN AKUN</h2>
                 <p class="text-xs text-slate-400">Masuk sebagai: <span id="menu-user-display" class="text-cyan-400 font-bold uppercase"></span></p>
             </div>
-
             <div class="space-y-2 pt-2">
-                <button id="btn-goto-changepass" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold py-3 px-4 rounded-2xl transition border border-slate-700 text-xs uppercase tracking-wider">
-                    Ubah Password
-                </button>
-                <button id="btn-logout" class="w-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold py-3 px-4 rounded-2xl transition text-xs uppercase tracking-wider">
-                    Logout (Keluar Akun)
-                </button>
-                <button id="btn-close-menu" class="w-full bg-transparent hover:bg-slate-900 text-slate-400 font-semibold py-2.5 px-4 rounded-2xl transition text-xs">
-                    Tutup
-                </button>
+                <button id="btn-goto-changepass" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold py-3 px-4 rounded-2xl transition border border-slate-700 text-xs uppercase tracking-wider">Ubah Password</button>
+                <button id="btn-logout" class="w-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold py-3 px-4 rounded-2xl transition text-xs uppercase tracking-wider">Logout (Keluar Akun)</button>
+                <button id="btn-close-menu" class="w-full bg-transparent hover:bg-slate-900 text-slate-400 font-semibold py-2.5 px-4 rounded-2xl transition text-xs">Tutup</button>
             </div>
         </div>
     </div>
@@ -179,7 +133,6 @@
                 <h2 class="text-lg font-extrabold text-white tracking-tight">UBAH PASSWORD</h2>
                 <p class="text-xs text-slate-400">Perbarui kata sandi akun <span id="current-user-display" class="text-cyan-400 font-bold uppercase"></span></p>
             </div>
-
             <div class="space-y-3">
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password Lama</label>
@@ -190,61 +143,46 @@
                     <input type="password" id="new-pass" placeholder="Masukkan password baru..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
                 </div>
             </div>
-
             <div class="flex gap-2 pt-2">
-                <button id="btn-submit-changepass" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
-                    Simpan
-                </button>
-                <button id="btn-close-changepass" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition border border-slate-700">
-                    Batal
-                </button>
+                <button id="btn-submit-changepass" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">Simpan</button>
+                <button id="btn-close-changepass" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition border border-slate-700">Batal</button>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar Mengambang -->
+    <!-- Navigation Bar Bawah -->
     <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">SYNC</span>
             <span class="text-[9px] font-bold tracking-wider uppercase">Muat Ulang</span>
         </button>
-
         <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition active:scale-90 -mt-6">
             <span class="text-xs font-extrabold bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/40 border border-cyan-300/30 uppercase tracking-widest">PINDAI</span>
         </button>
-
         <button id="btn-open-menu" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
             <span id="nav-user-label" class="text-xs font-bold uppercase bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
             <span class="text-[9px] font-bold tracking-wider uppercase">Akun</span>
         </button>
     </nav>
 
-    <!-- Area Utama Kamera Full Screen -->
+    <!-- Kamera Full Screen -->
     <main id="camera-wrapper" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
         <div class="relative w-full flex-1 bg-black overflow-hidden">
             <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
             <div class="absolute inset-0 border-2 border-cyan-400/80 border-dashed opacity-75 m-12 rounded-3xl pointer-events-none animate-pulse"></div>
         </div>
         <canvas id="canvas" class="hidden"></canvas>
-
         <footer class="w-full bg-slate-900/95 backdrop-blur-2xl p-4 border-t border-slate-800 space-y-3 rounded-t-3xl shadow-2xl">
             <div class="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between">
                 <div class="overflow-hidden pr-2">
                     <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Resi Terakhir:</span>
                     <span id="last-scanned-number" class="text-sm font-mono font-bold text-cyan-300 tracking-wide">-</span>
                 </div>
-                <div id="last-scanned-badge">
-                    <span class="text-[10px] bg-slate-800 text-slate-400 px-3 py-1.5 rounded-xl font-medium">Belum ada scan</span>
-                </div>
+                <div id="last-scanned-badge"><span class="text-[10px] bg-slate-800 text-slate-400 px-3 py-1.5 rounded-xl font-medium">Belum ada scan</span></div>
             </div>
-
             <div class="flex gap-2.5">
-                <button id="btn-scan" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 active:scale-95 transition text-sm flex items-center justify-center uppercase tracking-wider">
-                    Ambil / Scan Resi
-                </button>
-                <button id="btn-stop-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition active:scale-95 border border-slate-700">
-                    Tutup
-                </button>
+                <button id="btn-scan" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 active:scale-95 transition text-sm flex items-center justify-center uppercase tracking-wider">Ambil / Scan Resi</button>
+                <button id="btn-stop-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition active:scale-95 border border-slate-700">Tutup</button>
             </div>
         </footer>
     </main>
@@ -252,27 +190,13 @@
     <div id="toast-container" class="fixed bottom-24 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
-        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
-        document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
-        document.addEventListener('gestureend', function (e) { e.preventDefault(); });
-
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            let now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) { event.preventDefault(); }
-            lastTouchEnd = now;
-        }, false);
-
-        // DATABASE USER & PASSWORD
         let validUsers = JSON.parse(localStorage.getItem('v3_validUsers') || JSON.stringify({
-            "fian": "paiko098",
-            "admin": "admin123",
-            "march": "123456"
+            "fian": "paiko098", "admin": "admin123", "march": "123456"
         }));
 
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
         
-        // URL Apps Script v3.3 Terbaru
+        // Ganti URL di bawah ini jika Anda melakukan deployment ulang baru di Apps Script
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyawdftOB2ZDHo0jQCRmcaU1Pp4wmpLLYfo_FonDc67_g3uFED95-dpZS_UA7h-twfa/exec"; 
 
         const video = document.getElementById('video');
@@ -283,37 +207,30 @@
         const toggleText = document.getElementById('toggle-text');
         const searchHistory = document.getElementById('search-history');
         const toastContainer = document.getElementById('toast-container');
-        
         const countValidSpan = document.getElementById('count-valid');
         const countRemainingSpan = document.getElementById('count-remaining');
-        
         const mainDashboard = document.getElementById('main-dashboard');
         const cameraWrapper = document.getElementById('camera-wrapper');
         const bottomNav = document.getElementById('bottom-nav');
-        
         const btnStart = document.getElementById('btn-start-camera');
         const btnScan = document.getElementById('btn-scan');
         const btnStop = document.getElementById('btn-stop-camera');
         const fileUpload = document.getElementById('file-upload');
-        
         const btnCopyValid = document.getElementById('btn-copy-valid');
         const btnCopyInvalid = document.getElementById('btn-copy-invalid');
         const btnCopyRemaining = document.getElementById('btn-copy-remaining');
         const btnToggleRemaining = document.getElementById('btn-toggle-remaining');
         const btnExportXlsx = document.getElementById('btn-export-xlsx');
         const btnClearHistory = document.getElementById('btn-clear-history');
-        
         const loginWrapper = document.getElementById('login-wrapper');
         const btnSubmitLogin = document.getElementById('btn-submit-login');
         const loginUseridInput = document.getElementById('login-userid');
         const loginPassInput = document.getElementById('login-pass');
-        
         const accountMenuWrapper = document.getElementById('account-menu-wrapper');
         const btnOpenMenu = document.getElementById('btn-open-menu');
         const btnCloseMenu = document.getElementById('btn-close-menu');
         const btnGotoChangepass = document.getElementById('btn-goto-changepass');
         const btnLogout = document.getElementById('btn-logout');
-        
         const changepassWrapper = document.getElementById('changepass-wrapper');
         const btnCloseChangepass = document.getElementById('btn-close-changepass');
         const btnSubmitChangepass = document.getElementById('btn-submit-changepass');
@@ -321,7 +238,6 @@
         const newPassInput = document.getElementById('new-pass');
         const currentUserDisplay = document.getElementById('current-user-display');
         const menuUserDisplay = document.getElementById('menu-user-display');
-        
         const navUserLabel = document.getElementById('nav-user-label');
         const dbStatus = document.getElementById('db-status');
         const lastScannedNumber = document.getElementById('last-scanned-number');
@@ -341,7 +257,6 @@
                 navUserLabel.innerText = upperUser.length > 5 ? upperUser.substring(0, 5) + '..' : upperUser;
                 menuUserDisplay.innerText = upperUser;
                 currentUserDisplay.innerText = upperUser;
-                
                 loginWrapper.classList.add('hidden');
                 mainDashboard.classList.remove('hidden');
                 bottomNav.classList.remove('hidden');
@@ -356,123 +271,53 @@
             renderHistoryList();
         });
 
-        if(btnOpenMenu) {
-            btnOpenMenu.addEventListener('click', () => {
-                menuUserDisplay.innerText = currentUser.toUpperCase();
-                accountMenuWrapper.classList.remove('hidden');
-            });
-        }
-
-        if(btnCloseMenu) {
-            btnCloseMenu.addEventListener('click', () => {
-                accountMenuWrapper.classList.add('hidden');
-            });
-        }
-
-        if(btnGotoChangepass) {
-            btnGotoChangepass.addEventListener('click', () => {
-                accountMenuWrapper.classList.add('hidden');
-                currentUserDisplay.innerText = currentUser.toUpperCase();
-                oldPassInput.value = '';
-                newPassInput.value = '';
-                changepassWrapper.classList.remove('hidden');
-            });
-        }
-
-        if(btnLogout) {
-            btnLogout.addEventListener('click', () => {
-                if(confirm("Yakin ingin keluar dari akun ini?")) {
-                    localStorage.removeItem('v3_currentUser');
-                    currentUser = '';
-                    accountMenuWrapper.classList.add('hidden');
-                    mainDashboard.classList.add('hidden');
-                    bottomNav.classList.add('hidden');
-                    loginWrapper.classList.remove('hidden');
-                    showToast("Berhasil logout", "info");
-                }
-            });
-        }
-
-        if(btnCloseChangepass) {
-            btnCloseChangepass.addEventListener('click', () => {
-                changepassWrapper.classList.add('hidden');
-            });
-        }
+        if(btnOpenMenu) btnOpenMenu.addEventListener('click', () => { menuUserDisplay.innerText = currentUser.toUpperCase(); accountMenuWrapper.classList.remove('hidden'); });
+        if(btnCloseMenu) btnCloseMenu.addEventListener('click', () => { accountMenuWrapper.classList.add('hidden'); });
+        if(btnGotoChangepass) btnGotoChangepass.addEventListener('click', () => { accountMenuWrapper.classList.add('hidden'); currentUserDisplay.innerText = currentUser.toUpperCase(); oldPassInput.value = ''; newPassInput.value = ''; changepassWrapper.classList.remove('hidden'); });
+        if(btnLogout) btnLogout.addEventListener('click', () => { if(confirm("Yakin ingin keluar dari akun ini?")) { localStorage.removeItem('v3_currentUser'); currentUser = ''; accountMenuWrapper.classList.add('hidden'); mainDashboard.classList.add('hidden'); bottomNav.classList.add('hidden'); loginWrapper.classList.remove('hidden'); showToast("Berhasil logout", "info"); } });
+        if(btnCloseChangepass) btnCloseChangepass.addEventListener('click', () => { changepassWrapper.classList.add('hidden'); });
 
         btnSubmitChangepass.addEventListener('click', () => {
             let oldPass = oldPassInput.value.trim();
             let newPass = newPassInput.value.trim();
-
-            if(!oldPass || !newPass) {
-                showToast("Password lama dan baru harus diisi", "error");
-                return;
-            }
-
+            if(!oldPass || !newPass) { showToast("Password lama dan baru harus diisi", "error"); return; }
             if(validUsers[currentUser] === oldPass) {
                 validUsers[currentUser] = newPass;
                 localStorage.setItem('v3_validUsers', JSON.stringify(validUsers));
                 showToast("Password berhasil diperbarui!", "success");
                 changepassWrapper.classList.add('hidden');
-            } else {
-                showToast("Password lama salah!", "error");
-            }
+            } else { showToast("Password lama salah!", "error"); }
         });
 
         btnSubmitLogin.addEventListener('click', () => {
             let uid = loginUseridInput.value.trim().toLowerCase();
             let pass = loginPassInput.value.trim();
-
-            if(!uid || !pass) {
-                showToast("User ID dan Password harus diisi", "error");
-                return;
-            }
-
+            if(!uid || !pass) { showToast("User ID dan Password harus diisi", "error"); return; }
             if (validUsers[uid] && validUsers[uid] === pass) {
                 currentUser = uid;
                 localStorage.setItem('v3_currentUser', currentUser);
-                
                 let upperUser = currentUser.toUpperCase();
                 navUserLabel.innerText = upperUser.length > 5 ? upperUser.substring(0, 5) + '..' : upperUser;
                 menuUserDisplay.innerText = upperUser;
                 currentUserDisplay.innerText = upperUser;
-                
                 showToast(`Login berhasil, selamat datang ${upperUser}!`, "success");
-                loginUseridInput.value = '';
-                loginPassInput.value = '';
-
-                loginWrapper.classList.add('hidden');
-                mainDashboard.classList.remove('hidden');
-                bottomNav.classList.remove('hidden');
-                
+                loginUseridInput.value = ''; loginPassInput.value = '';
+                loginWrapper.classList.add('hidden'); mainDashboard.classList.remove('hidden'); bottomNav.classList.remove('hidden');
                 autoSyncDatabase();
-            } else {
-                showToast("User ID atau Password salah!", "error");
-                loginPassInput.value = '';
-            }
+            } else { showToast("User ID atau Password salah!", "error"); loginPassInput.value = ''; }
         });
 
         function showToast(message, type = 'info') {
             toastContainer.innerHTML = '';
             const toast = document.createElement('div');
             toast.className = `toast-animate pointer-events-auto flex items-center justify-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-bold backdrop-blur-2xl transition-all max-w-sm w-full`;
-            
-            if(type === 'success') {
-                toast.className += ` bg-emerald-950/90 border-emerald-500/50 text-emerald-200`;
-            } else if(type === 'error') {
-                toast.className += ` bg-rose-950/90 border-rose-500/50 text-rose-200`;
-            } else if(type === 'warn') {
-                toast.className += ` bg-amber-950/90 border-amber-500/50 text-amber-200`;
-            } else {
-                toast.className += ` bg-slate-900/90 border-slate-700 text-slate-200`;
-            }
-            
+            if(type === 'success') toast.className += ` bg-emerald-950/90 border-emerald-500/50 text-emerald-200`;
+            else if(type === 'error') toast.className += ` bg-rose-950/90 border-rose-500/50 text-rose-200`;
+            else if(type === 'warn') toast.className += ` bg-amber-950/90 border-amber-500/50 text-amber-200`;
+            else toast.className += ` bg-slate-900/90 border-slate-700 text-slate-200`;
             toast.innerText = message;
             toastContainer.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(10px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         function saveToLocalStorage() {
@@ -483,28 +328,13 @@
 
         function renderHistoryList(filterQuery = '') {
             resultList.innerHTML = '';
-            const filteredData = scanHistoryData.filter(item => 
-                item.resi.toLowerCase().includes(filterQuery.toLowerCase()) || 
-                item.toko.toLowerCase().includes(filterQuery.toLowerCase()) ||
-                item.produk.toLowerCase().includes(filterQuery.toLowerCase())
-            );
-
-            if(filteredData.length === 0) {
-                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-5">Tidak ada riwayat yang cocok</li>`;
-                return;
-            }
-
+            const filteredData = scanHistoryData.filter(item => item.resi.toLowerCase().includes(filterQuery.toLowerCase()) || item.toko.toLowerCase().includes(filterQuery.toLowerCase()) || item.produk.toLowerCase().includes(filterQuery.toLowerCase()));
+            if(filteredData.length === 0) { resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-5">Tidak ada riwayat yang cocok</li>`; return; }
             filteredData.forEach(item => {
                 const li = document.createElement('li');
                 if (item.status === 'VALID') {
                     li.className = "font-mono text-emerald-100 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/25 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
-                    li.innerHTML = `
-                        <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-emerald-300">${item.resi}</span><span class="text-[9px] bg-emerald-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-emerald-200 border border-emerald-500/30 uppercase">VALID (${item.waktu})</span></div>
-                        <div class="text-[10px] text-emerald-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-emerald-500/20">
-                            <div>Toko: <b class="text-white">${item.toko}</b></div>
-                            <div>Kurir: <b class="text-white">${item.kurir}</b></div>
-                            <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
-                        </div>`;
+                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-emerald-300">${item.resi}</span><span class="text-[9px] bg-emerald-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-emerald-200 border border-emerald-500/30 uppercase">VALID (${item.waktu})</span></div><div class="text-[10px] text-emerald-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-emerald-500/20"><div>Toko: <b class="text-white">${item.toko}</b></div><div>Kurir: <b class="text-white">${item.kurir}</b></div><div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div></div>`;
                 } else {
                     li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md";
                     li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-rose-300">${item.resi}</span><span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30 uppercase">TIDAK ADA (${item.waktu})</span></div>`;
@@ -518,10 +348,8 @@
                 dbStatus.innerText = "Memuat database...";
                 const response = await fetch(FIXED_SHEETS_URL);
                 const csvText = await response.text();
-                
                 masterDatabase.clear();
                 const lines = csvText.split(/\r?\n/);
-
                 lines.forEach((line, index) => {
                     if (index === 0) return;
                     const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
@@ -530,27 +358,20 @@
                         const toko = cols[1] || "-";
                         const kurir = cols[2] || "-";
                         const produk = cols[3] || "-";
-
                         const matches = resi.match(orderRegex);
-                        if (matches) {
-                            matches.forEach(m => {
-                                masterDatabase.set(m, { toko, kurir, produk });
-                            });
-                        } else if (resi.length >= 10) {
-                            masterDatabase.set(resi, { toko, kurir, produk });
-                        }
+                        if (matches) { matches.forEach(m => masterDatabase.set(m, { toko, kurir, produk })); }
+                        else if (resi.length >= 10) { masterDatabase.set(resi, { toko, kurir, produk }); }
                     }
                 });
-
                 if(masterDatabase.size > 0) {
                     dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
                     dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
                     if(countValidSpan) countValidSpan.innerText = validCount;
                     renderHistoryList();
                     updateRemainingDisplay();
-                    showToast("Database v3.3 tersinkronisasi", "success");
+                    showToast("Database tersinkronisasi", "success");
                 } else {
-                    dbStatus.innerText = "Database kosong / format salah";
+                    dbStatus.innerText = "Database kosong";
                     dbStatus.className = "text-[11px] text-amber-400 font-bold mt-0.5";
                 }
             } catch (err) {
@@ -560,39 +381,17 @@
             }
         }
 
-        searchHistory.addEventListener('input', (e) => {
-            renderHistoryList(e.target.value);
-        });
+        searchHistory.addEventListener('input', (e) => { renderHistoryList(e.target.value); });
 
         function playSound(type) {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            
-            if(type === 'success') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(900, ctx.currentTime);
-                gain.gain.setValueAtTime(0.5, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.3);
-            } else if(type === 'warn') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(500, ctx.currentTime);
-                gain.gain.setValueAtTime(0.4, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.3);
-            } else {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, ctx.currentTime);
-                gain.gain.setValueAtTime(0.5, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.5);
-            }
+            osc.connect(gain); gain.connect(ctx.destination);
+            if(type === 'success') { osc.type = 'sine'; osc.frequency.setValueAtTime(900, ctx.currentTime); gain.gain.setValueAtTime(0.5, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); }
+            else if(type === 'warn') { osc.type = 'triangle'; osc.frequency.setValueAtTime(500, ctx.currentTime); gain.gain.setValueAtTime(0.4, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); }
+            else { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, ctx.currentTime); gain.gain.setValueAtTime(0.5, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5); }
+            osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
         }
 
         btnStart.addEventListener('click', async () => {
@@ -602,9 +401,7 @@
                 mainDashboard.classList.add('hidden');
                 bottomNav.classList.add('hidden'); 
                 cameraWrapper.classList.remove('hidden');
-            } catch (err) {
-                showToast("Gagal membuka kamera: " + err.message, "error");
-            }
+            } catch (err) { showToast("Gagal membuka kamera: " + err.message, "error"); }
         });
 
         btnStop.addEventListener('click', () => {
@@ -617,27 +414,20 @@
         async function processImage(imageSource) {
             lastScannedNumber.innerText = "Memproses...";
             lastScannedBadge.innerHTML = `<span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-xl font-semibold uppercase animate-pulse">Membaca OCR...</span>`;
-            
             try {
                 const result = await Tesseract.recognize(imageSource, 'eng');
                 const text = result.data.text.replace(/\s+/g, ''); 
                 const matches = text.match(orderRegex);
-                
                 if (matches && matches.length > 0) {
                     let num = matches[0]; 
-                    
                     let isInDb = false;
                     let meta = { toko: "-", kurir: "-", produk: "-" };
-
                     if (masterDatabase.size > 0 && masterDatabase.has(num)) {
                         isInDb = true;
                         meta = masterDatabase.get(num);
-                    } else if (masterDatabase.size === 0) {
-                        isInDb = true; 
-                    }
+                    } else if (masterDatabase.size === 0) { isInDb = true; }
 
                     let isAlreadyScanned = scannedNumbers.has(num);
-
                     if (isAlreadyScanned) {
                         playSound('warn');
                         lastScannedNumber.innerText = num;
@@ -645,21 +435,11 @@
                         showToast(`Resi ${num} di-scan ulang`, "warn");
                     } else {
                         scannedNumbers.add(num);
-                        if (isInDb) {
-                            validCount++;
-                            if(countValidSpan) countValidSpan.innerText = validCount;
-                        }
-
+                        if (isInDb) { validCount++; if(countValidSpan) countValidSpan.innerText = validCount; }
                         scanHistoryData.unshift({
-                            resi: num,
-                            invoice: num,
-                            toko: meta.toko,
-                            kurir: meta.kurir,
-                            produk: meta.produk,
-                            status: isInDb ? 'VALID' : 'TIDAK VALID',
-                            waktu: new Date().toLocaleTimeString()
+                            resi: num, invoice: num, toko: meta.toko, kurir: meta.kurir, produk: meta.produk,
+                            status: isInDb ? 'VALID' : 'TIDAK VALID', waktu: new Date().toLocaleTimeString()
                         });
-
                         saveToLocalStorage();
                         renderHistoryList();
                         updateRemainingDisplay(); 
@@ -667,6 +447,7 @@
 
                     lastScannedNumber.innerText = num;
                     
+                    // Trigger pengiriman data otomatis ke Apps Script untuk update Kolom E
                     if(APPS_SCRIPT_URL && isInDb) {
                         fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, {
                             method: 'GET',
@@ -686,18 +467,13 @@
                     lastScannedNumber.innerText = "Tidak Dikenali";
                     lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-300 px-3 py-1 rounded-bold uppercase">Gagal Deteksi</span>`;
                 }
-            } catch (error) {
-                lastScannedNumber.innerText = "Error Sistem";
-                console.error(error);
-            }
+            } catch (error) { lastScannedNumber.innerText = "Error Sistem"; }
         }
 
         btnScan.addEventListener('click', () => {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = canvas.toDataURL('image/jpeg');
-            processImage(imageData);
+            processImage(canvas.toDataURL('image/jpeg'));
         });
 
         fileUpload.addEventListener('change', (e) => {
@@ -711,132 +487,64 @@
 
         function updateRemainingDisplay() {
             if(masterDatabase.size === 0) return;
-
             let remainingListArray = [];
-            masterDatabase.forEach((meta, resi) => {
-                if(!scannedNumbers.has(resi)) {
-                    remainingListArray.push({ resi, ...meta });
-                }
-            });
-
+            masterDatabase.forEach((meta, resi) => { if(!scannedNumbers.has(resi)) remainingListArray.push({ resi, ...meta }); });
             if(countRemainingSpan) countRemainingSpan.innerText = remainingListArray.length;
             remainingList.innerHTML = '';
-
-            if(remainingListArray.length === 0) {
-                remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-5 font-bold">Semua resi di database sudah selesai discan</li>`;
-                return;
-            }
-
+            if(remainingListArray.length === 0) { remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-5 font-bold">Semua resi di database sudah selesai discan</li>`; return; }
             remainingListArray.forEach(item => {
                 const li = document.createElement('li');
                 li.className = "font-mono text-amber-100 bg-amber-950/30 p-3 rounded-2xl border border-amber-500/20 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
-                li.innerHTML = `
-                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-amber-300">${item.resi}</span><span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span></div>
-                    <div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20">
-                        <div>Toko: <b class="text-white">${item.toko}</b></div>
-                        <div>Kurir: <b class="text-white">${item.kurir}</b></div>
-                        <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
-                    </div>`;
+                li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-amber-300">${item.resi}</span><span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span></div><div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20"><div>Toko: <b class="text-white">${item.toko}</b></div><div>Kurir: <b class="text-white">${item.kurir}</b></div><div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div></div>`;
                 remainingList.appendChild(li);
             });
         }
 
         btnToggleRemaining.addEventListener('click', () => {
-            if(masterDatabase.size === 0) {
-                showToast("Database belum termuat", "error");
-                return;
-            }
-            if(remainingContainer.classList.contains('hidden')) {
-                remainingContainer.classList.remove('hidden');
-                toggleText.innerText = "Sembunyikan Sisa";
-            } else {
-                remainingContainer.classList.add('hidden');
-                toggleText.innerText = "Cek Sisa Belum Discan";
-            }
+            if(masterDatabase.size === 0) { showToast("Database belum termuat", "error"); return; }
+            if(remainingContainer.classList.contains('hidden')) { remainingContainer.classList.remove('hidden'); toggleText.innerText = "Sembunyikan Sisa"; }
+            else { remainingContainer.classList.add('hidden'); toggleText.innerText = "Cek Sisa Belum Discan"; }
         });
 
         btnClearHistory.addEventListener('click', () => {
-            if(scannedNumbers.size === 0) {
-                showToast("Riwayat sudah kosong", "info");
-                return;
-            }
+            if(scannedNumbers.size === 0) { showToast("Riwayat sudah kosong", "info"); return; }
             if(confirm("Yakin ingin menghapus seluruh riwayat dan cache sesi ini?")) {
-                scannedNumbers.clear();
-                scanHistoryData = [];
-                validCount = 0;
-                localStorage.clear();
+                scannedNumbers.clear(); scanHistoryData = []; validCount = 0; localStorage.clear();
                 if(countValidSpan) countValidSpan.innerText = "0";
-                renderHistoryList();
-                updateRemainingDisplay();
+                renderHistoryList(); updateRemainingDisplay();
                 showToast("Riwayat sesi dibersihkan", "success");
             }
         });
 
         btnCopyValid.addEventListener('click', () => {
-            const validItems = scanHistoryData.filter(item => item.status === 'VALID');
-            if(validItems.length === 0) {
-                showToast("Tidak ada resi valid untuk disalin", "error");
-                return;
-            }
-            const validNumbers = validItems.map(item => item.resi);
-            navigator.clipboard.writeText(validNumbers.join('\n')).then(() => {
-                showToast(`Berhasil menyalin ${validNumbers.length} resi valid`, "success");
-            });
+            const validNumbers = scanHistoryData.filter(item => item.status === 'VALID').map(item => item.resi);
+            if(validNumbers.length === 0) { showToast("Tidak ada resi valid", "error"); return; }
+            navigator.clipboard.writeText(validNumbers.join('\n')).then(() => showToast(`Berhasil menyalin ${validNumbers.length} resi`, "success"));
         });
 
         btnCopyInvalid.addEventListener('click', () => {
-            const invalidItems = scanHistoryData.filter(item => item.status === 'TIDAK VALID');
-            if(invalidItems.length === 0) {
-                showToast("Tidak ada resi tidak valid untuk disalin", "error");
-                return;
-            }
-            const invalidNumbers = invalidItems.map(item => item.resi);
-            navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => {
-                showToast(`Berhasil menyalin ${invalidNumbers.length} resi tidak valid`, "success");
-            });
+            const invalidNumbers = scanHistoryData.filter(item => item.status === 'TIDAK VALID').map(item => item.resi);
+            if(invalidNumbers.length === 0) { showToast("Tidak ada resi invalid", "error"); return; }
+            navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => showToast(`Berhasil menyalin ${invalidNumbers.length} resi invalid`, "success"));
         });
 
         btnCopyRemaining.addEventListener('click', () => {
             let remainingNumbers = [];
-            masterDatabase.forEach((meta, resi) => {
-                if(!scannedNumbers.has(resi)) {
-                    remainingNumbers.push(resi);
-                }
-            });
-
-            if(remainingNumbers.length === 0) {
-                showToast("Tidak ada sisa resi yang belum discan", "info");
-                return;
-            }
-
-            navigator.clipboard.writeText(remainingNumbers.join('\n')).then(() => {
-                showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi`, "success");
-            });
+            masterDatabase.forEach((meta, resi) => { if(!scannedNumbers.has(resi)) remainingNumbers.push(resi); });
+            if(remainingNumbers.length === 0) { showToast("Tidak ada sisa resi", "info"); return; }
+            navigator.clipboard.writeText(remainingNumbers.join('\n')).then(() => showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi`, "success"));
         });
 
         btnExportXlsx.addEventListener('click', () => {
-            if(scanHistoryData.length === 0) {
-                showToast("Belum ada data resi untuk diexport", "error");
-                return;
-            }
-
+            if(scanHistoryData.length === 0) { showToast("Belum ada data", "error"); return; }
             const exportRows = scanHistoryData.map((item, idx) => ({
-                "No": idx + 1,
-                "Nomor Resi / Invoice": item.resi,
-                "Nama Toko": item.toko,
-                "Kurir Pickup": item.kurir,
-                "Nama Produk": item.produk,
-                "Status Scan": item.status,
-                "Waktu Scan": item.waktu,
-                "User ID": currentUser || "-"
+                "No": idx + 1, "Nomor Resi": item.resi, "Nama Toko": item.toko, "Kurir": item.kurir,
+                "Produk": item.produk, "Status Scan": item.status, "Waktu": item.waktu, "User ID": currentUser || "-"
             }));
-
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.3");
-
-            const dateStr = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(workbook, `Laporan_Resi_v3.3_${dateStr}.xlsx`);
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan");
+            XLSX.writeFile(workbook, `Laporan_Resi_${new Date().toISOString().slice(0,10)}.xlsx`);
             showToast("File XLSX berhasil diunduh", "success");
         });
     </script>
