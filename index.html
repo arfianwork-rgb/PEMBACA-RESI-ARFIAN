@@ -271,7 +271,7 @@
         }));
 
         const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzi1p28Rln8jTUB5crnNQ-MNsAcYFkZ1HPA68mjLjj_otb-wgIy6fTcTtGmvTEAG2Ib/exec"; 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEE1Y_-IwT2QBVPV75Mq40zC64Ii1XcVqc9fRkCinj53a-nZwWSLyOQmUSKDDezMBX/exec"; 
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -809,29 +809,38 @@
         });
 
         btnExportXlsx.addEventListener('click', () => {
-            if(scanHistoryData.length === 0) {
-                showToast("Belum ada data resi untuk diexport", "error");
+            if(masterDatabase.size === 0) {
+                showToast("Database master belum termuat", "error");
                 return;
             }
 
-            const exportRows = scanHistoryData.map((item, idx) => ({
-                "No": idx + 1,
-                "Nomor Resi / Invoice": item.resi,
-                "Nama Toko": item.toko,
-                "Kurir Pickup": item.kurir,
-                "Nama Produk": item.produk,
-                "Status Scan": item.status,
-                "Waktu Scan": item.waktu,
-                "User ID": currentUser || "-"
-            }));
+            let exportRows = [];
+            let index = 1;
+
+            masterDatabase.forEach((meta, resi) => {
+                let isScanned = scannedNumbers.has(resi);
+                let historyItem = scanHistoryData.find(item => item.resi === resi);
+                let waktuScan = historyItem ? historyItem.waktu : "-";
+
+                exportRows.push({
+                    "No": index++,
+                    "Nomor Resi / Invoice": resi,
+                    "Nama Toko": meta.toko,
+                    "Kurir Pickup": meta.kurir,
+                    "Nama Produk": meta.produk,
+                    "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
+                    "Waktu Scan": isScanned ? waktuScan : "-",
+                    "User ID": currentUser || "-"
+                });
+            });
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.1");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi Lengkap");
 
             const dateStr = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(workbook, `Laporan_Resi_v3.1_${dateStr}.xlsx`);
-            showToast("File XLSX berhasil diunduh", "success");
+            XLSX.writeFile(workbook, `Laporan_Full_Resi_${dateStr}.xlsx`);
+            showToast("File XLSX lengkap berhasil diunduh", "success");
         });
     </script>
 </body>
