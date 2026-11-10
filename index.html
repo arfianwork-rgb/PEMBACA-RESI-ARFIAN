@@ -3,28 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner Resi Pro - Offline First</title>
-    <!-- Tailwind CSS untuk Desain Modern -->
+    <title>Database Resi Pro</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS untuk Ekspor Excel (.xlsx) -->
+    <!-- SheetJS untuk Export XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0B0F19; color: #F8FAFC; }
     </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen pb-24">
 
     <!-- Header -->
     <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <div>
-                <span class="text-xs bg-cyan-500/10 text-cyan-400 font-semibold px-2 py-0.5 rounded-full border border-cyan-500/20">v3.4 Lokal</span>
-                <h1 class="text-lg font-bold text-white mt-0.5">Database Resi</h1>
+            <div class="flex items-center gap-2">
+                <span class="text-xs bg-cyan-500/10 text-cyan-400 font-semibold px-2.5 py-1 rounded-full border border-cyan-500/20">v3.3</span>
+                <div>
+                    <h1 class="text-base font-bold text-white flex items-center gap-1.5">
+                        Database Resi 
+                        <span class="text-[10px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded font-medium border border-indigo-500/30">PRO</span>
+                    </h1>
+                </div>
             </div>
-            <div id="sync-status" class="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+            <div id="sync-status" class="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-sm">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="sync-text">Siap Digunakan</span>
+                <span id="sync-text">Live Cloud</span>
             </div>
         </div>
     </header>
@@ -34,120 +39,189 @@
 
         <!-- Statistik Cards -->
         <div class="grid grid-cols-2 gap-3">
-            <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg">
-                <p class="text-xs text-slate-400 font-medium">SUDAH DISCAN</p>
+            <div class="bg-slate-900/90 border border-slate-800/80 p-4 rounded-2xl shadow-xl">
+                <p class="text-[11px] text-slate-400 font-semibold tracking-wider">SUDAH DISCAN</p>
                 <h2 id="count-scanned" class="text-3xl font-extrabold text-emerald-400 mt-1">0</h2>
             </div>
-            <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg">
-                <p class="text-xs text-slate-400 font-medium">BELUM DISCAN</p>
+            <div class="bg-slate-900/90 border border-slate-800/80 p-4 rounded-2xl shadow-xl">
+                <p class="text-[11px] text-slate-400 font-semibold tracking-wider">BELUM DISCAN</p>
                 <h2 id="count-unscanned" class="text-3xl font-extrabold text-amber-400 mt-1">0</h2>
             </div>
         </div>
 
-        <!-- Input / Scanner Section -->
-        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg space-y-3">
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Input / Scan Nomor Resi</label>
-            <div class="flex gap-2">
-                <input type="text" id="resi-input" autofocus placeholder="Scan atau ketik nomor resi..." 
-                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-cyan-500 transition">
-                <button onclick="processScan()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-5 py-3 rounded-xl text-sm transition shadow-lg shadow-cyan-600/20">
-                    Proses
+        <!-- Toolbar Navigasi / Kontrol -->
+        <div class="bg-slate-900/90 border border-slate-800/80 p-3 rounded-2xl shadow-xl space-y-3">
+            <div class="flex items-center justify-between gap-2">
+                <div class="text-xs font-bold text-slate-300 uppercase tracking-wide">RIWAYAT SUDAH DISCAN</div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openGallery()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl border border-slate-700 transition">Galeri</button>
+                    <button onclick="resetSession()" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl border border-rose-500/20 transition">Hapus Sesi</button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative">
+                <input type="text" id="search-input" oninput="renderHistory()" placeholder="Cari nomor resi, toko, atau produk..." 
+                    class="w-full bg-slate-950 border border-slate-800/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
+            </div>
+
+            <!-- Tombol Aksi Sekunder -->
+            <div class="grid grid-cols-3 gap-2 pt-1">
+                <button onclick="copyValidResi()" class="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 font-medium py-2 px-2 rounded-xl text-[11px] transition text-center">
+                    Salin Valid
+                </button>
+                <button onclick="exportToExcel()" class="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 font-medium py-2 px-2 rounded-xl text-[11px] transition text-center">
+                    Export XLSX
+                </button>
+                <button onclick="showInvalidModal()" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-medium py-2 px-2 rounded-xl text-[11px] transition text-center">
+                    Invalid (<span id="count-invalid">0</span>)
                 </button>
             </div>
         </div>
 
-        <!-- Tombol Aksi & Export -->
-        <div class="grid grid-cols-2 gap-3">
-            <button onclick="exportToExcel()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
-                📥 Export ke XLSX
-            </button>
-            <button onclick="resetSession()" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-medium py-2.5 px-4 rounded-xl text-xs transition">
-                🗑️ Hapus Sesi Scan
-            </button>
+        <!-- Daftar Riwayat Scan / Log Kartu -->
+        <div id="scan-history" class="space-y-2.5">
+            <!-- Kartu riwayat akan dirender dinamis di sini -->
+            <div class="text-center py-8 text-slate-500 text-xs">Belum ada riwayat pemindaian.</div>
         </div>
 
-        <!-- Riwayat / Daftar Terakhir -->
-        <div class="space-y-2">
-            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">Riwayat Scan Terbaru</h3>
-            <div id="scan-history" class="space-y-2">
-                <!-- Log item akan muncul di sini secara dinamis -->
-                <div class="text-center py-6 text-slate-500 text-xs">Belum ada resi yang dipindai pada sesi ini.</div>
-            </div>
+        <!-- Aksi Cek Sisa & Salin Semua -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+            <button onclick="showUnscannedModal()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-400 font-semibold py-3 px-4 rounded-2xl text-xs transition shadow-lg text-center">
+                Cek Sisa Belum Discan
+            </button>
+            <button onclick="copyAllUnscanned()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-semibold py-3 px-4 rounded-2xl text-xs transition shadow-lg text-center">
+                Salin Semua Sisa
+            </button>
         </div>
 
     </main>
 
-    <!-- Script Logika Client-Side -->
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-md border-t border-slate-900 px-4 py-3 z-50">
+        <div class="max-w-md mx-auto grid grid-cols-3 gap-3 items-center">
+            <button onclick="triggerSync()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                🔄 <span id="sync-btn-text">Muat Ulang</span>
+            </button>
+            <button onclick="triggerScanModal()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-lg shadow-cyan-600/30 text-center">
+                PINDAI
+            </button>
+            <div class="bg-slate-900/80 border border-slate-800 text-slate-300 font-medium py-2.5 px-3 rounded-xl text-xs text-center truncate">
+                FIAN
+            </div>
+        </div>
+    </nav>
+
+    <!-- Modal Input / Scan Manual -->
+    <div id="scan-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold text-white">Masukkan / Scan Nomor Resi</h3>
+                <button onclick="closeScanModal()" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+            </div>
+            <input type="text" id="modal-resi-input" placeholder="Ketik atau scan resi di sini..." 
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+            <div class="flex gap-2">
+                <button onclick="closeScanModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Batal</button>
+                <button onclick="processScanInput()" class="w-1/2 bg-cyan-600 hover:bg-cyan-500 text-white py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-cyan-600/20">Proses</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Daftar Sisa Belum Discan -->
+    <div id="unscanned-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold text-amber-400">Daftar Sisa Belum Discan</h3>
+                <button onclick="closeUnscannedModal()" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+            </div>
+            <div id="unscanned-list" class="overflow-y-auto space-y-1.5 flex-1 pr-1 text-xs text-slate-300">
+                <!-- List items -->
+            </div>
+            <button onclick="closeUnscannedModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2.5 rounded-xl text-xs font-semibold transition">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Script Logika & Tampilan Lengkap -->
     <script>
         // Masukkan URL Publik CSV Google Sheets Anda di sini
-        // Cara ambil: File > Share > Publish to web > Format: Comma-separated values (.csv)
         const CSV_URL = "GANTI_DENGAN_LINK_CSV_GOOGLE_SHEETS_ANDA";
 
-        let masterData = []; // Menyimpan data dari Sheets
+        let masterData = []; 
         let scannedData = JSON.parse(localStorage.getItem('scanned_resis') || '{}');
 
         async function loadMasterData() {
             try {
-                document.getElementById('sync-text').innerText = "Memuat Data...";
+                document.getElementById('sync-text').innerText = "Memuat...";
                 const response = await fetch(CSV_URL);
                 const csvText = await response.text();
                 
-                // Parse CSV sederhana
                 const rows = csvText.split('\n').map(row => row.split(','));
                 masterData = [];
                 
-                // Asumsi: Kolom A = Resi, Kolom B = Toko, Kolom C = Kurir, Kolom D = Produk
                 for (let i = 1; i < rows.length; i++) {
                     const cols = rows[i];
                     if (cols && cols[0]) {
                         masterData.push({
-                            resi: cols[0].replace(/["r]/g, "").trim(),
-                            toko: cols[1] ? cols[1].replace(/["r]/g, "").trim() : "-",
-                            kurir: cols[2] ? cols[2].replace(/["r]/g, "").trim() : "-",
-                            produk: cols[3] ? cols[3].replace(/["r]/g, "").trim() : "-"
+                            resi: cols[0].replace(/["\r]/g, "").trim(),
+                            toko: cols[1] ? cols[1].replace(/["\r]/g, "").trim() : "-",
+                            kurir: cols[2] ? cols[2].replace(/["\r]/g, "").trim() : "-",
+                            produk: cols[3] ? cols[3].replace(/["\r]/g, "").trim() : "-"
                         });
                     }
                 }
 
-                document.getElementById('sync-text').innerText = `Terhubung (${masterData.length} Resi)`;
+                document.getElementById('sync-text').innerText = `Terhubung (${masterData.length})`;
                 updateCounters();
+                renderHistory();
             } catch (error) {
-                console.error("Gagal memuat CSV:", error);
-                document.getElementById('sync-text').innerText = "Mode Offline (Cache)";
-                document.getElementById('sync-status').className = "flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20";
-                // Tetap hitung counter dari data lokal jika ada
+                console.error("Gagal memuat:", error);
+                document.getElementById('sync-text').innerText = "Offline Mode";
+                document.getElementById('sync-status').className = "flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20";
                 updateCounters();
+                renderHistory();
             }
         }
 
-        document.getElementById('resi-input').addEventListener('keypress', function (e) {
+        function triggerSync() {
+            loadMasterData();
+        }
+
+        function triggerScanModal() {
+            document.getElementById('scan-modal').classList.remove('hidden');
+            document.getElementById('modal-resi-input').focus();
+        }
+
+        function closeScanModal() {
+            document.getElementById('scan-modal').classList.add('hidden');
+            document.getElementById('modal-resi-input').value = '';
+        }
+
+        document.getElementById('modal-resi-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                processScan();
+                processScanInput();
             }
         });
 
-        function processScan() {
-            const inputEl = document.getElementById('resi-input');
+        function processScanInput() {
+            const inputEl = document.getElementById('modal-resi-input');
             const resiVal = inputEl.value.trim();
             if (!resiVal) return;
 
             const timeString = new Date().toLocaleTimeString('id-ID');
-            
-            // Cek apakah resi ada di master data
             const found = masterData.find(item => item.resi === resiVal);
 
             if (found) {
                 scannedData[resiVal] = {
-                    status: "Berhasil Scan",
+                    status: "VALID",
                     time: timeString,
                     toko: found.toko,
                     kurir: found.kurir,
                     produk: found.produk
                 };
             } else {
-                // Tetap catat meskipun tidak ada di sheet (sebagai invalid/manual)
                 scannedData[resiVal] = {
-                    status: "Tidak Ada di Master",
+                    status: "TIDAK ADA",
                     time: timeString,
                     toko: "-",
                     kurir: "-",
@@ -157,52 +231,107 @@
 
             localStorage.setItem('scanned_resis', JSON.stringify(scannedData));
             inputEl.value = "";
+            closeScanModal();
             updateCounters();
-            renderHistory(resiVal);
+            renderHistory();
         }
 
         function updateCounters() {
             const totalMaster = masterData.length;
-            const scannedCount = Object.keys(scannedData).length;
+            const scannedKeys = Object.keys(scannedData);
+            const validCount = scannedKeys.filter(k => scannedData[k].status === "VALID").length;
+            const invalidCount = scannedKeys.filter(k => scannedData[k].status === "TIDAK ADA").length;
             
-            document.getElementById('count-scanned').innerText = scannedCount;
-            document.getElementById('count-unscanned').innerText = Math.max(0, totalMaster - scannedCount);
+            document.getElementById('count-scanned').innerText = validCount;
+            document.getElementById('count-unscanned').innerText = Math.max(0, totalMaster - validCount);
+            document.getElementById('count-invalid').innerText = invalidCount;
         }
 
-        function renderHistory(latestResi) {
-            const historyContainer = document.getElementById('scan-history');
-            historyContainer.innerHTML = "";
+        function renderHistory() {
+            const container = document.getElementById('scan-history');
+            const query = document.getElementById('search-input').value.toLowerCase();
+            container.innerHTML = "";
 
-            const entries = Object.entries(scannedData).reverse().slice(0, 10); // Ambil 10 terakhir
-            
+            let entries = Object.entries(scannedData).reverse();
+
+            if (query) {
+                entries = entries.filter(([resi, data]) => 
+                    resi.toLowerCase().includes(query) || 
+                    data.toko.toLowerCase().includes(query) || 
+                    data.produk.toLowerCase().includes(query)
+                );
+            }
+
             if (entries.length === 0) {
-                historyContainer.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Belum ada resi yang dipindai pada sesi ini.</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">Belum ada riwayat atau data tidak ditemukan.</div>`;
                 return;
             }
 
             entries.forEach(([resi, data]) => {
-                const isValid = data.status === "Berhasil Scan";
+                const isValid = data.status === "VALID";
                 const card = document.createElement('div');
-                card.className = `p-3 rounded-xl border ${isValid ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'} flex flex-col gap-1`;
+                card.className = `p-3.5 rounded-2xl border ${isValid ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'} flex flex-col gap-1.5 shadow-md`;
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-white text-sm">${resi}</span>
-                        <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${isValid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${data.status} (${data.time})</span>
+                        <span class="font-bold text-white text-xs tracking-wider">${resi}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isValid ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">${data.status} (${data.time})</span>
                     </div>
-                    <div class="text-xs text-slate-400">Toko: ${data.toko} | Kurir: ${data.kurir}</div>
-                    <div class="text-xs text-slate-300 font-medium">Produk: ${data.produk}</div>
+                    <div class="text-[11px] text-slate-400">Toko: ${data.toko} | Kurir: ${data.kurir}</div>
+                    <div class="text-[11px] text-slate-200 font-medium">Produk: ${data.produk}</div>
                 `;
-                historyContainer.appendChild(card);
+                container.appendChild(card);
             });
+        }
+
+        function showUnscannedModal() {
+            const listEl = document.getElementById('unscanned-list');
+            listEl.innerHTML = '';
+            
+            const unscanned = masterData.filter(item => !scannedData[item.resi] || scannedData[item.resi].status !== "VALID");
+
+            if (unscanned.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-4 text-slate-400">Semua resi sudah selesai discan! 🎉</div>`;
+            } else {
+                unscanned.forEach((item, idx) => {
+                    const row = document.createElement('div');
+                    row.className = "bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center";
+                    row.innerHTML = `<span class="font-mono text-white">${item.resi}</span><span class="text-[10px] text-slate-400">${item.toko}</span>`;
+                    listEl.appendChild(row);
+                });
+            }
+            document.getElementById('unscanned-modal').classList.remove('hidden');
+        }
+
+        function closeUnscannedModal() {
+            document.getElementById('unscanned-modal').classList.add('hidden');
+        }
+
+        function copyValidResi() {
+            const validResis = Object.keys(scannedData).filter(k => scannedData[k].status === "VALID").join('\n');
+            if (!validResis) {
+                alert("Belum ada resi valid yang discan.");
+                return;
+            }
+            navigator.clipboard.writeText(validResis);
+            alert("Berhasil menyalin resi valid!");
+        }
+
+        function copyAllUnscanned() {
+            const unscanned = masterData.filter(item => !scannedData[item.resi] || scannedData[item.resi].status !== "VALID").map(i => i.resi).join('\n');
+            if (!unscanned) {
+                alert("Semua resi sudah habis discan!");
+                return;
+            }
+            navigator.clipboard.writeText(unscanned);
+            alert("Berhasil menyalin seluruh sisa resi yang belum discan!");
         }
 
         function exportToExcel() {
             if (masterData.length === 0) {
-                alert("Data master belum termuat. Pastikan URL CSV Google Sheets sudah benar.");
+                alert("Data master belum termuat. Periksa koneksi atau URL CSV Anda.");
                 return;
             }
 
-            // Gabungkan master data dengan status scan lokal
             const exportRows = masterData.map((item, index) => {
                 const scanInfo = scannedData[item.resi];
                 return {
@@ -211,21 +340,19 @@
                     "Nama Toko": item.toko,
                     "Kurir": item.kurir,
                     "Produk": item.produk,
-                    "Status Scan": scanInfo ? "Berhasil Scan" : "Belum Discan",
-                    "Waktu Scan": scanInfo ? scanInfo.time : "-"
+                    "Status Scan": scanInfo && scanInfo.status === "VALID" ? "Berhasil Scan" : "Belum Discan",
+                    "Waktu Scan": scanInfo && scanInfo.status === "VALID" ? scanInfo.time : "-"
                 };
             });
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
-
-            // Download file .xlsx
             XLSX.writeFile(workbook, "Laporan_Status_Resi_Shopee.xlsx");
         }
 
         function resetSession() {
-            if (confirm("Yakin ingin menghapus seluruh riwayat scan sesi ini?")) {
+            if (confirm("Yakin ingin mereset seluruh sesi scan saat ini?")) {
                 localStorage.removeItem('scanned_resis');
                 scannedData = {};
                 updateCounters();
@@ -233,10 +360,17 @@
             }
         }
 
-        // Jalankan saat pertama kali dibuka
+        function openGallery() {
+            alert("Fitur galeri arsip sesi.");
+        }
+
+        function showInvalidModal() {
+            const invalids = Object.keys(scannedData).filter(k => scannedData[k].status === "TIDAK ADA");
+            alert(invalids.length > 0 ? "Daftar Invalid:\n" + invalids.join('\n') : "Tidak ada resi invalid.");
+        }
+
         window.onload = () => {
             loadMasterData();
-            renderHistory();
         };
     </script>
 </body>
