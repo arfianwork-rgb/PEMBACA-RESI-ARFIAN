@@ -2,371 +2,837 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Resi Pro v3.1</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Database Resi v3.1 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS untuk Export XLSX -->
+    <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0B0F19; color: #F8FAFC; }
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style> 
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            touch-action: pan-x pan-y; 
+            -webkit-text-size-adjust: 100%; 
+        } 
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-animate {
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
-<body class="min-h-screen pb-24">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between m-0 p-0 overflow-x-hidden pb-28">
 
-    <!-- Header -->
-    <header class="bg-slate-900/85 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <span class="text-xs bg-cyan-500/10 text-cyan-400 font-semibold px-2.5 py-1 rounded-full border border-cyan-500/20">v3.1</span>
+    <!-- Header & Dashboard Utama -->
+    <div id="main-dashboard" class="w-full max-w-md mx-auto p-4 space-y-4 flex-1 flex flex-col">
+        <!-- Header Atas -->
+        <div class="glass-panel px-4 py-3.5 rounded-3xl flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-extrabold text-xs tracking-wider">
+                    v3.1
+                </div>
                 <div>
-                    <h1 class="text-base font-bold text-white flex items-center gap-1.5">
-                        Database Resi 
-                        <span class="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-medium border border-cyan-500/30">PRO</span>
+                    <h1 class="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                        Database Resi <span class="text-[9px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Pro</span>
                     </h1>
+                    <p id="db-status" class="text-[11px] text-amber-400/90 font-medium mt-0.5">Menghubungkan Google Sheets...</p>
                 </div>
             </div>
-            <div id="sync-status" class="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-sm">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="sync-text">Terhubung (Lokal)</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-md mx-auto p-4 space-y-4">
-
-        <!-- Statistik Cards -->
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-slate-900/90 border border-slate-800/80 p-4 rounded-2xl shadow-xl">
-                <p class="text-[11px] text-slate-400 font-semibold tracking-wider">SUDAH DISCAN</p>
-                <h2 id="count-scanned" class="text-3xl font-extrabold text-emerald-400 mt-1">0</h2>
-            </div>
-            <div class="bg-slate-900/90 border border-slate-800/80 p-4 rounded-2xl shadow-xl">
-                <p class="text-[11px] text-slate-400 font-semibold tracking-wider">BELUM DISCAN</p>
-                <h2 id="count-unscanned" class="text-3xl font-extrabold text-amber-400 mt-1">0</h2>
+            <div class="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="text-[10px] font-bold text-emerald-300">Live Cloud</span>
             </div>
         </div>
 
-        <!-- Toolbar Kontrol -->
-        <div class="bg-slate-900/90 border border-slate-800/80 p-3 rounded-2xl shadow-xl space-y-3">
-            <div class="flex items-center justify-between gap-2">
-                <div class="text-xs font-bold text-slate-300 uppercase tracking-wide">RIWAYAT SUDAH DISCAN</div>
+        <!-- Panel Total Statistik -->
+        <div class="grid grid-cols-2 gap-3.5">
+            <div class="glass-panel p-4 rounded-3xl border-emerald-500/20 text-center relative overflow-hidden group">
+                <span class="block text-3xl font-black text-emerald-400 tracking-tight" id="count-valid">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold mt-1 block">Sudah Discan</span>
+            </div>
+            <div class="glass-panel p-4 rounded-3xl border-amber-500/20 text-center relative overflow-hidden group">
+                <span class="block text-3xl font-black text-amber-400 tracking-tight" id="count-remaining">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold mt-1 block">Belum Discan</span>
+            </div>
+        </div>
+
+        <!-- KONTAINER UTAMA: RIWAYAT SUDAH DISCAN -->
+        <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xs font-extrabold text-cyan-400 uppercase tracking-wider">
+                    Riwayat Sudah Discan
+                </h3>
                 <div class="flex items-center gap-2">
-                    <button onclick="openGallery()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl border border-slate-700 transition">Galeri</button>
-                    <button onclick="resetSession()" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl border border-rose-500/20 transition">Hapus Sesi</button>
+                    <label class="text-[11px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer bg-blue-500/10 px-3 py-1 rounded-xl border border-blue-500/20 transition active:scale-95">
+                        Galeri
+                        <input type="file" id="file-upload" accept="image/*" class="hidden">
+                    </label>
+                    <button id="btn-clear-history" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold underline bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/20 transition active:scale-95">Hapus Sesi</button>
                 </div>
             </div>
 
-            <!-- Search Bar -->
+            <!-- Kotak Pencarian -->
             <div class="relative">
-                <input type="text" id="search-input" oninput="renderHistory()" placeholder="Cari nomor resi, toko, atau produk..." 
-                    class="w-full bg-slate-950 border border-slate-800/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
+                <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Sekunder -->
-            <div class="grid grid-cols-3 gap-2 pt-1">
-                <button onclick="copyValidResi()" class="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 font-medium py-2 px-2 rounded-xl text-[11px] transition text-center">
+            <!-- Tombol Aksi Riwayat -->
+            <div class="grid grid-cols-3 gap-2">
+                <button id="btn-copy-valid" class="bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
                     Salin Valid
                 </button>
-                <button onclick="exportToExcel()" class="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 font-medium py-2 px-2 rounded-xl text-[11px] transition text-center">
+                <button id="btn-export-xlsx" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
                     Export XLSX
                 </button>
-                <button onclick="showInvalidModal()" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-medium py-2 px-2 rounded-xl text-[11px] transition text-center">
-                    Invalid (<span id="count-invalid">0</span>)
+                <button id="btn-copy-invalid" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
+                    Invalid
+                </button>
+            </div>
+
+            <!-- List Sudah Discan -->
+            <ul id="result-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-48 overflow-y-auto border border-slate-800/80">
+                <li class="text-center text-slate-500 text-xs py-5">Belum ada resi yang dipindai hari ini</li>
+            </ul>
+        </div>
+
+        <!-- PANEL SISA BELUM DISCAN -->
+        <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+                <button id="btn-toggle-remaining" class="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">
+                    <span id="toggle-text">Cek Sisa Belum Discan</span>
+                </button>
+                <button id="btn-copy-remaining" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-300 text-[11px] font-extrabold py-2.5 px-2 rounded-2xl transition active:scale-95 shadow-sm">
+                    Salin Semua Sisa
+                </button>
+            </div>
+
+            <!-- Kontainer Daftar Sisa Tersembunyi -->
+            <div id="remaining-container" class="hidden space-y-2 pt-2 border-t border-slate-800">
+                <ul id="remaining-list" class="space-y-2 bg-slate-900/60 p-3 rounded-2xl max-h-40 overflow-y-auto border border-slate-800/80">
+                    <li class="text-center text-slate-500 text-xs py-4">Memuat data...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Login USER (Wajib) -->
+    <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
+            <div class="text-center space-y-1">
+                <h2 class="text-lg font-extrabold text-white tracking-tight">LOGIN USER</h2>
+                <p class="text-xs text-slate-400">Masukkan User ID dan Password terdaftar</p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID</label>
+                    <input type="text" id="login-userid" placeholder="Masukkan ID User..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                    <input type="password" id="login-pass" placeholder="Masukkan Password..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button id="btn-submit-login" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
+                    Masuk ke Aplikasi
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Daftar Riwayat Scan -->
-        <div id="scan-history" class="space-y-2.5">
-            <div class="text-center py-8 text-slate-500 text-xs">Belum ada riwayat pemindaian.</div>
-        </div>
+    <!-- Menu Pilihan Akun (Logout & Ubah Password) -->
+    <div id="account-menu-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-4 shadow-2xl border border-slate-800 text-center">
+            <div class="space-y-1">
+                <h2 class="text-lg font-extrabold text-white tracking-tight">PENGATURAN AKUN</h2>
+                <p class="text-xs text-slate-400">Masuk sebagai: <span id="menu-user-display" class="text-cyan-400 font-bold"></span></p>
+            </div>
 
-        <!-- Aksi Cek Sisa & Salin Semua -->
-        <div class="grid grid-cols-2 gap-3 pt-2">
-            <button onclick="showUnscannedModal()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-400 font-semibold py-3 px-4 rounded-2xl text-xs transition shadow-lg text-center">
-                Cek Sisa Belum Discan
-            </button>
-            <button onclick="copyAllUnscanned()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-semibold py-3 px-4 rounded-2xl text-xs transition shadow-lg text-center">
-                Salin Semua Sisa
-            </button>
-        </div>
-
-    </main>
-
-    <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-md border-t border-slate-900 px-4 py-3 z-50">
-        <div class="max-w-md mx-auto grid grid-cols-3 gap-3 items-center">
-            <button onclick="triggerSync()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-                🔄 <span id="sync-btn-text">Muat Ulang</span>
-            </button>
-            <button onclick="triggerScanModal()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-lg shadow-cyan-600/30 text-center">
-                PINDAI
-            </button>
-            <div class="bg-slate-900/80 border border-slate-800 text-slate-300 font-medium py-2.5 px-3 rounded-xl text-xs text-center truncate">
-                FIAN
+            <div class="space-y-2 pt-2">
+                <button id="btn-goto-changepass" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold py-3 px-4 rounded-2xl transition border border-slate-700 text-xs uppercase tracking-wider">
+                    Ubah Password
+                </button>
+                <button id="btn-logout" class="w-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold py-3 px-4 rounded-2xl transition text-xs uppercase tracking-wider">
+                    Logout (Keluar Akun)
+                </button>
+                <button id="btn-close-menu" class="w-full bg-transparent hover:bg-slate-900 text-slate-400 font-semibold py-2.5 px-4 rounded-2xl transition text-xs">
+                    Tutup
+                </button>
             </div>
         </div>
+    </div>
+
+    <!-- Halaman Ubah Password -->
+    <div id="changepass-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
+            <div class="text-center space-y-1">
+                <h2 class="text-lg font-extrabold text-white tracking-tight">UBAH PASSWORD</h2>
+                <p class="text-xs text-slate-400">Perbarui kata sandi akun <span id="current-user-display" class="text-cyan-400 font-bold"></span></p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password Lama</label>
+                    <input type="password" id="old-pass" placeholder="Masukkan password lama..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password Baru</label>
+                    <input type="password" id="new-pass" placeholder="Masukkan password baru..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 shadow-inner">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button id="btn-submit-changepass" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 transition text-xs uppercase tracking-wider">
+                    Simpan
+                </button>
+                <button id="btn-close-changepass" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition border border-slate-700">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar Mengambang -->
+    <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 px-6 py-3 rounded-3xl flex justify-around items-center shadow-2xl max-w-md mx-auto">
+        <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
+            <span class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">SYNC</span>
+            <span class="text-[9px] font-bold tracking-wider uppercase">Muat Ulang</span>
+        </button>
+
+        <button id="btn-start-camera" class="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition active:scale-90 -mt-6">
+            <span class="text-xs font-extrabold bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/40 border border-cyan-300/30 uppercase tracking-widest">PINDAI</span>
+        </button>
+
+        <button id="btn-open-menu" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-300 transition active:scale-90">
+            <span id="nav-user-label" class="text-xs font-bold bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">USER</span>
+            <span class="text-[9px] font-bold tracking-wider uppercase">Akun</span>
+        </button>
     </nav>
 
-    <!-- Modal Input / Scan -->
-    <div id="scan-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
-            <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-white">Masukkan / Scan Nomor Resi</h3>
-                <button onclick="closeScanModal()" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
-            </div>
-            <input type="text" id="modal-resi-input" placeholder="Ketik atau scan resi di sini..." 
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
-            <div class="flex gap-2">
-                <button onclick="closeScanModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Batal</button>
-                <button onclick="processScanInput()" class="w-1/2 bg-cyan-600 hover:bg-cyan-500 text-white py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-cyan-600/20">Proses</button>
-            </div>
+    <!-- Area Utama Kamera Full Screen -->
+    <main id="camera-wrapper" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
+        <div class="relative w-full flex-1 bg-black overflow-hidden">
+            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
+            <div class="absolute inset-0 border-2 border-cyan-400/80 border-dashed opacity-75 m-12 rounded-3xl pointer-events-none animate-pulse"></div>
         </div>
-    </div>
+        <canvas id="canvas" class="hidden"></canvas>
 
-    <!-- Modal Daftar Sisa -->
-    <div id="unscanned-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-amber-400">Daftar Sisa Belum Discan</h3>
-                <button onclick="closeUnscannedModal()" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+        <footer class="w-full bg-slate-900/95 backdrop-blur-2xl p-4 border-t border-slate-800 space-y-3 rounded-t-3xl shadow-2xl">
+            <div class="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between">
+                <div class="overflow-hidden pr-2">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Resi Terakhir:</span>
+                    <span id="last-scanned-number" class="text-sm font-mono font-bold text-cyan-300 tracking-wide">-</span>
+                </div>
+                <div id="last-scanned-badge">
+                    <span class="text-[10px] bg-slate-800 text-slate-400 px-3 py-1.5 rounded-xl font-medium">Belum ada scan</span>
+                </div>
             </div>
-            <div id="unscanned-list" class="overflow-y-auto space-y-1.5 flex-1 pr-1 text-xs text-slate-300"></div>
-            <button onclick="closeUnscannedModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2.5 rounded-xl text-xs font-semibold transition">Tutup</button>
-        </div>
-    </div>
+
+            <div class="flex gap-2.5">
+                <button id="btn-scan" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-cyan-500/30 active:scale-95 transition text-sm flex items-center justify-center uppercase tracking-wider">
+                    Ambil / Scan Resi
+                </button>
+                <button id="btn-stop-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-5 rounded-2xl text-xs transition active:scale-95 border border-slate-700">
+                    Tutup
+                </button>
+            </div>
+        </footer>
+    </main>
+
+    <div id="toast-container" class="fixed bottom-24 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"></div>
 
     <script>
-        // Masukkan URL Publik CSV Google Sheets Anda di sini
-        const CSV_URL = "GANTI_DENGAN_LINK_CSV_GOOGLE_SHEETS_ANDA";
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+        document.addEventListener('gestureend', function (e) { e.preventDefault(); });
 
-        let masterData = []; 
-        let scannedData = JSON.parse(localStorage.getItem('scanned_resis_v31') || '{}');
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            let now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) { event.preventDefault(); }
+            lastTouchEnd = now;
+        }, false);
 
-        async function loadMasterData() {
-            try {
-                document.getElementById('sync-text').innerText = "Memuat...";
-                const response = await fetch(CSV_URL);
-                const csvText = await response.text();
-                
-                const rows = csvText.split('\n').map(row => row.split(','));
-                masterData = [];
-                
-                for (let i = 1; i < rows.length; i++) {
-                    const cols = rows[i];
-                    if (cols && cols[0]) {
-                        masterData.push({
-                            resi: cols[0].replace(/["\r]/g, "").trim(),
-                            toko: cols[1] ? cols[1].replace(/["\r]/g, "").trim() : "-",
-                            kurir: cols[2] ? cols[2].replace(/["\r]/g, "").trim() : "-",
-                            produk: cols[3] ? cols[3].replace(/["\r]/g, "").trim() : "-"
-                        });
-                    }
-                }
+        // DATABASE USER & PASSWORD
+        let validUsers = JSON.parse(localStorage.getItem('v3_validUsers') || JSON.stringify({
+            "fian": "paiko098",
+            "admin": "admin123",
+            "march": "123456"
+        }));
 
-                document.getElementById('sync-text').innerText = `Terhubung (${masterData.length})`;
-                updateCounters();
-                renderHistory();
-            } catch (error) {
-                console.error("Gagal memuat:", error);
-                document.getElementById('sync-text').innerText = "Offline Mode";
-                updateCounters();
-                renderHistory();
+        const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzi1p28Rln8jTUB5crnNQ-MNsAcYFkZ1HPA68mjLjj_otb-wgIy6fTcTtGmvTEAG2Ib/exec"; 
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const resultList = document.getElementById('result-list');
+        const remainingList = document.getElementById('remaining-list');
+        const remainingContainer = document.getElementById('remaining-container');
+        const toggleText = document.getElementById('toggle-text');
+        const searchHistory = document.getElementById('search-history');
+        const toastContainer = document.getElementById('toast-container');
+        
+        const countValidSpan = document.getElementById('count-valid');
+        const countRemainingSpan = document.getElementById('count-remaining');
+        
+        const mainDashboard = document.getElementById('main-dashboard');
+        const cameraWrapper = document.getElementById('camera-wrapper');
+        const bottomNav = document.getElementById('bottom-nav');
+        
+        const btnStart = document.getElementById('btn-start-camera');
+        const btnScan = document.getElementById('btn-scan');
+        const btnStop = document.getElementById('btn-stop-camera');
+        const fileUpload = document.getElementById('file-upload');
+        
+        const btnCopyValid = document.getElementById('btn-copy-valid');
+        const btnCopyInvalid = document.getElementById('btn-copy-invalid');
+        const btnCopyRemaining = document.getElementById('btn-copy-remaining');
+        const btnToggleRemaining = document.getElementById('btn-toggle-remaining');
+        const btnExportXlsx = document.getElementById('btn-export-xlsx');
+        const btnClearHistory = document.getElementById('btn-clear-history');
+        
+        const loginWrapper = document.getElementById('login-wrapper');
+        const btnSubmitLogin = document.getElementById('btn-submit-login');
+        const loginUseridInput = document.getElementById('login-userid');
+        const loginPassInput = document.getElementById('login-pass');
+        
+        const accountMenuWrapper = document.getElementById('account-menu-wrapper');
+        const btnOpenMenu = document.getElementById('btn-open-menu');
+        const btnCloseMenu = document.getElementById('btn-close-menu');
+        const btnGotoChangepass = document.getElementById('btn-goto-changepass');
+        const btnLogout = document.getElementById('btn-logout');
+        
+        const changepassWrapper = document.getElementById('changepass-wrapper');
+        const btnCloseChangepass = document.getElementById('btn-close-changepass');
+        const btnSubmitChangepass = document.getElementById('btn-submit-changepass');
+        const oldPassInput = document.getElementById('old-pass');
+        const newPassInput = document.getElementById('new-pass');
+        const currentUserDisplay = document.getElementById('current-user-display');
+        const menuUserDisplay = document.getElementById('menu-user-display');
+        
+        const navUserLabel = document.getElementById('nav-user-label');
+        const dbStatus = document.getElementById('db-status');
+        const lastScannedNumber = document.getElementById('last-scanned-number');
+        const lastScannedBadge = document.getElementById('last-scanned-badge');
+
+        let stream = null;
+        let scannedNumbers = new Set(JSON.parse(localStorage.getItem('v3_scannedNumbers') || '[]'));
+        let scanHistoryData = JSON.parse(localStorage.getItem('v3_scanHistoryData') || '[]'); 
+        let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
+        let currentUser = localStorage.getItem('v3_currentUser') || '';
+        let masterDatabase = new Map(); 
+        const orderRegex = /58[67]\d{15}/g; 
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentUser && validUsers[currentUser]) {
+                navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                menuUserDisplay.innerText = currentUser;
+                currentUserDisplay.innerText = currentUser;
+                loginWrapper.classList.add('hidden');
+                mainDashboard.classList.remove('hidden');
+                bottomNav.classList.remove('hidden');
+                autoSyncDatabase();
+            } else {
+                localStorage.removeItem('v3_currentUser');
+                loginWrapper.classList.remove('hidden');
+                mainDashboard.classList.add('hidden');
+                bottomNav.classList.add('hidden');
             }
+            if(countValidSpan) countValidSpan.innerText = validCount;
+            renderHistoryList();
+        });
+
+        if(btnOpenMenu) {
+            btnOpenMenu.addEventListener('click', () => {
+                menuUserDisplay.innerText = currentUser;
+                accountMenuWrapper.classList.remove('hidden');
+            });
         }
 
-        function triggerSync() {
-            loadMasterData();
+        if(btnCloseMenu) {
+            btnCloseMenu.addEventListener('click', () => {
+                accountMenuWrapper.classList.add('hidden');
+            });
         }
 
-        function triggerScanModal() {
-            document.getElementById('scan-modal').classList.remove('hidden');
-            document.getElementById('modal-resi-input').focus();
+        if(btnGotoChangepass) {
+            btnGotoChangepass.addEventListener('click', () => {
+                accountMenuWrapper.classList.add('hidden');
+                currentUserDisplay.innerText = currentUser;
+                oldPassInput.value = '';
+                newPassInput.value = '';
+                changepassWrapper.classList.remove('hidden');
+            });
         }
 
-        function closeScanModal() {
-            document.getElementById('scan-modal').classList.add('hidden');
-            document.getElementById('modal-resi-input').value = '';
+        if(btnLogout) {
+            btnLogout.addEventListener('click', () => {
+                if(confirm("Yakin ingin keluar dari akun ini?")) {
+                    localStorage.removeItem('v3_currentUser');
+                    currentUser = '';
+                    accountMenuWrapper.classList.add('hidden');
+                    mainDashboard.classList.add('hidden');
+                    bottomNav.classList.add('hidden');
+                    loginWrapper.classList.remove('hidden');
+                    showToast("Berhasil logout", "info");
+                }
+            });
         }
 
-        document.getElementById('modal-resi-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                processScanInput();
+        if(btnCloseChangepass) {
+            btnCloseChangepass.addEventListener('click', () => {
+                changepassWrapper.classList.add('hidden');
+            });
+        }
+
+        btnSubmitChangepass.addEventListener('click', () => {
+            let oldPass = oldPassInput.value.trim();
+            let newPass = newPassInput.value.trim();
+
+            if(!oldPass || !newPass) {
+                showToast("Password lama dan baru harus diisi", "error");
+                return;
+            }
+
+            if(validUsers[currentUser] === oldPass) {
+                validUsers[currentUser] = newPass;
+                localStorage.setItem('v3_validUsers', JSON.stringify(validUsers));
+                showToast("Password berhasil diperbarui!", "success");
+                changepassWrapper.classList.add('hidden');
+            } else {
+                showToast("Password lama salah!", "error");
             }
         });
 
-        function processScanInput() {
-            const inputEl = document.getElementById('modal-resi-input');
-            const resiVal = inputEl.value.trim();
-            if (!resiVal) return;
+        btnSubmitLogin.addEventListener('click', () => {
+            let uid = loginUseridInput.value.trim().toLowerCase();
+            let pass = loginPassInput.value.trim();
 
-            const timeString = new Date().toLocaleTimeString('id-ID');
-            const found = masterData.find(item => item.resi === resiVal);
-
-            if (found) {
-                scannedData[resiVal] = {
-                    status: "VALID",
-                    time: timeString,
-                    toko: found.toko,
-                    kurir: found.kurir,
-                    produk: found.produk
-                };
-            } else {
-                scannedData[resiVal] = {
-                    status: "TIDAK ADA",
-                    time: timeString,
-                    toko: "-",
-                    kurir: "-",
-                    produk: "-"
-                };
-            }
-
-            localStorage.setItem('scanned_resis_v31', JSON.stringify(scannedData));
-            inputEl.value = "";
-            closeScanModal();
-            updateCounters();
-            renderHistory();
-        }
-
-        function updateCounters() {
-            const totalMaster = masterData.length;
-            const scannedKeys = Object.keys(scannedData);
-            const validCount = scannedKeys.filter(k => scannedData[k].status === "VALID").length;
-            const invalidCount = scannedKeys.filter(k => scannedData[k].status === "TIDAK ADA").length;
-            
-            document.getElementById('count-scanned').innerText = validCount;
-            document.getElementById('count-unscanned').innerText = Math.max(0, totalMaster - validCount);
-            document.getElementById('count-invalid').innerText = invalidCount;
-        }
-
-        function renderHistory() {
-            const container = document.getElementById('scan-history');
-            const query = document.getElementById('search-input').value.toLowerCase();
-            container.innerHTML = "";
-
-            let entries = Object.entries(scannedData).reverse();
-
-            if (query) {
-                entries = entries.filter(([resi, data]) => 
-                    resi.toLowerCase().includes(query) || 
-                    data.toko.toLowerCase().includes(query) || 
-                    data.produk.toLowerCase().includes(query)
-                );
-            }
-
-            if (entries.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">Belum ada riwayat atau data tidak ditemukan.</div>`;
+            if(!uid || !pass) {
+                showToast("User ID dan Password harus diisi", "error");
                 return;
             }
 
-            entries.forEach(([resi, data]) => {
-                const isValid = data.status === "VALID";
-                const card = document.createElement('div');
-                card.className = `p-3.5 rounded-2xl border ${isValid ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'} flex flex-col gap-1.5 shadow-md`;
-                card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-white text-xs tracking-wider">${resi}</span>
-                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isValid ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">${data.status} (${data.time})</span>
-                    </div>
-                    <div class="text-[11px] text-slate-400">Toko: ${data.toko} | Kurir: ${data.kurir}</div>
-                    <div class="text-[11px] text-slate-200 font-medium">Produk: ${data.produk}</div>
-                `;
-                container.appendChild(card);
+            if (validUsers[uid] && validUsers[uid] === pass) {
+                currentUser = uid;
+                localStorage.setItem('v3_currentUser', currentUser);
+                navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                menuUserDisplay.innerText = currentUser;
+                currentUserDisplay.innerText = currentUser;
+                
+                showToast(`Login berhasil, selamat datang ${currentUser}!`, "success");
+                loginUseridInput.value = '';
+                loginPassInput.value = '';
+
+                loginWrapper.classList.add('hidden');
+                mainDashboard.classList.remove('hidden');
+                bottomNav.classList.remove('hidden');
+                
+                autoSyncDatabase();
+            } else {
+                showToast("User ID atau Password salah!", "error");
+                loginPassInput.value = '';
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            toastContainer.innerHTML = '';
+            const toast = document.createElement('div');
+            toast.className = `toast-animate pointer-events-auto flex items-center justify-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-bold backdrop-blur-2xl transition-all max-w-sm w-full`;
+            
+            if(type === 'success') {
+                toast.className += ` bg-emerald-950/90 border-emerald-500/50 text-emerald-200`;
+            } else if(type === 'error') {
+                toast.className += ` bg-rose-950/90 border-rose-500/50 text-rose-200`;
+            } else if(type === 'warn') {
+                toast.className += ` bg-amber-950/90 border-amber-500/50 text-amber-200`;
+            } else {
+                toast.className += ` bg-slate-900/90 border-slate-700 text-slate-200`;
+            }
+            
+            toast.innerText = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('v3_scannedNumbers', JSON.stringify(Array.from(scannedNumbers)));
+            localStorage.setItem('v3_scanHistoryData', JSON.stringify(scanHistoryData));
+            localStorage.setItem('v3_validCount', validCount.toString());
+        }
+
+        function renderHistoryList(filterQuery = '') {
+            resultList.innerHTML = '';
+            const filteredData = scanHistoryData.filter(item => 
+                item.resi.toLowerCase().includes(filterQuery.toLowerCase()) || 
+                item.toko.toLowerCase().includes(filterQuery.toLowerCase()) ||
+                item.produk.toLowerCase().includes(filterQuery.toLowerCase())
+            );
+
+            if(filteredData.length === 0) {
+                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-5">Tidak ada riwayat yang cocok</li>`;
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const li = document.createElement('li');
+                if (item.status === 'VALID') {
+                    li.className = "font-mono text-emerald-100 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/25 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-emerald-300">${item.resi}</span><span class="text-[9px] bg-emerald-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-emerald-200 border border-emerald-500/30 uppercase">VALID (${item.waktu})</span></div>
+                        <div class="text-[10px] text-emerald-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-emerald-500/20">
+                            <div>Toko: <b class="text-white">${item.toko}</b></div>
+                            <div>Kurir: <b class="text-white">${item.kurir}</b></div>
+                            <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
+                        </div>`;
+                } else {
+                    li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md";
+                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-rose-300">${item.resi}</span><span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30 uppercase">TIDAK ADA (${item.waktu})</span></div>`;
+                }
+                resultList.appendChild(li);
             });
         }
 
-        function showUnscannedModal() {
-            const listEl = document.getElementById('unscanned-list');
-            listEl.innerHTML = '';
-            
-            const unscanned = masterData.filter(item => !scannedData[item.resi] || scannedData[item.resi].status !== "VALID");
+        async function autoSyncDatabase() {
+            try {
+                dbStatus.innerText = "Memuat database...";
+                const response = await fetch(FIXED_SHEETS_URL);
+                const csvText = await response.text();
+                
+                masterDatabase.clear();
+                const lines = csvText.split(/\r?\n/);
 
-            if (unscanned.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-4 text-slate-400">Semua resi sudah selesai discan! 🎉</div>`;
-            } else {
-                unscanned.forEach((item) => {
-                    const row = document.createElement('div');
-                    row.className = "bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center";
-                    row.innerHTML = `<span class="font-mono text-white">${item.resi}</span><span class="text-[10px] text-slate-400">${item.toko}</span>`;
-                    listEl.appendChild(row);
+                lines.forEach((line, index) => {
+                    if (index === 0) return;
+                    const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
+                    if (cols.length >= 1) {
+                        const resi = cols[0];
+                        const toko = cols[1] || "-";
+                        const kurir = cols[2] || "-";
+                        const produk = cols[3] || "-";
+
+                        const matches = resi.match(orderRegex);
+                        if (matches) {
+                            matches.forEach(m => {
+                                masterDatabase.set(m, { toko, kurir, produk });
+                            });
+                        } else if (resi.length >= 10) {
+                            masterDatabase.set(resi, { toko, kurir, produk });
+                        }
+                    }
                 });
+
+                if(masterDatabase.size > 0) {
+                    dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
+                    dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
+                    if(countValidSpan) countValidSpan.innerText = validCount;
+                    renderHistoryList();
+                    updateRemainingDisplay();
+                    showToast("Database v3.1 tersinkronisasi", "success");
+                } else {
+                    dbStatus.innerText = "Database kosong / format salah";
+                    dbStatus.className = "text-[11px] text-amber-400 font-bold mt-0.5";
+                }
+            } catch (err) {
+                dbStatus.innerText = "Gagal memuat database online";
+                dbStatus.className = "text-[11px] text-rose-400 font-bold mt-0.5";
+                showToast("Gagal terhubung ke Google Sheets", "error");
             }
-            document.getElementById('unscanned-modal').classList.remove('hidden');
         }
 
-        function closeUnscannedModal() {
-            document.getElementById('unscanned-modal').classList.add('hidden');
+        searchHistory.addEventListener('input', (e) => {
+            renderHistoryList(e.target.value);
+        });
+
+        function playSound(type) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            if(type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(900, ctx.currentTime);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            } else if(type === 'warn') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(500, ctx.currentTime);
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, ctx.currentTime);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.5);
+            }
         }
 
-        function copyValidResi() {
-            const validResis = Object.keys(scannedData).filter(k => scannedData[k].status === "VALID").join('\n');
-            if (!validResis) {
-                alert("Belum ada resi valid yang discan.");
-                return;
+        btnStart.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                mainDashboard.classList.add('hidden');
+                bottomNav.classList.add('hidden'); 
+                cameraWrapper.classList.remove('hidden');
+            } catch (err) {
+                showToast("Gagal membuka kamera: " + err.message, "error");
             }
-            navigator.clipboard.writeText(validResis);
-            alert("Berhasil menyalin resi valid!");
+        });
+
+        btnStop.addEventListener('click', () => {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            cameraWrapper.classList.add('hidden');
+            mainDashboard.classList.remove('hidden');
+            bottomNav.classList.remove('hidden'); 
+        });
+
+        async function processImage(imageSource) {
+            lastScannedNumber.innerText = "Memproses...";
+            lastScannedBadge.innerHTML = `<span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-xl font-semibold uppercase animate-pulse">Membaca OCR...</span>`;
+            
+            try {
+                const result = await Tesseract.recognize(imageSource, 'eng');
+                const text = result.data.text.replace(/\s+/g, ''); 
+                const matches = text.match(orderRegex);
+                
+                if (matches && matches.length > 0) {
+                    let num = matches[0]; 
+                    
+                    let isInDb = false;
+                    let meta = { toko: "-", kurir: "-", produk: "-" };
+
+                    if (masterDatabase.size > 0 && masterDatabase.has(num)) {
+                        isInDb = true;
+                        meta = masterDatabase.get(num);
+                    } else if (masterDatabase.size === 0) {
+                        isInDb = true; 
+                    }
+
+                    let isAlreadyScanned = scannedNumbers.has(num);
+
+                    if (isAlreadyScanned) {
+                        playSound('warn');
+                        lastScannedNumber.innerText = num;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-bold uppercase">Di-scan Ulang</span>`;
+                        showToast(`Resi ${num} di-scan ulang`, "warn");
+                    } else {
+                        scannedNumbers.add(num);
+                        if (isInDb) {
+                            validCount++;
+                            if(countValidSpan) countValidSpan.innerText = validCount;
+                        }
+
+                        scanHistoryData.unshift({
+                            resi: num,
+                            invoice: num,
+                            toko: meta.toko,
+                            kurir: meta.kurir,
+                            produk: meta.produk,
+                            status: isInDb ? 'VALID' : 'TIDAK VALID',
+                            waktu: new Date().toLocaleTimeString()
+                        });
+
+                        saveToLocalStorage();
+                        renderHistoryList();
+                        updateRemainingDisplay(); 
+                    }
+
+                    lastScannedNumber.innerText = num;
+                    
+                    if(APPS_SCRIPT_URL && isInDb) {
+                        fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, {
+                            method: 'GET',
+                            redirect: 'follow'
+                        }).catch(err => console.log("Gagal memperbarui Sheets:", err));
+                    }
+
+                    if(isInDb) {
+                        playSound('success');
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-bold uppercase">Ada (${meta.toko})</span>`;
+                    } else {
+                        playSound('error');
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-300 px-3 py-1 rounded-bold uppercase">Tidak Ada</span>`;
+                    }
+                } else {
+                    playSound('error');
+                    lastScannedNumber.innerText = "Tidak Dikenali";
+                    lastScannedBadge.innerHTML = `<span class="text-[10px] bg-rose-500/20 text-rose-300 px-3 py-1 rounded-bold uppercase">Gagal Deteksi</span>`;
+                }
+            } catch (error) {
+                lastScannedNumber.innerText = "Error Sistem";
+                console.error(error);
+            }
         }
 
-        function copyAllUnscanned() {
-            const unscanned = masterData.filter(item => !scannedData[item.resi] || scannedData[item.resi].status !== "VALID").map(i => i.resi).join('\n');
-            if (!unscanned) {
-                alert("Semua resi sudah habis discan!");
-                return;
-            }
-            navigator.clipboard.writeText(unscanned);
-            alert("Berhasil menyalin seluruh sisa resi yang belum discan!");
-        }
+        btnScan.addEventListener('click', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg');
+            processImage(imageData);
+        });
 
-        function exportToExcel() {
-            if (masterData.length === 0) {
-                alert("Data master belum termuat. Periksa koneksi atau URL CSV Anda.");
-                return;
+        fileUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => processImage(event.target.result);
+                reader.readAsDataURL(file);
             }
+        });
 
-            const exportRows = masterData.map((item, index) => {
-                const scanInfo = scannedData[item.resi];
-                return {
-                    "No": index + 1,
-                    "Nomor Resi / Invoice": item.resi,
-                    "Nama Toko": item.toko,
-                    "Kurir": item.kurir,
-                    "Produk": item.produk,
-                    "Status Scan": scanInfo && scanInfo.status === "VALID" ? "Berhasil Scan" : "Belum Discan",
-                    "Waktu Scan": scanInfo && scanInfo.status === "VALID" ? scanInfo.time : "-"
-                };
+        function updateRemainingDisplay() {
+            if(masterDatabase.size === 0) return;
+
+            let remainingListArray = [];
+            masterDatabase.forEach((meta, resi) => {
+                if(!scannedNumbers.has(resi)) {
+                    remainingListArray.push({ resi, ...meta });
+                }
             });
+
+            if(countRemainingSpan) countRemainingSpan.innerText = remainingListArray.length;
+            remainingList.innerHTML = '';
+
+            if(remainingListArray.length === 0) {
+                remainingList.innerHTML = `<li class="text-center text-emerald-400 text-xs py-5 font-bold">Semua resi di database sudah selesai discan</li>`;
+                return;
+            }
+
+            remainingListArray.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "font-mono text-amber-100 bg-amber-950/30 p-3 rounded-2xl border border-amber-500/20 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
+                li.innerHTML = `
+                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-amber-300">${item.resi}</span><span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span></div>
+                    <div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20">
+                        <div>Toko: <b class="text-white">${item.toko}</b></div>
+                        <div>Kurir: <b class="text-white">${item.kurir}</b></div>
+                        <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
+                    </div>`;
+                remainingList.appendChild(li);
+            });
+        }
+
+        btnToggleRemaining.addEventListener('click', () => {
+            if(masterDatabase.size === 0) {
+                showToast("Database belum termuat", "error");
+                return;
+            }
+            if(remainingContainer.classList.contains('hidden')) {
+                remainingContainer.classList.remove('hidden');
+                toggleText.innerText = "Sembunyikan Sisa";
+            } else {
+                remainingContainer.classList.add('hidden');
+                toggleText.innerText = "Cek Sisa Belum Discan";
+            }
+        });
+
+        btnClearHistory.addEventListener('click', () => {
+            if(scannedNumbers.size === 0) {
+                showToast("Riwayat sudah kosong", "info");
+                return;
+            }
+            if(confirm("Yakin ingin menghapus seluruh riwayat dan cache sesi ini?")) {
+                scannedNumbers.clear();
+                scanHistoryData = [];
+                validCount = 0;
+                localStorage.clear();
+                if(countValidSpan) countValidSpan.innerText = "0";
+                renderHistoryList();
+                updateRemainingDisplay();
+                showToast("Riwayat sesi dibersihkan", "success");
+            }
+        });
+
+        btnCopyValid.addEventListener('click', () => {
+            const validItems = scanHistoryData.filter(item => item.status === 'VALID');
+            if(validItems.length === 0) {
+                showToast("Tidak ada resi valid untuk disalin", "error");
+                return;
+            }
+            const validNumbers = validItems.map(item => item.resi);
+            navigator.clipboard.writeText(validNumbers.join('\n')).then(() => {
+                showToast(`Berhasil menyalin ${validNumbers.length} resi valid`, "success");
+            });
+        });
+
+        btnCopyInvalid.addEventListener('click', () => {
+            const invalidItems = scanHistoryData.filter(item => item.status === 'TIDAK VALID');
+            if(invalidItems.length === 0) {
+                showToast("Tidak ada resi tidak valid untuk disalin", "error");
+                return;
+            }
+            const invalidNumbers = invalidItems.map(item => item.resi);
+            navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => {
+                showToast(`Berhasil menyalin ${invalidNumbers.length} resi tidak valid`, "success");
+            });
+        });
+
+        btnCopyRemaining.addEventListener('click', () => {
+            let remainingNumbers = [];
+            masterDatabase.forEach((meta, resi) => {
+                if(!scannedNumbers.has(resi)) {
+                    remainingNumbers.push(resi);
+                }
+            });
+
+            if(remainingNumbers.length === 0) {
+                showToast("Tidak ada sisa resi yang belum discan", "info");
+                return;
+            }
+
+            navigator.clipboard.writeText(remainingNumbers.join('\n')).then(() => {
+                showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi`, "success");
+            });
+        });
+
+        btnExportXlsx.addEventListener('click', () => {
+            if(scanHistoryData.length === 0) {
+                showToast("Belum ada data resi untuk diexport", "error");
+                return;
+            }
+
+            const exportRows = scanHistoryData.map((item, idx) => ({
+                "No": idx + 1,
+                "Nomor Resi / Invoice": item.resi,
+                "Nama Toko": item.toko,
+                "Kurir Pickup": item.kurir,
+                "Nama Produk": item.produk,
+                "Status Scan": item.status,
+                "Waktu Scan": item.waktu,
+                "User ID": currentUser || "-"
+            }));
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
-            XLSX.writeFile(workbook, "Laporan_Status_Resi_Shopee.xlsx");
-        }
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Scan Resi v3.1");
 
-        function resetSession() {
-            if (confirm("Yakin ingin mereset seluruh sesi scan saat ini?")) {
-                localStorage.removeItem('scanned_resis_v31');
-                scannedData = {};
-                updateCounters();
-                renderHistory();
-            }
-        }
-
-        function openGallery() {
-            alert("Fitur galeri arsip sesi.");
-        }
-
-        function showInvalidModal() {
-            const invalids = Object.keys(scannedData).filter(k => scannedData[k].status === "TIDAK ADA");
-            alert(invalids.length > 0 ? "Daftar Invalid:\n" + invalids.join('\n') : "Tidak ada resi invalid.");
-        }
-
-        window.onload = () => {
-            loadMasterData();
-        };
+            const dateStr = new Date().toISOString().slice(0,10);
+            XLSX.writeFile(workbook, `Laporan_Resi_v3.1_${dateStr}.xlsx`);
+            showToast("File XLSX berhasil diunduh", "success");
+        });
     </script>
 </body>
 </html>
