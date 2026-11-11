@@ -85,12 +85,12 @@
                 <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Riwayat (VALID & INVALID Menutupi Satu Sama Lain) -->
+            <!-- Tombol Aksi Riwayat (VALID & INVALID Tab Saling Menutupi) -->
             <div class="relative flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
                 <button id="btn-tab-valid" onclick="switchTab('valid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md">
                     VALID
                 </button>
-                <button id="btn-tab-invalid" onclick="switchTab('invalid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200">
+                <button id="btn-tab-invalid" onclick="switchTab('invalid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent">
                     INVALID
                 </button>
             </div>
@@ -207,7 +207,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar Melengkung (Fungsi Export Pindah ke Sini) -->
+    <!-- Bottom Navigation Bar Melengkung -->
     <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 backdrop-blur-2xl border border-slate-800/90 px-4 py-2.5 rounded-full flex justify-between items-center shadow-2xl max-w-md mx-auto">
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -226,7 +226,6 @@
             <span class="text-[9px] font-extrabold tracking-wider uppercase text-cyan-400 mt-0.5">PINDAI</span>
         </button>
 
-        <!-- Tombol Export XLSX di Navigasi Bawah -->
         <button id="btn-export-xlsx" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             <span class="text-[9px] font-bold tracking-wider uppercase">EXPORT</span>
@@ -346,7 +345,7 @@
         let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
         let currentUser = localStorage.getItem('v3_currentUser') || '';
         let masterDatabase = new Map(); 
-        let currentTab = 'valid'; // State tab aktif ('valid' atau 'invalid')
+        let currentTab = 'valid'; 
         const orderRegex = /58[67]\d{15}/g; 
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -368,7 +367,6 @@
             renderHistoryList();
         });
 
-        // Fungsi Switch Tab Valid / Invalid (Saling Menutupi)
         function switchTab(tab) {
             currentTab = tab;
             if (tab === 'valid') {
@@ -424,25 +422,21 @@
             });
         }
 
-       btnSubmitChangepass.addEventListener('click', () => {
+        btnSubmitChangepass.addEventListener('click', () => {
             let oldPass = oldPassInput.value.trim();
             let newPass = newPassInput.value.trim();
-    
+
             if(!oldPass || !newPass) {
-                    showToast("Password lama dan baru harus diisi", "error");
-                    return;
+                showToast("Password lama dan baru harus diisi", "error");
+                return;
             }
 
-                if(validUsers[currentUser] === oldPass) {
-                // Perbarui password di objek data user
+            if(validUsers[currentUser] === oldPass) {
                 validUsers[currentUser] = newPass;
-        
-                // SIMPAN PERUBAHAN KE LOCALSTORAGE AGAR OTOMATIS BERUBAH PERMANEN
                 localStorage.setItem('v3_validUsers', JSON.stringify(validUsers));
-        
                 showToast("Password berhasil diperbarui!", "success");
                 changepassWrapper.classList.add('hidden');
-                } else {
+            } else {
                 showToast("Password lama salah!", "error");
             }
         });
@@ -508,10 +502,15 @@
             localStorage.setItem('v3_validCount', validCount.toString());
         }
 
+        // Fungsi Salin Resi Individual saat Diklik
+        function copySingleResi(resiText) {
+            navigator.clipboard.writeText(resiText).then(() => {
+                showToast(`Resi ${resiText} berhasil disalin!`, "success");
+            });
+        }
+
         function renderHistoryList(filterQuery = '') {
             resultList.innerHTML = '';
-            
-            // Filter berdasarkan tab aktif (VALID / INVALID)
             const targetStatus = currentTab === 'valid' ? 'VALID' : 'TIDAK VALID';
             const filteredData = scanHistoryData.filter(item => 
                 item.status === targetStatus &&
@@ -528,17 +527,32 @@
             filteredData.forEach(item => {
                 const li = document.createElement('li');
                 if (item.status === 'VALID') {
-                    li.className = "font-mono text-emerald-100 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/25 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
+                    li.className = "font-mono text-emerald-100 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/25 text-xs shadow-sm space-y-1.5 backdrop-blur-md cursor-pointer hover:bg-emerald-900/40 transition";
+                    li.setAttribute('onclick', `copySingleResi('${item.resi}')`);
                     li.innerHTML = `
-                        <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-emerald-300">${item.resi}</span><span class="text-[9px] bg-emerald-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-emerald-200 border border-emerald-500/30 uppercase">VALID (${item.waktu})</span></div>
+                        <div class="flex justify-between items-center">
+                            <span class="tracking-wide font-bold text-emerald-300 flex items-center gap-1.5">
+                                ${item.resi} 
+                                <span class="text-[9px] bg-emerald-500/20 text-emerald-200 px-2 py-0.5 rounded-md border border-emerald-500/30 font-sans">Klik Salin</span>
+                            </span>
+                            <span class="text-[9px] bg-emerald-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-emerald-200 border border-emerald-500/30 uppercase">VALID (${item.waktu})</span>
+                        </div>
                         <div class="text-[10px] text-emerald-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-emerald-500/20">
                             <div>Toko: <b class="text-white">${item.toko}</b></div>
                             <div>Kurir: <b class="text-white">${item.kurir}</b></div>
                             <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
                         </div>`;
                 } else {
-                    li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md";
-                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-rose-300">${item.resi}</span><span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30 uppercase">INVALID (${item.waktu})</span></div>`;
+                    li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md cursor-pointer hover:bg-rose-900/40 transition";
+                    li.setAttribute('onclick', `copySingleResi('${item.resi}')`);
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="tracking-wide font-bold text-rose-300 flex items-center gap-1.5">
+                                ${item.resi} 
+                                <span class="text-[9px] bg-rose-500/20 text-rose-200 px-2 py-0.5 rounded-md border border-rose-500/30 font-sans">Klik Salin</span>
+                            </span>
+                            <span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30 uppercase">INVALID (${item.waktu})</span>
+                        </div>`;
                 }
                 resultList.appendChild(li);
             });
@@ -775,9 +789,16 @@
 
             remainingListArray.forEach(item => {
                 const li = document.createElement('li');
-                li.className = "font-mono text-amber-100 bg-amber-950/30 p-3 rounded-2xl border border-amber-500/20 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
+                li.className = "font-mono text-amber-100 bg-amber-950/30 p-3 rounded-2xl border border-amber-500/20 text-xs shadow-sm space-y-1.5 backdrop-blur-md cursor-pointer hover:bg-amber-900/40 transition";
+                li.setAttribute('onclick', `copySingleResi('${item.resi}')`);
                 li.innerHTML = `
-                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-amber-300">${item.resi}</span><span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span></div>
+                    <div class="flex justify-between items-center">
+                        <span class="tracking-wide font-bold text-amber-300 flex items-center gap-1.5">
+                            ${item.resi} 
+                            <span class="text-[9px] bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded-md border border-amber-500/30 font-sans">Klik Salin</span>
+                        </span>
+                        <span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span>
+                    </div>
                     <div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20">
                         <div>Toko: <b class="text-white">${item.toko}</b></div>
                         <div>Kurir: <b class="text-white">${item.kurir}</b></div>
@@ -836,7 +857,6 @@
             });
         });
 
-        // Fungsionalitas Export XLSX yang dipindahkan ke tombol bawah
         btnExportXlsx.addEventListener('click', () => {
             if(masterDatabase.size === 0) {
                 showToast("Database master belum termuat", "error");
