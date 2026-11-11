@@ -85,7 +85,7 @@
                 <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Riwayat (VALID & INVALID Auto-Copy saat Diklik) -->
+            <!-- Tombol Aksi Riwayat (Klik VALID/INVALID otomatis menyalin data) -->
             <div class="relative flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
                 <button id="btn-tab-valid" onclick="switchTab('valid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md">
                     VALID
@@ -365,11 +365,10 @@
             }
             if(countValidSpan) countValidSpan.innerText = validCount;
             renderHistoryList();
-            // Jalankan copy otomatis saat pertama kali halaman dimuat (default tab VALID)
             copyCurrentTabResi(false);
         });
 
-        // Fungsi Switch Tab + Otomatis Salin Resi yang Sesuai
+        // Fungsi Switch Tab Atas + Auto Copy Semua Invoice Sesuai Tab
         function switchTab(tab) {
             currentTab = tab;
             if (tab === 'valid') {
@@ -380,12 +379,10 @@
                 btnTabValid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent";
             }
             renderHistoryList(searchHistory.value);
-            
-            // Otomatis Salin Resi berdasarkan Tab yang diklik
             copyCurrentTabResi(true);
         }
 
-        // Fungsi Helper untuk Menyalin Resi sesuai Tab Aktif
+        // Fungsi Menyalin Semua Nomor Sesuai Tab Aktif
         function copyCurrentTabResi(showNotification = true) {
             const targetStatus = currentTab === 'valid' ? 'VALID' : 'TIDAK VALID';
             const matchedItems = scanHistoryData.filter(item => item.status === targetStatus);
@@ -797,10 +794,7 @@
                 const li = document.createElement('li');
                 li.className = "font-mono text-amber-100 bg-amber-950/30 p-3 rounded-2xl border border-amber-500/20 text-xs shadow-sm space-y-1.5 backdrop-blur-md";
                 li.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="tracking-wide font-bold text-amber-300">${item.resi}</span>
-                        <span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span>
-                    </div>
+                    <div class="flex justify-between items-center"><span class="tracking-wide font-bold text-amber-300">${item.resi}</span><span class="text-[9px] bg-amber-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-amber-200 border border-amber-500/30 uppercase">Belum</span></div>
                     <div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20">
                         <div>Toko: <b class="text-white">${item.toko}</b></div>
                         <div>Kurir: <b class="text-white">${item.kurir}</b></div>
