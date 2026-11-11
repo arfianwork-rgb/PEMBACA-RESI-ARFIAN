@@ -424,21 +424,25 @@
             });
         }
 
-        btnSubmitChangepass.addEventListener('click', () => {
+       btnSubmitChangepass.addEventListener('click', () => {
             let oldPass = oldPassInput.value.trim();
             let newPass = newPassInput.value.trim();
-
+    
             if(!oldPass || !newPass) {
-                showToast("Password lama dan baru harus diisi", "error");
-                return;
+                    showToast("Password lama dan baru harus diisi", "error");
+                    return;
             }
 
-            if(validUsers[currentUser] === oldPass) {
+                if(validUsers[currentUser] === oldPass) {
+                // Perbarui password di objek data user
                 validUsers[currentUser] = newPass;
+        
+                // SIMPAN PERUBAHAN KE LOCALSTORAGE AGAR OTOMATIS BERUBAH PERMANEN
                 localStorage.setItem('v3_validUsers', JSON.stringify(validUsers));
+        
                 showToast("Password berhasil diperbarui!", "success");
                 changepassWrapper.classList.add('hidden');
-            } else {
+                } else {
                 showToast("Password lama salah!", "error");
             }
         });
