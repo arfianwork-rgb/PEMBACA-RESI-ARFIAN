@@ -85,16 +85,13 @@
                 <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Riwayat -->
-            <div class="grid grid-cols-3 gap-2">
-                <button id="btn-copy-valid" class="bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
-                    Salin Valid
+            <!-- Tombol Aksi Riwayat (VALID & INVALID Menutupi Satu Sama Lain) -->
+            <div class="relative flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
+                <button id="btn-tab-valid" onclick="switchTab('valid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md">
+                    VALID
                 </button>
-                <button id="btn-export-xlsx" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
-                    Export XLSX
-                </button>
-                <button id="btn-copy-invalid" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] font-bold py-2 px-1 rounded-2xl transition active:scale-95 shadow-sm">
-                    Invalid
+                <button id="btn-tab-invalid" onclick="switchTab('invalid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200">
+                    INVALID
                 </button>
             </div>
 
@@ -108,7 +105,6 @@
     <!-- POPUP ANDROID STYLE (BOTTOM SHEET) UNTUK SISA RESI -->
     <div id="remaining-popup" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end p-2 transition-all">
         <div class="glass-panel w-full max-w-md mx-auto p-5 rounded-t-3xl space-y-4 shadow-2xl border-t border-slate-700/80 toast-animate max-h-[80vh] flex flex-col">
-            <!-- Header Popup -->
             <div class="flex justify-between items-center pb-2 border-b border-slate-800">
                 <div>
                     <h3 class="text-sm font-extrabold text-amber-400 uppercase tracking-wider">Sisa Belum Discan</h3>
@@ -117,12 +113,10 @@
                 <button onclick="closeRemainingPopup()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white transition">✕</button>
             </div>
 
-            <!-- Daftar Sisa Resi di dalam Popup -->
             <ul id="popup-remaining-list" class="space-y-2 bg-slate-950/60 p-3 rounded-2xl overflow-y-auto flex-1 border border-slate-800/80">
                 <li class="text-center text-slate-500 text-xs py-5">Memuat data...</li>
             </ul>
 
-            <!-- Tombol Aksi Popup -->
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
                 <button id="btn-copy-remaining-popup" class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold py-3 px-3 rounded-2xl transition active:scale-95">
                     Salin Semua Sisa
@@ -161,7 +155,7 @@
         </div>
     </div>
 
-    <!-- Menu Pilihan Akun (Logout & Ubah Password) -->
+    <!-- Menu Pilihan Akun -->
     <div id="account-menu-wrapper" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-4 shadow-2xl border border-slate-800 text-center">
             <div class="space-y-1">
@@ -213,7 +207,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar Melengkung Modern -->
+    <!-- Bottom Navigation Bar Melengkung (Fungsi Export Pindah ke Sini) -->
     <nav id="bottom-nav" class="hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 backdrop-blur-2xl border border-slate-800/90 px-4 py-2.5 rounded-full flex justify-between items-center shadow-2xl max-w-md mx-auto">
         <button onclick="autoSyncDatabase()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -232,6 +226,7 @@
             <span class="text-[9px] font-extrabold tracking-wider uppercase text-cyan-400 mt-0.5">PINDAI</span>
         </button>
 
+        <!-- Tombol Export XLSX di Navigasi Bawah -->
         <button id="btn-export-xlsx" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-400 transition active:scale-90 px-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             <span class="text-[9px] font-bold tracking-wider uppercase">EXPORT</span>
@@ -315,8 +310,8 @@
         const btnScan = document.getElementById('btn-scan');
         const btnStop = document.getElementById('btn-stop-camera');
         
-        const btnCopyValid = document.getElementById('btn-copy-valid');
-        const btnCopyInvalid = document.getElementById('btn-copy-invalid');
+        const btnTabValid = document.getElementById('btn-tab-valid');
+        const btnTabInvalid = document.getElementById('btn-tab-invalid');
         const btnCopyRemainingPopup = document.getElementById('btn-copy-remaining-popup');
         const btnExportXlsx = document.getElementById('btn-export-xlsx');
         const btnClearHistory = document.getElementById('btn-clear-history');
@@ -351,6 +346,7 @@
         let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
         let currentUser = localStorage.getItem('v3_currentUser') || '';
         let masterDatabase = new Map(); 
+        let currentTab = 'valid'; // State tab aktif ('valid' atau 'invalid')
         const orderRegex = /58[67]\d{15}/g; 
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -371,6 +367,19 @@
             if(countValidSpan) countValidSpan.innerText = validCount;
             renderHistoryList();
         });
+
+        // Fungsi Switch Tab Valid / Invalid (Saling Menutupi)
+        function switchTab(tab) {
+            currentTab = tab;
+            if (tab === 'valid') {
+                btnTabValid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md";
+                btnTabInvalid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent";
+            } else {
+                btnTabInvalid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-md";
+                btnTabValid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent";
+            }
+            renderHistoryList(searchHistory.value);
+        }
 
         if(btnOpenMenu) {
             btnOpenMenu.addEventListener('click', () => {
@@ -497,14 +506,18 @@
 
         function renderHistoryList(filterQuery = '') {
             resultList.innerHTML = '';
+            
+            // Filter berdasarkan tab aktif (VALID / INVALID)
+            const targetStatus = currentTab === 'valid' ? 'VALID' : 'TIDAK VALID';
             const filteredData = scanHistoryData.filter(item => 
-                item.resi.toLowerCase().includes(filterQuery.toLowerCase()) || 
-                item.toko.toLowerCase().includes(filterQuery.toLowerCase()) ||
-                item.produk.toLowerCase().includes(filterQuery.toLowerCase())
+                item.status === targetStatus &&
+                (item.resi.toLowerCase().includes(filterQuery.toLowerCase()) || 
+                 item.toko.toLowerCase().includes(filterQuery.toLowerCase()) ||
+                 item.produk.toLowerCase().includes(filterQuery.toLowerCase()))
             );
 
             if(filteredData.length === 0) {
-                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-5">Tidak ada riwayat yang cocok</li>`;
+                resultList.innerHTML = `<li class="text-center text-slate-500 text-xs py-5">Tidak ada riwayat ${currentTab.toUpperCase()} yang cocok</li>`;
                 return;
             }
 
@@ -521,7 +534,7 @@
                         </div>`;
                 } else {
                     li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md";
-                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-rose-300">${item.resi}</span><span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30 uppercase">TIDAK ADA (${item.waktu})</span></div>`;
+                    li.innerHTML = `<div class="flex justify-between items-center"><span class="tracking-wide font-bold text-rose-300">${item.resi}</span><span class="text-[9px] bg-rose-500/20 px-2 py-0.5 rounded-full font-sans font-bold text-rose-200 border border-rose-500/30 uppercase">INVALID (${item.waktu})</span></div>`;
                 }
                 resultList.appendChild(li);
             });
@@ -584,7 +597,7 @@
                     dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
                     if(countValidSpan) countValidSpan.innerText = validCount;
                     
-                    renderHistoryList();
+                    renderHistoryList(searchHistory.value);
                     updateRemainingDisplay();
                     showToast("Sync Ulang Berhasil: Riwayat telah diperbarui!", "success");
                 } else {
@@ -699,7 +712,7 @@
                         });
 
                         saveToLocalStorage();
-                        renderHistoryList();
+                        renderHistoryList(searchHistory.value);
                         updateRemainingDisplay(); 
                     }
 
@@ -794,34 +807,10 @@
                 validCount = 0;
                 localStorage.clear();
                 if(countValidSpan) countValidSpan.innerText = "0";
-                renderHistoryList();
+                renderHistoryList(searchHistory.value);
                 updateRemainingDisplay();
                 showToast("Riwayat sesi dibersihkan", "success");
             }
-        });
-
-        btnCopyValid.addEventListener('click', () => {
-            const validItems = scanHistoryData.filter(item => item.status === 'VALID');
-            if(validItems.length === 0) {
-                showToast("Tidak ada resi valid untuk disalin", "error");
-                return;
-            }
-            const validNumbers = validItems.map(item => item.resi);
-            navigator.clipboard.writeText(validNumbers.join('\n')).then(() => {
-                showToast(`Berhasil menyalin ${validNumbers.length} resi valid`, "success");
-            });
-        });
-
-        btnCopyInvalid.addEventListener('click', () => {
-            const invalidItems = scanHistoryData.filter(item => item.status === 'TIDAK VALID');
-            if(invalidItems.length === 0) {
-                showToast("Tidak ada resi tidak valid untuk disalin", "error");
-                return;
-            }
-            const invalidNumbers = invalidItems.map(item => item.resi);
-            navigator.clipboard.writeText(invalidNumbers.join('\n')).then(() => {
-                showToast(`Berhasil menyalin ${invalidNumbers.length} resi tidak valid`, "success");
-            });
         });
 
         btnCopyRemainingPopup.addEventListener('click', () => {
@@ -843,6 +832,7 @@
             });
         });
 
+        // Fungsionalitas Export XLSX yang dipindahkan ke tombol bawah
         btnExportXlsx.addEventListener('click', () => {
             if(masterDatabase.size === 0) {
                 showToast("Database master belum termuat", "error");
