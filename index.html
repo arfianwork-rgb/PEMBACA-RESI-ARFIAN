@@ -85,12 +85,12 @@
                 <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Riwayat (Klik VALID/INVALID otomatis menyalin data) -->
+            <!-- Tombol Aksi Riwayat (VALID & INVALID Auto-Copy + Indikator Khusus) -->
             <div class="relative flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
-                <button id="btn-tab-valid" onclick="switchTab('valid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md">
+                <button id="btn-tab-valid" onclick="switchTab('valid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md scale-105">
                     VALID
                 </button>
-                <button id="btn-tab-invalid" onclick="switchTab('invalid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent">
+                <button id="btn-tab-invalid" onclick="switchTab('invalid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent scale-100">
                     INVALID
                 </button>
             </div>
@@ -368,15 +368,17 @@
             copyCurrentTabResi(false);
         });
 
-        // Fungsi Switch Tab Atas + Auto Copy Semua Invoice Sesuai Tab
+        // Fungsi Switch Tab + Auto Copy Massal + Indikator Khusus
         function switchTab(tab) {
             currentTab = tab;
             if (tab === 'valid') {
-                btnTabValid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md";
-                btnTabInvalid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent";
+                btnTabValid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md scale-105";
+                btnTabInvalid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent scale-100";
+                showToast("Menampilkan & Menyalin Data VALID", "success");
             } else {
-                btnTabInvalid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-md";
-                btnTabValid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent";
+                btnTabInvalid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-md scale-105";
+                btnTabValid.className = "flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent scale-100";
+                showToast("Menampilkan & Menyalin Data INVALID", "error");
             }
             renderHistoryList(searchHistory.value);
             copyCurrentTabResi(true);
