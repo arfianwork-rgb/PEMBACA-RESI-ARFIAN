@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Database Resi v3.1 Pro</title>
+    <title>Database Resi v4.0 Pro (Supabase Cloud)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Supabase JavaScript Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style> 
         body { 
@@ -37,18 +39,18 @@
         <div class="glass-panel px-4 py-3.5 rounded-3xl flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-extrabold text-xs tracking-wider">
-                    v3.1
+                    v4.0
                 </div>
                 <div>
                     <h1 class="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                        Database Resi <span class="text-[9px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Pro</span>
+                        Database Resi <span class="text-[9px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Supabase</span>
                     </h1>
-                    <p id="db-status" class="text-[11px] text-amber-400/90 font-medium mt-0.5">Menghubungkan Google Sheets...</p>
+                    <p id="db-status" class="text-[11px] text-amber-400/90 font-medium mt-0.5">Menghubungkan Supabase...</p>
                 </div>
             </div>
             <div class="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span class="text-[10px] font-bold text-emerald-300">Live Cloud</span>
+                <span class="text-[10px] font-bold text-emerald-300">Supabase Cloud</span>
             </div>
         </div>
 
@@ -72,7 +74,7 @@
                 </h3>
                 <div class="flex items-center gap-2">
                     <button onclick="autoSyncDatabase()" class="text-[11px] text-cyan-300 font-bold bg-cyan-500/15 hover:bg-cyan-500/25 px-3 py-1.5 rounded-xl border border-cyan-500/30 transition active:scale-95 shadow-sm">
-                        Sync Ulang
+                        Sync Supabase
                     </button>
                     <button id="btn-clear-history" class="text-[11px] text-rose-300 font-bold bg-rose-500/15 hover:bg-rose-500/25 px-3 py-1.5 rounded-xl border border-rose-500/30 transition active:scale-95 shadow-sm">
                         Hapus Sesi
@@ -85,7 +87,7 @@
                 <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
-            <!-- Tombol Aksi Riwayat (VALID & INVALID Auto-Copy + Indikator Khusus) -->
+            <!-- Tombol Aksi Riwayat (VALID & INVALID Auto-Copy) -->
             <div class="relative flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
                 <button id="btn-tab-valid" onclick="switchTab('valid')" class="flex-1 py-2 px-3 text-xs font-extrabold rounded-xl transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md scale-105">
                     VALID
@@ -108,7 +110,7 @@
             <div class="flex justify-between items-center pb-2 border-b border-slate-800">
                 <div>
                     <h3 class="text-sm font-extrabold text-amber-400 uppercase tracking-wider">Sisa Belum Discan</h3>
-                    <p class="text-[10px] text-slate-400">Daftar resi dari Google Sheets yang belum dipindai</p>
+                    <p class="text-[10px] text-slate-400">Daftar resi dari Supabase yang belum dipindai</p>
                 </div>
                 <button onclick="closeRemainingPopup()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white transition">✕</button>
             </div>
@@ -128,7 +130,7 @@
         </div>
     </div>
 
-    <!-- Halaman Login USER (Wajib) -->
+    <!-- Halaman Login USER -->
     <div id="login-wrapper" class="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl space-y-5 shadow-2xl border border-slate-800">
             <div class="text-center space-y-1">
@@ -281,14 +283,16 @@
             lastTouchEnd = now;
         }, false);
 
-        let validUsers = JSON.parse(localStorage.getItem('v3_validUsers') || JSON.stringify({
+        // --- KONFIGURASI SUPABASE (Sudah diisi otomatis) ---
+        const SUPABASE_URL = "https://ncsegckiapxnfxpyudvs.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_hYILyFeq5KXyeoqsPvLZtA_ZFZSBQrt";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let validUsers = JSON.parse(localStorage.getItem('v4_validUsers') || JSON.stringify({
             "fian": "paiko098",
             "admin": "admin123",
             "march": "123456"
         }));
-
-        const FIXED_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrePM4XsuFuQXkiAxKVT6pEaAWFfIFcrrplLmkm0JuH4zJTJnY2hMSQ3uBRMEaQdRm-QBeCdPGeTjv/pub?output=csv";
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEE1Y_-IwT2QBVPV75Mq40zC64Ii1XcVqc9fRkCinj53a-nZwWSLyOQmUSKDDezMBX/exec"; 
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -340,10 +344,10 @@
         const lastScannedBadge = document.getElementById('last-scanned-badge');
 
         let stream = null;
-        let scannedNumbers = new Set(JSON.parse(localStorage.getItem('v3_scannedNumbers') || '[]'));
-        let scanHistoryData = JSON.parse(localStorage.getItem('v3_scanHistoryData') || '[]'); 
-        let validCount = parseInt(localStorage.getItem('v3_validCount') || '0');
-        let currentUser = localStorage.getItem('v3_currentUser') || '';
+        let scannedNumbers = new Set(JSON.parse(localStorage.getItem('v4_scannedNumbers') || '[]'));
+        let scanHistoryData = JSON.parse(localStorage.getItem('v4_scanHistoryData') || '[]'); 
+        let validCount = parseInt(localStorage.getItem('v4_validCount') || '0');
+        let currentUser = localStorage.getItem('v4_currentUser') || '';
         let masterDatabase = new Map(); 
         let currentTab = 'valid'; 
         const orderRegex = /58[67]\d{15}/g; 
@@ -358,7 +362,7 @@
                 bottomNav.classList.remove('hidden');
                 autoSyncDatabase();
             } else {
-                localStorage.removeItem('v3_currentUser');
+                localStorage.removeItem('v4_currentUser');
                 loginWrapper.classList.remove('hidden');
                 mainDashboard.classList.add('hidden');
                 bottomNav.classList.add('hidden');
@@ -368,7 +372,7 @@
             copyCurrentTabResi(false);
         });
 
-        // Fungsi Switch Tab + Auto Copy Massal + Indikator Khusus
+        // Fungsi Switch Tab + Auto Copy Massal
         function switchTab(tab) {
             currentTab = tab;
             if (tab === 'valid') {
@@ -384,7 +388,6 @@
             copyCurrentTabResi(true);
         }
 
-        // Fungsi Menyalin Semua Nomor Sesuai Tab Aktif
         function copyCurrentTabResi(showNotification = true) {
             const targetStatus = currentTab === 'valid' ? 'VALID' : 'TIDAK VALID';
             const matchedItems = scanHistoryData.filter(item => item.status === targetStatus);
@@ -432,7 +435,7 @@
         if(btnLogout) {
             btnLogout.addEventListener('click', () => {
                 if(confirm("Yakin ingin keluar dari akun ini?")) {
-                    localStorage.removeItem('v3_currentUser');
+                    localStorage.removeItem('v4_currentUser');
                     currentUser = '';
                     accountMenuWrapper.classList.add('hidden');
                     mainDashboard.classList.add('hidden');
@@ -460,7 +463,7 @@
 
             if(validUsers[currentUser] === oldPass) {
                 validUsers[currentUser] = newPass;
-                localStorage.setItem('v3_validUsers', JSON.stringify(validUsers));
+                localStorage.setItem('v4_validUsers', JSON.stringify(validUsers));
                 showToast("Password berhasil diperbarui!", "success");
                 changepassWrapper.classList.add('hidden');
             } else {
@@ -479,7 +482,7 @@
 
             if (validUsers[uid] && validUsers[uid] === pass) {
                 currentUser = uid;
-                localStorage.setItem('v3_currentUser', currentUser);
+                localStorage.setItem('v4_currentUser', currentUser);
                 navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
                 menuUserDisplay.innerText = currentUser;
                 currentUserDisplay.innerText = currentUser;
@@ -524,9 +527,9 @@
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('v3_scannedNumbers', JSON.stringify(Array.from(scannedNumbers)));
-            localStorage.setItem('v3_scanHistoryData', JSON.stringify(scanHistoryData));
-            localStorage.setItem('v3_validCount', validCount.toString());
+            localStorage.setItem('v4_scannedNumbers', JSON.stringify(Array.from(scannedNumbers)));
+            localStorage.setItem('v4_scanHistoryData', JSON.stringify(scanHistoryData));
+            localStorage.setItem('v4_validCount', validCount.toString());
         }
 
         function renderHistoryList(filterQuery = '') {
@@ -563,74 +566,68 @@
             });
         }
 
+        // --- SINKRONISASI DENGAN SUPABASE CLOUD ---
         async function autoSyncDatabase() {
             try {
-                dbStatus.innerText = "Memuat database...";
-                const response = await fetch(FIXED_SHEETS_URL);
-                const csvText = await response.text();
+                dbStatus.innerText = "Memuat dari Supabase...";
+                
+                // Mengambil data dari tabel master_resi di Supabase
+                const { data, error } = await supabaseClient
+                    .from('master_resi')
+                    .select('*');
+
+                if (error) throw error;
                 
                 masterDatabase.clear();
-                const lines = csvText.split(/\r?\n/);
 
-                lines.forEach((line, index) => {
-                    if (index === 0) return;
-                    const cols = line.split(',').map(c => c.replace(/["']/g, "").trim());
-                    if (cols.length >= 1) {
-                        const resi = cols[0];
-                        const toko = cols[1] || "-";
-                        const kurir = cols[2] || "-";
-                        const produk = cols[3] || "-";
+                if (data && data.length > 0) {
+                    data.forEach(row => {
+                        const resi = row.no_order;
+                        const toko = row.nama_toko || "-";
+                        const kurir = row.kurir_yang_pickup || "-";
+                        const produk = row.nama_produk || "-";
 
-                        const matches = resi.match(orderRegex);
-                        if (matches) {
-                            matches.forEach(m => {
-                                masterDatabase.set(m, { toko, kurir, produk });
-                            });
-                        } else if (resi.length >= 10) {
+                        if (resi) {
                             masterDatabase.set(resi, { toko, kurir, produk });
                         }
+                    });
+                }
+
+                validCount = 0;
+                scannedNumbers.clear();
+
+                scanHistoryData.forEach(item => {
+                    let resiNum = item.resi;
+                    if (masterDatabase.has(resiNum)) {
+                        let meta = masterDatabase.get(resiNum);
+                        item.status = 'VALID';
+                        item.toko = meta.toko;
+                        item.kurir = meta.kurir;
+                        item.produk = meta.produk;
+                        validCount++;
+                    } else {
+                        item.status = 'TIDAK VALID';
+                        item.toko = '-';
+                        item.kurir = '-';
+                        item.produk = '-';
                     }
+                    scannedNumbers.add(resiNum);
                 });
 
-                if(masterDatabase.size > 0) {
-                    validCount = 0;
-                    scannedNumbers.clear();
+                saveToLocalStorage();
 
-                    scanHistoryData.forEach(item => {
-                        let resiNum = item.resi;
-                        if (masterDatabase.has(resiNum)) {
-                            let meta = masterDatabase.get(resiNum);
-                            item.status = 'VALID';
-                            item.toko = meta.toko;
-                            item.kurir = meta.kurir;
-                            item.produk = meta.produk;
-                            validCount++;
-                        } else {
-                            item.status = 'TIDAK VALID';
-                            item.toko = '-';
-                            item.kurir = '-';
-                            item.produk = '-';
-                        }
-                        scannedNumbers.add(resiNum);
-                    });
-
-                    saveToLocalStorage();
-
-                    dbStatus.innerText = `Terhubung (${masterDatabase.size} resi aktif)`;
-                    dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
-                    if(countValidSpan) countValidSpan.innerText = validCount;
-                    
-                    renderHistoryList(searchHistory.value);
-                    updateRemainingDisplay();
-                    showToast("Sync Ulang Berhasil: Riwayat telah diperbarui!", "success");
-                } else {
-                    dbStatus.innerText = "Database kosong / format salah";
-                    dbStatus.className = "text-[11px] text-amber-400 font-bold mt-0.5";
-                }
+                dbStatus.innerText = `Terhubung Cloud (${masterDatabase.size} resi)`;
+                dbStatus.className = "text-[11px] text-cyan-400 font-bold mt-0.5";
+                if(countValidSpan) countValidSpan.innerText = validCount;
+                
+                renderHistoryList(searchHistory.value);
+                updateRemainingDisplay();
+                showToast("Berhasil sinkronisasi dengan Supabase!", "success");
             } catch (err) {
-                dbStatus.innerText = "Gagal memuat database online";
+                console.error("Supabase Error:", err);
+                dbStatus.innerText = "Gagal memuat database cloud";
                 dbStatus.className = "text-[11px] text-rose-400 font-bold mt-0.5";
-                showToast("Gagal terhubung ke Google Sheets", "error");
+                showToast("Gagal terhubung ke Supabase", "error");
             }
         }
 
@@ -740,13 +737,6 @@
                     }
 
                     lastScannedNumber.innerText = num;
-                    
-                    if(APPS_SCRIPT_URL && isInDb) {
-                        fetch(`${APPS_SCRIPT_URL}?resi=${num}&status=Berhasil%20Scan`, {
-                            method: 'GET',
-                            redirect: 'follow'
-                        }).catch(err => console.log("Gagal memperbarui Sheets:", err));
-                    }
 
                     if(isInDb) {
                         playSound('success');
@@ -808,7 +798,7 @@
 
         function openRemainingPopup() {
             if(masterDatabase.size === 0) {
-                showToast("Database belum termuat", "error");
+                showToast("Database Supabase belum termuat", "error");
                 return;
             }
             updateRemainingDisplay();
@@ -857,14 +847,14 @@
 
         btnExportXlsx.addEventListener('click', () => {
             if(masterDatabase.size === 0) {
-                showToast("Database master belum termuat", "error");
+                showToast("Database Supabase belum termuat", "error");
                 return;
             }
 
             let exportRows = [];
             let index = 1;
 
-            exportRows.push({ "No": "LAPORAN REKAPITULASI PEMINDAIAN RESI SHOPEE" });
+            exportRows.push({ "No": "LAPORAN REKAPITULASI PEMINDAIAN RESI (SUPABASE)" });
             exportRows.push({ "No": `Dicetak oleh: ${currentUser.toUpperCase()} | Tanggal: ${new Date().toLocaleDateString('id-ID')}` });
             exportRows.push({});
 
@@ -912,7 +902,7 @@
             XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
 
             const dateStr = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(workbook, `Laporan_Resi_Pro_${dateStr}.xlsx`);
+            XLSX.writeFile(workbook, `Laporan_Resi_v4_${dateStr}.xlsx`);
             showToast("File XLSX rapi berhasil diunduh", "success");
         });
     </script>
