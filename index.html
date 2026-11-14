@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Database Resi v4.0 Pro (Supabase Cloud)</title>
+    <title>Database Resi v4.0 Pro (Supabase Cloud + History Log)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -283,7 +283,7 @@
             lastTouchEnd = now;
         }, false);
 
-        // --- KONFIGURASI SUPABASE (Sudah diisi otomatis) ---
+        // --- KONFIGURASI SUPABASE ---
         const SUPABASE_URL = "https://ncsegckiapxnfxpyudvs.supabase.co";
         const SUPABASE_KEY = "sb_publishable_hYILyFeq5KXyeoqsPvLZtA_ZFZSBQrt";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -685,6 +685,26 @@
             bottomNav.classList.remove('hidden'); 
         });
 
+        // --- FUNGSI OTOMATIS KIRIM RIWAYAT SCAN KE SUPABASE (scan_history) ---
+        async function logScanToSupabaseCloud(resiNumber, statusText) {
+            try {
+                const { error } = await supabaseClient
+                    .from('scan_history')
+                    .insert([
+                        { 
+                            no_order: resiNumber, 
+                            status: statusText, 
+                            scanned_by: currentUser || 'unknown' 
+                        }
+                    ]);
+                if (error) {
+                    console.error("Gagal mencatat log ke Supabase scan_history:", error.message);
+                }
+            } catch (err) {
+                console.error("Supabase network error:", err);
+            }
+        }
+
         async function processImage(imageSource) {
             lastScannedNumber.innerText = "Memproses...";
             lastScannedBadge.innerHTML = `<span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-xl font-semibold uppercase animate-pulse">Membaca OCR...</span>`;
@@ -707,6 +727,11 @@
                         isInDb = true; 
                     }
 
+                    let statusText = isInDb ? 'VALID' : 'TIDAK VALID';
+
+                    // Otomatis Simpan Riwayat ke Supabase Cloud (tabel scan_history)
+                    logScanToSupabaseCloud(num, statusText);
+
                     let isAlreadyScanned = scannedNumbers.has(num);
 
                     if (isAlreadyScanned) {
@@ -727,7 +752,7 @@
                             toko: meta.toko,
                             kurir: meta.kurir,
                             produk: meta.produk,
-                            status: isInDb ? 'VALID' : 'TIDAK VALID',
+                            status: statusText,
                             waktu: new Date().toLocaleTimeString()
                         });
 
