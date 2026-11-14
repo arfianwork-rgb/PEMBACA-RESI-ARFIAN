@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Database Resi v4.0 Pro (Supabase Cloud + Clean History)</title>
+    <title>Database Resi v4.0 Pro (Supabase Auth & Cloud)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -288,12 +288,6 @@
         const SUPABASE_KEY = "sb_publishable_hYILyFeq5KXyeoqsPvLZtA_ZFZSBQrt";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let validUsers = JSON.parse(localStorage.getItem('v4_validUsers') || JSON.stringify({
-            "fian": "paiko098",
-            "admin": "admin123",
-            "march": "123456"
-        }));
-
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const resultList = document.getElementById('result-list');
@@ -353,7 +347,7 @@
         const orderRegex = /58[67]\d{15}/g; 
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (currentUser && validUsers[currentUser]) {
+            if (currentUser) {
                 navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
                 menuUserDisplay.innerText = currentUser;
                 currentUserDisplay.innerText = currentUser;
@@ -372,7 +366,92 @@
             copyCurrentTabResi(false);
         });
 
-        // Fungsi Switch Tab + Auto Copy Massal
+        // --- SISTEM LOGIN DARI SUPABASE (TABEL "user") ---
+        btnSubmitLogin.addEventListener('click', async () => {
+            let uid = loginUseridInput.value.trim().toLowerCase();
+            let pass = loginPassInput.value.trim();
+
+            if(!uid || !pass) {
+                showToast("User ID dan Password harus diisi", "error");
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('user')
+                    .select('*')
+                    .eq('username', uid)
+                    .single();
+
+                if (error || !data) {
+                    showToast("User ID tidak ditemukan!", "error");
+                    loginPassInput.value = '';
+                    return;
+                }
+
+                if (data.password === pass) {
+                    currentUser = data.username;
+                    localStorage.setItem('v4_currentUser', currentUser);
+                    navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
+                    menuUserDisplay.innerText = currentUser;
+                    currentUserDisplay.innerText = currentUser;
+                    
+                    showToast(`Login berhasil, selamat datang ${currentUser}!`, "success");
+                    loginUseridInput.value = '';
+                    loginPassInput.value = '';
+
+                    loginWrapper.classList.add('hidden');
+                    mainDashboard.classList.remove('hidden');
+                    bottomNav.classList.remove('hidden');
+                    
+                    autoSyncDatabase();
+                } else {
+                    showToast("Password salah!", "error");
+                    loginPassInput.value = '';
+                }
+            } catch (err) {
+                console.error("Login error:", err);
+                showToast("Gagal terhubung ke database user", "error");
+            }
+        });
+
+        // --- UBAH PASSWORD LANGSUNG KE SUPABASE (TABEL "user") ---
+        btnSubmitChangepass.addEventListener('click', async () => {
+            let oldPass = oldPassInput.value.trim();
+            let newPass = newPassInput.value.trim();
+
+            if(!oldPass || !newPass) {
+                showToast("Password lama dan baru harus diisi", "error");
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('user')
+                    .select('*')
+                    .eq('username', currentUser)
+                    .single();
+
+                if (error || data.password !== oldPass) {
+                    showToast("Password lama salah!", "error");
+                    return;
+                }
+
+                const { error: updateError } = await supabaseClient
+                    .from('user')
+                    .update({ password: newPass })
+                    .eq('username', currentUser);
+
+                if (updateError) throw updateError;
+
+                showToast("Password berhasil diperbarui di Cloud!", "success");
+                changepassWrapper.classList.add('hidden');
+            } catch (err) {
+                console.error("Gagal ubah password:", err);
+                showToast("Gagal memperbarui password", "error");
+            }
+        });
+
         function switchTab(tab) {
             currentTab = tab;
             if (tab === 'valid') {
@@ -451,56 +530,6 @@
                 changepassWrapper.classList.add('hidden');
             });
         }
-
-        btnSubmitChangepass.addEventListener('click', () => {
-            let oldPass = oldPassInput.value.trim();
-            let newPass = newPassInput.value.trim();
-
-            if(!oldPass || !newPass) {
-                showToast("Password lama dan baru harus diisi", "error");
-                return;
-            }
-
-            if(validUsers[currentUser] === oldPass) {
-                validUsers[currentUser] = newPass;
-                localStorage.setItem('v4_validUsers', JSON.stringify(validUsers));
-                showToast("Password berhasil diperbarui!", "success");
-                changepassWrapper.classList.add('hidden');
-            } else {
-                showToast("Password lama salah!", "error");
-            }
-        });
-
-        btnSubmitLogin.addEventListener('click', () => {
-            let uid = loginUseridInput.value.trim().toLowerCase();
-            let pass = loginPassInput.value.trim();
-
-            if(!uid || !pass) {
-                showToast("User ID dan Password harus diisi", "error");
-                return;
-            }
-
-            if (validUsers[uid] && validUsers[uid] === pass) {
-                currentUser = uid;
-                localStorage.setItem('v4_currentUser', currentUser);
-                navUserLabel.innerText = currentUser.length > 5 ? currentUser.substring(0, 5) + '..' : currentUser;
-                menuUserDisplay.innerText = currentUser;
-                currentUserDisplay.innerText = currentUser;
-                
-                showToast(`Login berhasil, selamat datang ${currentUser}!`, "success");
-                loginUseridInput.value = '';
-                loginPassInput.value = '';
-
-                loginWrapper.classList.add('hidden');
-                mainDashboard.classList.remove('hidden');
-                bottomNav.classList.remove('hidden');
-                
-                autoSyncDatabase();
-            } else {
-                showToast("User ID atau Password salah!", "error");
-                loginPassInput.value = '';
-            }
-        });
 
         function showToast(message, type = 'info') {
             toastContainer.innerHTML = '';
@@ -684,10 +713,9 @@
             bottomNav.classList.remove('hidden'); 
         });
 
-        // --- FUNGSI KIRIM RIWAYAT SCAN KE SUPABASE (scan_history) DENGAN FORMAT BERSIH ---
+        // --- FUNGSI KIRIM RIWAYAT SCAN KE SUPABASE (scan_history) ---
         async function logScanToSupabaseCloud(resiNumber, statusText) {
             try {
-                // Format waktu bersih: YYYY-MM-DD HH:mm:ss
                 const now = new Date();
                 const dateStr = now.getFullYear() + '-' +
                     String(now.getMonth() + 1).padStart(2, '0') + '-' +
@@ -725,6 +753,15 @@
                 
                 if (matches && matches.length > 0) {
                     let num = matches[0]; 
+
+                    // Cegah proses & kirim ke Supabase jika resi sudah pernah di-scan
+                    if (scannedNumbers.has(num)) {
+                        playSound('warn');
+                        lastScannedNumber.innerText = num;
+                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-bold uppercase">Sudah Discan</span>`;
+                        showToast(`Resi ${num} sudah ada, tidak discan ulang`, "warn");
+                        return;
+                    }
                     
                     let isInDb = false;
                     let meta = { toko: "-", kurir: "-", produk: "-" };
@@ -738,37 +775,28 @@
 
                     let statusText = isInDb ? 'VALID' : 'TIDAK VALID';
 
-                    // Otomatis Simpan (VALID / TIDAK VALID) ke Supabase Cloud
+                    scannedNumbers.add(num);
+                    if (isInDb) {
+                        validCount++;
+                        if(countValidSpan) countValidSpan.innerText = validCount;
+                    }
+
+                    scanHistoryData.unshift({
+                        resi: num,
+                        invoice: num,
+                        toko: meta.toko,
+                        kurir: meta.kurir,
+                        produk: meta.produk,
+                        status: statusText,
+                        waktu: new Date().toLocaleTimeString()
+                    });
+
+                    // Simpan ke Supabase scan_history hanya untuk scan baru
                     logScanToSupabaseCloud(num, statusText);
 
-                    let isAlreadyScanned = scannedNumbers.has(num);
-
-                    if (isAlreadyScanned) {
-                        playSound('warn');
-                        lastScannedNumber.innerText = num;
-                        lastScannedBadge.innerHTML = `<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-bold uppercase">Di-scan Ulang</span>`;
-                        showToast(`Resi ${num} di-scan ulang`, "warn");
-                    } else {
-                        scannedNumbers.add(num);
-                        if (isInDb) {
-                            validCount++;
-                            if(countValidSpan) countValidSpan.innerText = validCount;
-                        }
-
-                        scanHistoryData.unshift({
-                            resi: num,
-                            invoice: num,
-                            toko: meta.toko,
-                            kurir: meta.kurir,
-                            produk: meta.produk,
-                            status: statusText,
-                            waktu: new Date().toLocaleTimeString()
-                        });
-
-                        saveToLocalStorage();
-                        renderHistoryList(searchHistory.value);
-                        updateRemainingDisplay(); 
-                    }
+                    saveToLocalStorage();
+                    renderHistoryList(searchHistory.value);
+                    updateRemainingDisplay(); 
 
                     lastScannedNumber.innerText = num;
 
