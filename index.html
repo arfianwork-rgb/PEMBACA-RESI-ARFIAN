@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Database Resi v4.0 Pro (Supabase Cloud + History Log)</title>
+    <title>Database Resi v4.0 Pro (Supabase Cloud + Clean History)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -571,7 +571,6 @@
             try {
                 dbStatus.innerText = "Memuat dari Supabase...";
                 
-                // Mengambil data dari tabel master_resi di Supabase
                 const { data, error } = await supabaseClient
                     .from('master_resi')
                     .select('*');
@@ -685,15 +684,25 @@
             bottomNav.classList.remove('hidden'); 
         });
 
-        // --- FUNGSI OTOMATIS KIRIM RIWAYAT SCAN KE SUPABASE (scan_history) ---
+        // --- FUNGSI KIRIM RIWAYAT SCAN KE SUPABASE (scan_history) DENGAN FORMAT BERSIH ---
         async function logScanToSupabaseCloud(resiNumber, statusText) {
             try {
+                // Format waktu bersih: YYYY-MM-DD HH:mm:ss
+                const now = new Date();
+                const dateStr = now.getFullYear() + '-' +
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(now.getDate()).padStart(2, '0') + ' ' +
+                    String(now.getHours()).padStart(2, '0') + ':' +
+                    String(now.getMinutes()).padStart(2, '0') + ':' +
+                    String(now.getSeconds()).padStart(2, '0');
+
                 const { error } = await supabaseClient
                     .from('scan_history')
                     .insert([
                         { 
                             no_order: resiNumber, 
                             status: statusText, 
+                            scanned_at: dateStr,
                             scanned_by: currentUser || 'unknown' 
                         }
                     ]);
@@ -729,7 +738,7 @@
 
                     let statusText = isInDb ? 'VALID' : 'TIDAK VALID';
 
-                    // Otomatis Simpan Riwayat ke Supabase Cloud (tabel scan_history)
+                    // Otomatis Simpan (VALID / TIDAK VALID) ke Supabase Cloud
                     logScanToSupabaseCloud(num, statusText);
 
                     let isAlreadyScanned = scannedNumbers.has(num);
