@@ -26,7 +26,6 @@
         }
 
         /* --- TEMA GELAP (HITAM PUTIH MONOKROM) --- */
-        .theme-dark body,
         body.theme-dark {
             background-color: #09090b;
             color: #fafafa;
@@ -64,10 +63,6 @@
         body.theme-dark .dock-item:hover {
             color: #ffffff;
             background-color: rgba(255, 255, 255, 0.08);
-        }
-        body.theme-dark .dock-item-active {
-            background-color: rgba(255, 255, 255, 0.16);
-            color: #ffffff;
         }
 
         /* --- TEMA TERANG (LIGHT MODE BERSIH) --- */
@@ -108,10 +103,6 @@
         body.theme-light .dock-item:hover {
             color: #09090b;
             background-color: rgba(9, 9, 11, 0.06);
-        }
-        body.theme-light .dock-item-active {
-            background-color: #18181b;
-            color: #ffffff;
         }
     </style>
 </head>
@@ -737,14 +728,14 @@
                     li.innerHTML = `
                         <div class="flex justify-between items-center">
                             <span class="tracking-wide font-bold">${item.resi}</span>
-                            <span class="text-[9px] ${isLight ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} px-2 py-0.5 rounded-full font-sans font-bold uppercase">INVALID (${item.waktu})</span>
+                            <span class="text-[9px] bg-zinc-700 text-white px-2 py-0.5 rounded-full font-sans font-bold uppercase">INVALID (${item.waktu})</span>
                         </div>`;
                 }
                 resultList.appendChild(li);
             });
         }
 
-        // --- SINKRONISASI DENGAN SUPABASE CLOUD ---
+        // --- SINKRONISASI MASTER_RESI & SCAN_HISTORY ANTAR DEVICE ---
         async function autoSyncDatabase() {
             try {
                 dbStatus.innerText = "Memuat dari Supabase...";
@@ -775,27 +766,66 @@
                     });
                 }
 
+                // Ambil riwayat scan dari tabel scan_history agar sinkron di semua device
+                const { data: historyRows, error: historyError } = await supabaseClient
+                    .from('scan_history')
+                    .select('*')
+                    .order('scanned_at', { ascending: false });
+
+                if (historyError) throw historyError;
+
+                const mergedByResi = new Map();
+
+                if (historyRows && historyRows.length > 0) {
+                    historyRows.forEach(row => {
+                        const resiNum = String(row.no_order ?? "").trim();
+                        if (!resiNum) return;
+
+                        const meta = masterDatabase.get(resiNum);
+                        const isInDb = masterDatabase.size === 0 ? true : masterDatabase.has(resiNum);
+                        const rawTime = String(row.scanned_at ?? "");
+                        const waktuLabel = rawTime.includes(" ") ? rawTime.split(" ")[1] : (rawTime || "-");
+
+                        mergedByResi.set(resiNum, {
+                            resi: resiNum,
+                            invoice: resiNum,
+                            toko: isInDb && meta ? meta.toko : "-",
+                            kurir: isInDb && meta ? meta.kurir : "-",
+                            produk: isInDb && meta ? meta.produk : "-",
+                            statusMp: isInDb && meta ? (meta.statusMp || "-") : "-",
+                            status: isInDb ? "VALID" : "TIDAK VALID",
+                            waktu: waktuLabel
+                        });
+                    });
+                }
+
+                // Pertahankan item lokal jika ada yang belum sempat masuk ke cloud
+                scanHistoryData.forEach(item => {
+                    const resiNum = String(item.resi ?? "").trim();
+                    if (resiNum && !mergedByResi.has(resiNum)) {
+                        const meta = masterDatabase.get(resiNum);
+                        const isInDb = masterDatabase.size === 0 ? true : masterDatabase.has(resiNum);
+                        mergedByResi.set(resiNum, {
+                            ...item,
+                            resi: resiNum,
+                            toko: isInDb && meta ? meta.toko : "-",
+                            kurir: isInDb && meta ? meta.kurir : "-",
+                            produk: isInDb && meta ? meta.produk : "-",
+                            statusMp: isInDb && meta ? (meta.statusMp || "-") : "-",
+                            status: isInDb ? "VALID" : "TIDAK VALID"
+                        });
+                    }
+                });
+
+                scanHistoryData = Array.from(mergedByResi.values());
                 validCount = 0;
                 scannedNumbers.clear();
 
                 scanHistoryData.forEach(item => {
-                    let resiNum = item.resi;
-                    if (masterDatabase.has(resiNum)) {
-                        let meta = masterDatabase.get(resiNum);
-                        item.status = 'VALID';
-                        item.toko = meta.toko;
-                        item.kurir = meta.kurir;
-                        item.produk = meta.produk;
-                        item.statusMp = meta.statusMp || "-";
+                    scannedNumbers.add(item.resi);
+                    if (item.status === "VALID") {
                         validCount++;
-                    } else {
-                        item.status = 'TIDAK VALID';
-                        item.toko = '-';
-                        item.kurir = '-';
-                        item.produk = '-';
-                        item.statusMp = '-';
                     }
-                    scannedNumbers.add(resiNum);
                 });
 
                 saveToLocalStorage();
@@ -805,7 +835,7 @@
 
                 renderHistoryList(searchHistory.value);
                 updateRemainingDisplay();
-                showToast("Berhasil sinkronisasi dengan Supabase!", "success");
+                showToast("Berhasil sinkronisasi data & riwayat dengan Supabase!", "success");
             } catch (err) {
                 console.error("Supabase Error:", err);
                 dbStatus.innerText = "Gagal memuat database cloud";
