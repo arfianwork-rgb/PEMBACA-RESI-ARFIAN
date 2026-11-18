@@ -84,7 +84,7 @@
 
             <!-- Kotak Pencarian -->
             <div class="relative">
-                <input type="text" id="search-history" placeholder="Cari nomor resi, toko, atau produk..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
+                <input type="text" id="search-history" placeholder="Cari nomor pesanan, toko, atau SKU..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 shadow-inner transition">
             </div>
 
             <!-- Tombol Aksi Riwayat (VALID & INVALID Auto-Copy) -->
@@ -585,7 +585,8 @@
                         <div class="text-[10px] text-emerald-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-emerald-500/20">
                             <div>Toko: <b class="text-white">${item.toko}</b></div>
                             <div>Kurir: <b class="text-white">${item.kurir}</b></div>
-                            <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
+                            <div class="col-span-2">SKU / Jumlah: <b class="text-white">${item.produk}</b></div>
+                            <div class="col-span-2">Status MP: <b class="text-white">${item.statusMp || '-'}</b></div>
                         </div>`;
                 } else {
                     li.className = "font-mono text-rose-100 bg-rose-950/40 p-3 rounded-2xl border border-rose-500/25 text-xs shadow-sm backdrop-blur-md";
@@ -610,13 +611,18 @@
 
                 if (data && data.length > 0) {
                     data.forEach(row => {
-                        const resi = row.no_order;
-                        const toko = row.nama_toko || "-";
-                        const kurir = row.kurir_yang_pickup || "-";
-                        const produk = row.nama_produk || "-";
+                        const resi = String(row["Nomor_Pesanan"] ?? row["Nomor Pesanan"] ?? row.no_order ?? "").trim();
+                        const toko = row["Nama_Panggilan_Toko_BigSeller"] ?? row["Nama Panggilan Toko BigSeller"] ?? row.nama_toko ?? "-";
+                        const kurir = row["Jasa_Kirim_yang_Dipilih_Pembeli"] ?? row["Jasa Kirim yang Dipilih Pembeli"] ?? row.kurir_yang_pickup ?? "-";
+                        const sku = row["SKU"] ?? "";
+                        const jumlah = row["Jumlah"] ?? "";
+                        const statusMp = row["Status_Marketplace"] ?? row["Status Marketplace"] ?? "";
+                        const produk = sku
+                            ? (jumlah !== "" && jumlah !== null ? `${sku} (x${jumlah})` : sku)
+                            : (row.nama_produk ?? "-");
 
                         if (resi) {
-                            masterDatabase.set(resi, { toko, kurir, produk });
+                            masterDatabase.set(resi, { toko, kurir, produk, sku, jumlah, statusMp });
                         }
                     });
                 }
@@ -632,12 +638,14 @@
                         item.toko = meta.toko;
                         item.kurir = meta.kurir;
                         item.produk = meta.produk;
+                        item.statusMp = meta.statusMp || "-";
                         validCount++;
                     } else {
                         item.status = 'TIDAK VALID';
                         item.toko = '-';
                         item.kurir = '-';
                         item.produk = '-';
+                        item.statusMp = '-';
                     }
                     scannedNumbers.add(resiNum);
                 });
@@ -734,7 +742,7 @@
                             scanned_by: currentUser || 'unknown' 
                         }
                     ]);
-                if (error) {
+                if (error && error.code !== '23505') {
                     console.error("Gagal mencatat log ke Supabase scan_history:", error.message);
                 }
             } catch (err) {
@@ -754,7 +762,6 @@
                 if (matches && matches.length > 0) {
                     let num = matches[0]; 
 
-                    // Cegah proses & kirim ke Supabase jika resi sudah pernah di-scan
                     if (scannedNumbers.has(num)) {
                         playSound('warn');
                         lastScannedNumber.innerText = num;
@@ -764,7 +771,7 @@
                     }
                     
                     let isInDb = false;
-                    let meta = { toko: "-", kurir: "-", produk: "-" };
+                    let meta = { toko: "-", kurir: "-", produk: "-", statusMp: "-" };
 
                     if (masterDatabase.size > 0 && masterDatabase.has(num)) {
                         isInDb = true;
@@ -787,11 +794,11 @@
                         toko: meta.toko,
                         kurir: meta.kurir,
                         produk: meta.produk,
+                        statusMp: meta.statusMp || "-",
                         status: statusText,
                         waktu: new Date().toLocaleTimeString()
                     });
 
-                    // Simpan ke Supabase scan_history hanya untuk scan baru
                     logScanToSupabaseCloud(num, statusText);
 
                     saveToLocalStorage();
@@ -852,7 +859,8 @@
                     <div class="text-[10px] text-amber-200/70 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t border-amber-500/20">
                         <div>Toko: <b class="text-white">${item.toko}</b></div>
                         <div>Kurir: <b class="text-white">${item.kurir}</b></div>
-                        <div class="col-span-2">Produk: <b class="text-white">${item.produk}</b></div>
+                        <div class="col-span-2">SKU / Jumlah: <b class="text-white">${item.produk}</b></div>
+                        <div class="col-span-2">Status MP: <b class="text-white">${item.statusMp || '-'}</b></div>
                     </div>`;
                 popupRemainingList.appendChild(li);
             });
@@ -922,10 +930,11 @@
 
             exportRows.push({
                 "No": "No",
-                "Nomor Resi / Invoice": "Nomor Resi / Invoice",
-                "Nama Toko": "Nama Toko",
-                "Kurir Pickup": "Kurir Pickup",
-                "Nama Produk": "Nama Produk",
+                "Nomor_Pesanan": "Nomor_Pesanan",
+                "Nama_Panggilan_Toko_BigSeller": "Nama_Panggilan_Toko_BigSeller",
+                "Jasa_Kirim_yang_Dipilih_Pembeli": "Jasa_Kirim_yang_Dipilih_Pembeli",
+                "SKU / Jumlah": "SKU / Jumlah",
+                "Status_Marketplace": "Status_Marketplace",
                 "Status Scan": "Status Scan",
                 "Waktu Scan": "Waktu Scan",
                 "User ID": "User ID"
@@ -938,10 +947,11 @@
 
                 exportRows.push({
                     "No": index++,
-                    "Nomor Resi / Invoice": String(resi),
-                    "Nama Toko": meta.toko,
-                    "Kurir Pickup": meta.kurir,
-                    "Nama Produk": meta.produk,
+                    "Nomor_Pesanan": String(resi),
+                    "Nama_Panggilan_Toko_BigSeller": meta.toko,
+                    "Jasa_Kirim_yang_Dipilih_Pembeli": meta.kurir,
+                    "SKU / Jumlah": meta.produk,
+                    "Status_Marketplace": meta.statusMp || "-",
                     "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
                     "Waktu Scan": waktuScan,
                     "User ID": currentUser || "-"
@@ -952,9 +962,10 @@
             worksheet['!cols'] = [
                 { wch: 6 },  
                 { wch: 22 }, 
+                { wch: 24 }, 
+                { wch: 24 }, 
+                { wch: 28 }, 
                 { wch: 18 }, 
-                { wch: 15 }, 
-                { wch: 30 }, 
                 { wch: 16 }, 
                 { wch: 14 }, 
                 { wch: 12 }  
