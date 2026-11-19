@@ -144,17 +144,20 @@
             </div>
         </div>
 
-        <!-- KONTAINER UTAMA: RIWAYAT SUDAH DISCAN -->
+        <!-- KONTAINER UTAMA: RIWAYAT SUDAH DISCAN (HARI INI) -->
         <div class="glass-panel p-4 rounded-3xl flex flex-col space-y-3">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider opacity-80">
-                    Riwayat Sudah Discan
-                </h3>
-                <div class="flex items-center gap-2">
-                    <button onclick="autoSyncDatabase()" class="surface-card text-[11px] font-bold px-3 py-1.5 rounded-xl border transition active:scale-95">
-                        Sync
+            <div class="flex justify-between items-center gap-2">
+                <div>
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider opacity-80">
+                        Riwayat Hari Ini
+                    </h3>
+                    <p id="active-date-label" class="text-[10px] opacity-60 font-medium"></p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="openPickupHistoryPopup()" class="surface-card text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition active:scale-95">
+                        Arsip Pickup
                     </button>
-                    <button id="btn-clear-history" class="surface-card text-[11px] font-bold px-3 py-1.5 rounded-xl border transition active:scale-95">
+                    <button id="btn-clear-history" class="surface-card text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition active:scale-95">
                         Hapus Sesi
                     </button>
                 </div>
@@ -203,6 +206,43 @@
                 </button>
                 <button onclick="closeRemainingPopup()" class="surface-card text-xs font-bold py-3 px-3 rounded-2xl transition active:scale-95 border">
                     Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP BOTTOM SHEET UNTUK PICKUP HISTORY (ARSIP TANGGAL SEBELUMNYA) -->
+    <div id="pickup-history-popup" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex flex-col justify-end p-2 transition-all">
+        <div class="glass-panel w-full max-w-md mx-auto p-5 rounded-t-3xl space-y-3 shadow-2xl toast-animate max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center pb-2 border-b border-zinc-500/20">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider">Pickup History (Arsip)</h3>
+                    <p id="pickup-history-subtitle" class="text-[10px] opacity-70">Data scan otomatis dipindahkan saat berganti tanggal</p>
+                </div>
+                <button onclick="closePickupHistoryPopup()" class="surface-card w-8 h-8 rounded-full border flex items-center justify-center text-xs transition">✕</button>
+            </div>
+
+            <!-- Filter Tanggal & Pencarian Arsip -->
+            <div class="grid grid-cols-2 gap-2">
+                <select id="pickup-date-filter" class="surface-input border rounded-2xl px-3 py-2 text-xs focus:outline-none transition">
+                    <option value="ALL">Semua Tanggal</option>
+                </select>
+                <input type="text" id="pickup-search-input" placeholder="Cari resi / toko..." class="surface-input border rounded-2xl px-3 py-2 text-xs focus:outline-none transition">
+            </div>
+
+            <ul id="pickup-history-list" class="surface-card space-y-2 p-3 rounded-2xl overflow-y-auto flex-1 border">
+                <li class="text-center opacity-60 text-xs py-5">Memuat arsip pickup_history...</li>
+            </ul>
+
+            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-zinc-500/20">
+                <button onclick="loadPickupHistory(true)" class="surface-card text-xs font-bold py-3 px-2 rounded-2xl transition active:scale-95 border">
+                    Refresh
+                </button>
+                <button id="btn-copy-pickup-history" class="surface-card text-xs font-bold py-3 px-2 rounded-2xl transition active:scale-95 border">
+                    Salin Resi
+                </button>
+                <button id="btn-export-pickup-history" class="surface-card text-xs font-bold py-3 px-2 rounded-2xl transition active:scale-95 border">
+                    Export XLSX
                 </button>
             </div>
         </div>
@@ -290,9 +330,9 @@
         </div>
     </div>
 
-    <!-- Floating Pill Bottom Navigation Bar (Gaya Referensi Monokrom) -->
-    <nav id="bottom-nav" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 floating-dock w-[92%] max-w-md px-2 py-2 rounded-full flex items-center justify-between gap-1">
-        <button onclick="autoSyncDatabase()" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Sync">
+    <!-- Floating Pill Bottom Navigation Bar (6 Tombol Monokrom) -->
+    <nav id="bottom-nav" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 floating-dock w-[94%] max-w-md px-2 py-2 rounded-full flex items-center justify-between gap-1">
+        <button onclick="autoSyncDatabase(true)" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Sync & Arsip Otomatis">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
@@ -310,7 +350,13 @@
             </svg>
         </button>
 
-        <button id="btn-export-xlsx" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Export XLSX">
+        <button onclick="openPickupHistoryPopup()" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Pickup History">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+            </svg>
+        </button>
+
+        <button id="btn-export-xlsx" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Export XLSX Hari Ini">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
@@ -380,8 +426,17 @@
         const searchHistory = document.getElementById('search-history');
         const toastContainer = document.getElementById('toast-container');
 
+        const pickupHistoryPopup = document.getElementById('pickup-history-popup');
+        const pickupHistoryList = document.getElementById('pickup-history-list');
+        const pickupHistorySubtitle = document.getElementById('pickup-history-subtitle');
+        const pickupDateFilter = document.getElementById('pickup-date-filter');
+        const pickupSearchInput = document.getElementById('pickup-search-input');
+        const btnCopyPickupHistory = document.getElementById('btn-copy-pickup-history');
+        const btnExportPickupHistory = document.getElementById('btn-export-pickup-history');
+
         const countValidSpan = document.getElementById('count-valid');
         const countRemainingSpan = document.getElementById('count-remaining');
+        const activeDateLabel = document.getElementById('active-date-label');
 
         const mainDashboard = document.getElementById('main-dashboard');
         const cameraWrapper = document.getElementById('camera-wrapper');
@@ -431,9 +486,43 @@
         let validCount = parseInt(localStorage.getItem('v4_validCount') || '0');
         let currentUser = localStorage.getItem('v4_currentUser') || '';
         let currentTheme = localStorage.getItem('v4_theme') || 'dark';
+        let activeSessionDate = localStorage.getItem('v4_activeDate') || '';
         let masterDatabase = new Map();
+        let pickupHistoryData = [];
         let currentTab = 'valid';
+        let isSyncing = false;
         const orderRegex = /58[67]\d{15}/g;
+
+        function getLocalDateString(dateObj = new Date()) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function extractDatePart(scannedAtStr) {
+            if (!scannedAtStr) return '';
+            return String(scannedAtStr).trim().slice(0, 10);
+        }
+
+        function updateActiveDateUI() {
+            const todayStr = getLocalDateString();
+            if (activeDateLabel) {
+                activeDateLabel.innerText = `Tanggal Aktif: ${todayStr}`;
+            }
+        }
+
+        function resetLocalSessionForToday(todayStr) {
+            scannedNumbers.clear();
+            scanHistoryData = [];
+            validCount = 0;
+            activeSessionDate = todayStr;
+            localStorage.setItem('v4_activeDate', todayStr);
+            saveToLocalStorage();
+            if (countValidSpan) countValidSpan.innerText = "0";
+            renderHistoryList(searchHistory.value);
+            updateRemainingDisplay();
+        }
 
         function applyTheme(theme) {
             currentTheme = theme === 'light' ? 'light' : 'dark';
@@ -459,6 +548,9 @@
             updateTabStyles();
             renderHistoryList(searchHistory.value);
             updateRemainingDisplay();
+            if (!pickupHistoryPopup.classList.contains('hidden')) {
+                renderPickupHistoryList();
+            }
         }
 
         function updateTabStyles() {
@@ -487,6 +579,16 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
+            const todayStr = getLocalDateString();
+            updateActiveDateUI();
+
+            if (activeSessionDate && activeSessionDate !== todayStr) {
+                resetLocalSessionForToday(todayStr);
+            } else if (!activeSessionDate) {
+                activeSessionDate = todayStr;
+                localStorage.setItem('v4_activeDate', todayStr);
+            }
+
             applyTheme(currentTheme);
             if (currentUser) {
                 menuUserDisplay.innerText = currentUser;
@@ -494,7 +596,7 @@
                 loginWrapper.classList.add('hidden');
                 mainDashboard.classList.remove('hidden');
                 bottomNav.classList.remove('hidden');
-                autoSyncDatabase();
+                autoSyncDatabase(false);
             } else {
                 localStorage.removeItem('v4_currentUser');
                 loginWrapper.classList.remove('hidden');
@@ -505,6 +607,16 @@
             renderHistoryList();
             copyCurrentTabResi(false);
         });
+
+        // Cek pergantian tanggal otomatis setiap 60 detik saat aplikasi tetap terbuka
+        setInterval(() => {
+            if (!currentUser) return;
+            const todayStr = getLocalDateString();
+            if (activeSessionDate && activeSessionDate !== todayStr) {
+                updateActiveDateUI();
+                autoSyncDatabase(false);
+            }
+        }, 60000);
 
         // --- SISTEM LOGIN DARI SUPABASE (TABEL "user") ---
         btnSubmitLogin.addEventListener('click', async () => {
@@ -543,7 +655,7 @@
                     mainDashboard.classList.remove('hidden');
                     bottomNav.classList.remove('hidden');
 
-                    autoSyncDatabase();
+                    autoSyncDatabase(false);
                 } else {
                     showToast("Password salah!", "error");
                     loginPassInput.value = '';
@@ -702,7 +814,7 @@
             );
 
             if (filteredData.length === 0) {
-                resultList.innerHTML = `<li class="text-center opacity-60 text-xs py-5">Tidak ada riwayat ${currentTab.toUpperCase()} yang cocok</li>`;
+                resultList.innerHTML = `<li class="text-center opacity-60 text-xs py-5">Tidak ada riwayat ${currentTab.toUpperCase()} hari ini</li>`;
                 return;
             }
 
@@ -738,10 +850,84 @@
             });
         }
 
-        // --- SINKRONISASI MASTER_RESI & SCAN_HISTORY ANTAR DEVICE ---
-        async function autoSyncDatabase() {
+        // --- OTOMATIS PINDAHKAN DATA SUDAH DISCAN YANG BERBEDA TANGGAL KE PICKUP_HISTORY ---
+        async function archiveOldScanHistory() {
+            const todayStr = getLocalDateString();
+
+            const { data: scannedRows, error } = await supabaseClient
+                .from('scan_history')
+                .select('*');
+
+            if (error || !scannedRows || scannedRows.length === 0) return 0;
+
+            const oldScannedRows = scannedRows.filter(row => {
+                const rowDate = extractDatePart(row.scanned_at);
+                return row.no_order && rowDate && rowDate < todayStr;
+            });
+
+            if (oldScannedRows.length === 0) return 0;
+
+            const archivePayload = oldScannedRows.map(row => {
+                const resiNum = String(row.no_order).trim();
+                const meta = masterDatabase.get(resiNum) || {};
+                return {
+                    no_order: resiNum,
+                    status: row.status || 'VALID',
+                    scanned_at: row.scanned_at,
+                    scanned_by: row.scanned_by || currentUser || 'unknown',
+                    toko: meta.toko || '-',
+                    kurir: meta.kurir || '-',
+                    produk: meta.produk || '-',
+                    status_mp: meta.statusMp || '-',
+                    pickup_date: extractDatePart(row.scanned_at)
+                };
+            });
+
+            const { error: insertErr } = await supabaseClient
+                .from('pickup_history')
+                .insert(archivePayload);
+
+            if (insertErr) {
+                console.error("Gagal memindahkan ke pickup_history:", insertErr.message);
+                return 0;
+            }
+
+            const oldIds = oldScannedRows.map(r => r.id).filter(Boolean);
+            if (oldIds.length > 0) {
+                const { error: delErr } = await supabaseClient
+                    .from('scan_history')
+                    .delete()
+                    .in('id', oldIds);
+
+                if (delErr) {
+                    console.error("Gagal menghapus data tanggal lama di scan_history:", delErr.message);
+                }
+            }
+
+            resetLocalSessionForToday(todayStr);
+
+            // Jika popup Pickup History sedang terbuka, otomatis perbarui tampilannya
+            if (!pickupHistoryPopup.classList.contains('hidden')) {
+                await loadPickupHistory(false);
+            }
+
+            return archivePayload.length;
+        }
+
+        // --- SINKRONISASI MASTER_RESI & SCAN_HISTORY HARI INI ---
+        async function autoSyncDatabase(notifyUser = true) {
+            if (isSyncing) return;
+            isSyncing = true;
+
             try {
-                dbStatus.innerText = "Memuat dari Supabase...";
+                const todayStr = getLocalDateString();
+                updateActiveDateUI();
+
+                if (activeSessionDate && activeSessionDate !== todayStr) {
+                    resetLocalSessionForToday(todayStr);
+                }
+
+                dbStatus.innerText = "Menyinkronkan Supabase...";
 
                 const { data, error } = await supabaseClient
                     .from('master_resi')
@@ -769,7 +955,10 @@
                     });
                 }
 
-                // Ambil riwayat scan dari tabel scan_history agar sinkron di semua device
+                // Pindahkan otomatis data yang sudah discan dari tanggal sebelumnya ke pickup_history
+                const archivedCount = await archiveOldScanHistory();
+
+                // Ambil data scan_history khusus tanggal hari ini
                 const { data: historyRows, error: historyError } = await supabaseClient
                     .from('scan_history')
                     .select('*')
@@ -777,35 +966,36 @@
 
                 if (historyError) throw historyError;
 
+                const todayHistoryRows = (historyRows || []).filter(row => extractDatePart(row.scanned_at) === todayStr);
                 const mergedByResi = new Map();
 
-                if (historyRows && historyRows.length > 0) {
-                    historyRows.forEach(row => {
-                        const resiNum = String(row.no_order ?? "").trim();
-                        if (!resiNum) return;
+                todayHistoryRows.forEach(row => {
+                    const resiNum = String(row.no_order ?? "").trim();
+                    if (!resiNum) return;
 
-                        const meta = masterDatabase.get(resiNum);
-                        const isInDb = masterDatabase.size === 0 ? true : masterDatabase.has(resiNum);
-                        const rawTime = String(row.scanned_at ?? "");
-                        const waktuLabel = rawTime.includes(" ") ? rawTime.split(" ")[1] : (rawTime || "-");
+                    const meta = masterDatabase.get(resiNum);
+                    const isInDb = masterDatabase.size === 0 ? true : masterDatabase.has(resiNum);
+                    const rawTime = String(row.scanned_at ?? "");
+                    const waktuLabel = rawTime.includes(" ") ? rawTime.split(" ")[1] : (rawTime || "-");
 
-                        mergedByResi.set(resiNum, {
-                            resi: resiNum,
-                            invoice: resiNum,
-                            toko: isInDb && meta ? meta.toko : "-",
-                            kurir: isInDb && meta ? meta.kurir : "-",
-                            produk: isInDb && meta ? meta.produk : "-",
-                            statusMp: isInDb && meta ? (meta.statusMp || "-") : "-",
-                            status: isInDb ? "VALID" : "TIDAK VALID",
-                            waktu: waktuLabel
-                        });
+                    mergedByResi.set(resiNum, {
+                        resi: resiNum,
+                        invoice: resiNum,
+                        toko: isInDb && meta ? meta.toko : "-",
+                        kurir: isInDb && meta ? meta.kurir : "-",
+                        produk: isInDb && meta ? meta.produk : "-",
+                        statusMp: isInDb && meta ? (meta.statusMp || "-") : "-",
+                        status: isInDb ? "VALID" : "TIDAK VALID",
+                        waktu: waktuLabel,
+                        tanggal: todayStr
                     });
-                }
+                });
 
-                // Pertahankan item lokal jika ada yang belum sempat masuk ke cloud
+                // Pertahankan item lokal hari ini jika ada yang belum sempat masuk ke cloud
                 scanHistoryData.forEach(item => {
                     const resiNum = String(item.resi ?? "").trim();
-                    if (resiNum && !mergedByResi.has(resiNum)) {
+                    const itemDate = item.tanggal || activeSessionDate || todayStr;
+                    if (resiNum && itemDate === todayStr && !mergedByResi.has(resiNum)) {
                         const meta = masterDatabase.get(resiNum);
                         const isInDb = masterDatabase.size === 0 ? true : masterDatabase.has(resiNum);
                         mergedByResi.set(resiNum, {
@@ -815,7 +1005,8 @@
                             kurir: isInDb && meta ? meta.kurir : "-",
                             produk: isInDb && meta ? meta.produk : "-",
                             statusMp: isInDb && meta ? (meta.statusMp || "-") : "-",
-                            status: isInDb ? "VALID" : "TIDAK VALID"
+                            status: isInDb ? "VALID" : "TIDAK VALID",
+                            tanggal: todayStr
                         });
                     }
                 });
@@ -831,6 +1022,8 @@
                     }
                 });
 
+                activeSessionDate = todayStr;
+                localStorage.setItem('v4_activeDate', todayStr);
                 saveToLocalStorage();
 
                 dbStatus.innerText = `Terhubung Cloud (${masterDatabase.size} resi)`;
@@ -838,13 +1031,206 @@
 
                 renderHistoryList(searchHistory.value);
                 updateRemainingDisplay();
-                showToast("Berhasil sinkronisasi data & riwayat dengan Supabase!", "success");
+
+                if (archivedCount > 0) {
+                    showToast(`${archivedCount} data tanggal lama dipindahkan ke Pickup History`, "success");
+                } else if (notifyUser) {
+                    showToast("Data hari ini berhasil disinkronkan!", "success");
+                }
             } catch (err) {
                 console.error("Supabase Error:", err);
                 dbStatus.innerText = "Gagal memuat database cloud";
-                showToast("Gagal terhubung ke Supabase", "error");
+                if (notifyUser) showToast("Gagal terhubung ke Supabase", "error");
+            } finally {
+                isSyncing = false;
             }
         }
+
+        // --- MENU & TAMPILAN PICKUP HISTORY (OTOMATIS UPDATE) ---
+        async function openPickupHistoryPopup() {
+            pickupHistoryPopup.classList.remove('hidden');
+            await archiveOldScanHistory();
+            await loadPickupHistory(false);
+        }
+
+        function closePickupHistoryPopup() {
+            pickupHistoryPopup.classList.add('hidden');
+        }
+
+        async function loadPickupHistory(showNotif = false) {
+            try {
+                pickupHistoryList.innerHTML = `<li class="text-center opacity-60 text-xs py-5">Memuat arsip pickup_history...</li>`;
+
+                const { data, error } = await supabaseClient
+                    .from('pickup_history')
+                    .select('*')
+                    .order('scanned_at', { ascending: false });
+
+                if (error) throw error;
+
+                pickupHistoryData = data || [];
+                populatePickupDateOptions();
+                renderPickupHistoryList();
+
+                if (showNotif) {
+                    showToast("Pickup History diperbarui!", "success");
+                }
+            } catch (err) {
+                console.error("Gagal memuat pickup_history:", err);
+                pickupHistoryList.innerHTML = `<li class="text-center opacity-60 text-xs py-5">Gagal memuat data pickup_history</li>`;
+            }
+        }
+
+        function populatePickupDateOptions() {
+            const previousSelection = pickupDateFilter.value;
+            const uniqueDates = [...new Set(
+                pickupHistoryData
+                    .map(row => row.pickup_date || extractDatePart(row.scanned_at))
+                    .filter(Boolean)
+            )].sort((a, b) => b.localeCompare(a));
+
+            pickupDateFilter.innerHTML = `<option value="ALL">Semua Tanggal (${pickupHistoryData.length})</option>`;
+            uniqueDates.forEach(dateStr => {
+                const count = pickupHistoryData.filter(r => (r.pickup_date || extractDatePart(r.scanned_at)) === dateStr).length;
+                const opt = document.createElement('option');
+                opt.value = dateStr;
+                opt.innerText = `${dateStr} (${count} resi)`;
+                pickupDateFilter.appendChild(opt);
+            });
+
+            if ([...pickupDateFilter.options].some(o => o.value === previousSelection)) {
+                pickupDateFilter.value = previousSelection;
+            }
+        }
+
+        function getFilteredPickupHistory() {
+            const selectedDate = pickupDateFilter.value;
+            const query = pickupSearchInput.value.trim().toLowerCase();
+
+            return pickupHistoryData.filter(row => {
+                const rowDate = row.pickup_date || extractDatePart(row.scanned_at);
+                const matchesDate = selectedDate === 'ALL' || rowDate === selectedDate;
+                const matchesQuery = !query ||
+                    String(row.no_order || '').toLowerCase().includes(query) ||
+                    String(row.toko || '').toLowerCase().includes(query) ||
+                    String(row.kurir || '').toLowerCase().includes(query) ||
+                    String(row.produk || '').toLowerCase().includes(query);
+                return matchesDate && matchesQuery;
+            });
+        }
+
+        function renderPickupHistoryList() {
+            const filtered = getFilteredPickupHistory();
+            pickupHistorySubtitle.innerText = `Menampilkan ${filtered.length} dari ${pickupHistoryData.length} resi arsip`;
+            pickupHistoryList.innerHTML = '';
+
+            if (filtered.length === 0) {
+                pickupHistoryList.innerHTML = `<li class="text-center opacity-60 text-xs py-5">Belum ada data di Pickup History</li>`;
+                return;
+            }
+
+            const isLight = currentTheme === 'light';
+            filtered.forEach(row => {
+                const rowDate = row.pickup_date || extractDatePart(row.scanned_at) || '-';
+                const rawTime = String(row.scanned_at || '');
+                const timePart = rawTime.includes(' ') ? rawTime.split(' ')[1] : rawTime;
+
+                const li = document.createElement('li');
+                li.className = isLight
+                    ? "font-mono text-zinc-900 bg-zinc-100 p-3 rounded-2xl border border-zinc-300 text-xs shadow-sm space-y-1.5"
+                    : "font-mono text-zinc-100 bg-zinc-900 p-3 rounded-2xl border border-zinc-700 text-xs shadow-sm space-y-1.5";
+                li.innerHTML = `
+                    <div class="flex justify-between items-center gap-2">
+                        <span class="tracking-wide font-bold">${row.no_order}</span>
+                        <span class="text-[9px] ${isLight ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-950'} px-2 py-0.5 rounded-full font-sans font-bold uppercase">${rowDate}</span>
+                    </div>
+                    <div class="text-[10px] opacity-80 font-sans grid grid-cols-2 gap-1 pt-1.5 border-t ${isLight ? 'border-zinc-200' : 'border-zinc-800'}">
+                        <div>Toko: <b>${row.toko || '-'}</b></div>
+                        <div>Kurir: <b>${row.kurir || '-'}</b></div>
+                        <div>Scan: <b>${timePart || '-'}</b></div>
+                        <div>User: <b>${row.scanned_by || '-'}</b></div>
+                        <div class="col-span-2">SKU / Jumlah: <b>${row.produk || '-'}</b></div>
+                    </div>`;
+                pickupHistoryList.appendChild(li);
+            });
+        }
+
+        pickupDateFilter.addEventListener('change', renderPickupHistoryList);
+        pickupSearchInput.addEventListener('input', renderPickupHistoryList);
+
+        btnCopyPickupHistory.addEventListener('click', () => {
+            const filtered = getFilteredPickupHistory();
+            if (filtered.length === 0) {
+                showToast("Tidak ada resi arsip untuk disalin", "warn");
+                return;
+            }
+            const listText = filtered.map(r => r.no_order).join('\n');
+            navigator.clipboard.writeText(listText).then(() => {
+                showToast(`Berhasil menyalin ${filtered.length} resi arsip`, "success");
+            });
+        });
+
+        btnExportPickupHistory.addEventListener('click', () => {
+            const filtered = getFilteredPickupHistory();
+            if (filtered.length === 0) {
+                showToast("Tidak ada data arsip untuk diexport", "warn");
+                return;
+            }
+
+            const selectedDate = pickupDateFilter.value;
+            let exportRows = [];
+            exportRows.push({ "No": "ARSIP PICKUP HISTORY (SUPABASE)" });
+            exportRows.push({ "No": `Filter Tanggal: ${selectedDate} | Dicetak: ${new Date().toLocaleDateString('id-ID')}` });
+            exportRows.push({});
+
+            exportRows.push({
+                "No": "No",
+                "Tanggal_Pickup": "Tanggal_Pickup",
+                "Nomor_Pesanan": "Nomor_Pesanan",
+                "Toko": "Toko",
+                "Kurir": "Kurir",
+                "SKU_Jumlah": "SKU_Jumlah",
+                "Status_Marketplace": "Status_Marketplace",
+                "Status_Scan": "Status_Scan",
+                "Waktu_Scan": "Waktu_Scan",
+                "User": "User"
+            });
+
+            filtered.forEach((row, idx) => {
+                exportRows.push({
+                    "No": idx + 1,
+                    "Tanggal_Pickup": row.pickup_date || extractDatePart(row.scanned_at) || "-",
+                    "Nomor_Pesanan": String(row.no_order || ""),
+                    "Toko": row.toko || "-",
+                    "Kurir": row.kurir || "-",
+                    "SKU_Jumlah": row.produk || "-",
+                    "Status_Marketplace": row.status_mp || "-",
+                    "Status_Scan": row.status || "VALID",
+                    "Waktu_Scan": String(row.scanned_at || "-"),
+                    "User": row.scanned_by || "-"
+                });
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(exportRows, { skipHeader: true });
+            worksheet['!cols'] = [
+                { wch: 6 },
+                { wch: 16 },
+                { wch: 22 },
+                { wch: 24 },
+                { wch: 24 },
+                { wch: 28 },
+                { wch: 18 },
+                { wch: 14 },
+                { wch: 20 },
+                { wch: 12 }
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Pickup History");
+            const fileLabel = selectedDate === 'ALL' ? getLocalDateString() : selectedDate;
+            XLSX.writeFile(workbook, `Pickup_History_${fileLabel}.xlsx`);
+            showToast("File XLSX Pickup History berhasil diunduh", "success");
+        });
 
         searchHistory.addEventListener('input', (e) => {
             renderHistoryList(e.target.value);
@@ -882,6 +1268,10 @@
         }
 
         btnStart.addEventListener('click', async () => {
+            const todayStr = getLocalDateString();
+            if (activeSessionDate && activeSessionDate !== todayStr) {
+                await autoSyncDatabase(false);
+            }
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 video.srcObject = stream;
@@ -900,7 +1290,7 @@
             bottomNav.classList.remove('hidden');
         });
 
-        // --- FUNGSI KIRIM RIWAYAT SCAN KE SUPABASE (scan_history) ---
+        // --- FUNGSI KIRIM RIWAYAT SCAN HARI INI KE SUPABASE (scan_history) ---
         async function logScanToSupabaseCloud(resiNumber, statusText) {
             try {
                 const now = new Date();
@@ -930,6 +1320,11 @@
         }
 
         async function processImage(imageSource) {
+            const todayStr = getLocalDateString();
+            if (activeSessionDate && activeSessionDate !== todayStr) {
+                await autoSyncDatabase(false);
+            }
+
             lastScannedNumber.innerText = "Memproses...";
             lastScannedBadge.innerHTML = `<span class="text-[10px] bg-zinc-800 text-white px-3 py-1 rounded-xl font-semibold uppercase animate-pulse">Membaca OCR...</span>`;
 
@@ -975,11 +1370,14 @@
                         produk: meta.produk,
                         statusMp: meta.statusMp || "-",
                         status: statusText,
-                        waktu: new Date().toLocaleTimeString()
+                        waktu: new Date().toLocaleTimeString(),
+                        tanggal: todayStr
                     });
 
                     logScanToSupabaseCloud(num, statusText);
 
+                    activeSessionDate = todayStr;
+                    localStorage.setItem('v4_activeDate', todayStr);
                     saveToLocalStorage();
                     renderHistoryList(searchHistory.value);
                     updateRemainingDisplay();
@@ -1069,17 +1467,21 @@
                 showToast("Riwayat sudah kosong", "info");
                 return;
             }
-            if (confirm("Yakin ingin menghapus seluruh riwayat dan cache sesi ini?")) {
+            if (confirm("Yakin ingin menghapus cache tampilan sesi lokal ini? (Data di cloud tetap aman)")) {
                 const savedTheme = currentTheme;
+                const savedUser = currentUser;
+                const todayStr = getLocalDateString();
                 scannedNumbers.clear();
                 scanHistoryData = [];
                 validCount = 0;
                 localStorage.clear();
                 localStorage.setItem('v4_theme', savedTheme);
+                localStorage.setItem('v4_currentUser', savedUser);
+                localStorage.setItem('v4_activeDate', todayStr);
                 if (countValidSpan) countValidSpan.innerText = "0";
                 renderHistoryList(searchHistory.value);
                 updateRemainingDisplay();
-                showToast("Riwayat sesi dibersihkan", "success");
+                showToast("Cache sesi lokal dibersihkan", "success");
             }
         });
 
@@ -1161,7 +1563,7 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
 
-            const dateStr = new Date().toISOString().slice(0, 10);
+            const dateStr = getLocalDateString();
             XLSX.writeFile(workbook, `Laporan_Resi_v4_${dateStr}.xlsx`);
             showToast("File XLSX rapi berhasil diunduh", "success");
         });
