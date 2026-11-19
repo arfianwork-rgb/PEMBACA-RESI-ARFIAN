@@ -234,17 +234,49 @@
                 <li class="text-center opacity-60 text-xs py-5">Memuat arsip pickup_history...</li>
             </ul>
 
-            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-zinc-500/20">
-                <button onclick="loadPickupHistory(true)" class="surface-card text-xs font-bold py-3 px-2 rounded-2xl transition active:scale-95 border">
-                    Refresh
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-500/20">
+                <button id="btn-copy-pickup-history" class="surface-card text-xs font-bold py-3 px-3 rounded-2xl transition active:scale-95 border">
+                    Salin Resi Arsip
                 </button>
-                <button id="btn-copy-pickup-history" class="surface-card text-xs font-bold py-3 px-2 rounded-2xl transition active:scale-95 border">
-                    Salin Resi
-                </button>
-                <button id="btn-export-pickup-history" class="surface-card text-xs font-bold py-3 px-2 rounded-2xl transition active:scale-95 border">
-                    Export XLSX
+                <button onclick="openExportChoicePopup()" class="surface-card text-xs font-bold py-3 px-3 rounded-2xl transition active:scale-95 border">
+                    Menu Download XLSX
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- POPUP PILIHAN BAGIAN DOWNLOAD XLSX -->
+    <div id="export-choice-popup" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex flex-col justify-end p-2 transition-all">
+        <div class="glass-panel w-full max-w-md mx-auto p-5 rounded-t-3xl space-y-3 shadow-2xl toast-animate">
+            <div class="flex justify-between items-center pb-2 border-b border-zinc-500/20">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider">Pilih Bagian Download</h3>
+                    <p class="text-[10px] opacity-70">Pilih bagian data yang ingin diunduh dalam format XLSX</p>
+                </div>
+                <button onclick="closeExportChoicePopup()" class="surface-card w-8 h-8 rounded-full border flex items-center justify-center text-xs transition">✕</button>
+            </div>
+
+            <div class="space-y-2 pt-1">
+                <button onclick="selectExportOption('today')" class="surface-card w-full text-left p-3.5 rounded-2xl border transition active:scale-95 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-extrabold">Rekap Hari Ini</div>
+                        <div class="text-[10px] opacity-70">Data scan & belum discan pada tanggal aktif</div>
+                    </div>
+                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border">XLSX</span>
+                </button>
+
+                <button onclick="selectExportOption('pickup_history')" class="surface-card w-full text-left p-3.5 rounded-2xl border transition active:scale-95 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-extrabold">Pickup History (Arsip)</div>
+                        <div id="export-pickup-desc" class="text-[10px] opacity-70">Data scan tanggal sebelumnya dari tabel pickup_history</div>
+                    </div>
+                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border">XLSX</span>
+                </button>
+            </div>
+
+            <button onclick="closeExportChoicePopup()" class="w-full opacity-70 hover:opacity-100 font-semibold py-2.5 rounded-2xl transition text-xs">
+                Batal
+            </button>
         </div>
     </div>
 
@@ -330,8 +362,8 @@
         </div>
     </div>
 
-    <!-- Floating Pill Bottom Navigation Bar (6 Tombol Monokrom) -->
-    <nav id="bottom-nav" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 floating-dock w-[94%] max-w-md px-2 py-2 rounded-full flex items-center justify-between gap-1">
+    <!-- Floating Pill Bottom Navigation Bar (5 Tombol Monokrom) -->
+    <nav id="bottom-nav" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 floating-dock w-[92%] max-w-md px-2 py-2 rounded-full flex items-center justify-between gap-1">
         <button onclick="autoSyncDatabase(true)" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Sync & Arsip Otomatis">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -350,13 +382,7 @@
             </svg>
         </button>
 
-        <button onclick="openPickupHistoryPopup()" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Pickup History">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-            </svg>
-        </button>
-
-        <button id="btn-export-xlsx" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Export XLSX Hari Ini">
+        <button id="btn-export-xlsx" class="dock-item flex-1 h-12 rounded-full flex items-center justify-center transition active:scale-95" title="Pilih Bagian Download XLSX">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
@@ -432,7 +458,9 @@
         const pickupDateFilter = document.getElementById('pickup-date-filter');
         const pickupSearchInput = document.getElementById('pickup-search-input');
         const btnCopyPickupHistory = document.getElementById('btn-copy-pickup-history');
-        const btnExportPickupHistory = document.getElementById('btn-export-pickup-history');
+
+        const exportChoicePopup = document.getElementById('export-choice-popup');
+        const exportPickupDesc = document.getElementById('export-pickup-desc');
 
         const countValidSpan = document.getElementById('count-valid');
         const countRemainingSpan = document.getElementById('count-remaining');
@@ -906,7 +934,6 @@
 
             resetLocalSessionForToday(todayStr);
 
-            // Jika popup Pickup History sedang terbuka, otomatis perbarui tampilannya
             if (!pickupHistoryPopup.classList.contains('hidden')) {
                 await loadPickupHistory(false);
             }
@@ -955,10 +982,8 @@
                     });
                 }
 
-                // Pindahkan otomatis data yang sudah discan dari tanggal sebelumnya ke pickup_history
                 const archivedCount = await archiveOldScanHistory();
 
-                // Ambil data scan_history khusus tanggal hari ini
                 const { data: historyRows, error: historyError } = await supabaseClient
                     .from('scan_history')
                     .select('*')
@@ -991,7 +1016,6 @@
                     });
                 });
 
-                // Pertahankan item lokal hari ini jika ada yang belum sempat masuk ke cloud
                 scanHistoryData.forEach(item => {
                     const resiNum = String(item.resi ?? "").trim();
                     const itemDate = item.tanggal || activeSessionDate || todayStr;
@@ -1170,67 +1194,182 @@
             });
         });
 
-        btnExportPickupHistory.addEventListener('click', () => {
-            const filtered = getFilteredPickupHistory();
-            if (filtered.length === 0) {
-                showToast("Tidak ada data arsip untuk diexport", "warn");
+        // --- MENU PILIHAN DOWNLOAD XLSX ---
+        function openExportChoicePopup() {
+            if (!exportChoicePopup) return;
+            const selectedDate = pickupDateFilter ? pickupDateFilter.value : 'ALL';
+            if (exportPickupDesc) {
+                exportPickupDesc.innerText = selectedDate && selectedDate !== 'ALL'
+                    ? `Unduh data arsip pickup_history tanggal ${selectedDate}`
+                    : `Unduh seluruh data arsip dari tabel pickup_history`;
+            }
+            exportChoicePopup.classList.remove('hidden');
+        }
+
+        function closeExportChoicePopup() {
+            if (!exportChoicePopup) return;
+            exportChoicePopup.classList.add('hidden');
+        }
+
+        async function selectExportOption(mode) {
+            closeExportChoicePopup();
+            if (mode === 'today') {
+                exportTodayReportXlsx();
+            } else if (mode === 'pickup_history') {
+                await exportPickupHistoryReportXlsx();
+            }
+        }
+
+        btnExportXlsx.addEventListener('click', () => {
+            openExportChoicePopup();
+        });
+
+        function exportTodayReportXlsx() {
+            if (masterDatabase.size === 0) {
+                showToast("Database Supabase belum termuat", "error");
                 return;
             }
 
-            const selectedDate = pickupDateFilter.value;
             let exportRows = [];
-            exportRows.push({ "No": "ARSIP PICKUP HISTORY (SUPABASE)" });
-            exportRows.push({ "No": `Filter Tanggal: ${selectedDate} | Dicetak: ${new Date().toLocaleDateString('id-ID')}` });
+            let index = 1;
+
+            exportRows.push({ "No": "LAPORAN REKAPITULASI PEMINDAIAN RESI (HARI INI)" });
+            exportRows.push({ "No": `Dicetak oleh: ${currentUser.toUpperCase()} | Tanggal: ${new Date().toLocaleDateString('id-ID')}` });
             exportRows.push({});
 
             exportRows.push({
                 "No": "No",
-                "Tanggal_Pickup": "Tanggal_Pickup",
                 "Nomor_Pesanan": "Nomor_Pesanan",
-                "Toko": "Toko",
-                "Kurir": "Kurir",
-                "SKU_Jumlah": "SKU_Jumlah",
+                "Nama_Panggilan_Toko_BigSeller": "Nama_Panggilan_Toko_BigSeller",
+                "Jasa_Kirim_yang_Dipilih_Pembeli": "Jasa_Kirim_yang_Dipilih_Pembeli",
+                "SKU / Jumlah": "SKU / Jumlah",
                 "Status_Marketplace": "Status_Marketplace",
-                "Status_Scan": "Status_Scan",
-                "Waktu_Scan": "Waktu_Scan",
-                "User": "User"
+                "Status Scan": "Status Scan",
+                "Waktu Scan": "Waktu Scan",
+                "User ID": "User ID"
             });
 
-            filtered.forEach((row, idx) => {
+            masterDatabase.forEach((meta, resi) => {
+                let isScanned = scannedNumbers.has(resi);
+                let historyItem = scanHistoryData.find(item => item.resi === resi);
+                let waktuScan = historyItem ? historyItem.waktu : "-";
+
                 exportRows.push({
-                    "No": idx + 1,
-                    "Tanggal_Pickup": row.pickup_date || extractDatePart(row.scanned_at) || "-",
-                    "Nomor_Pesanan": String(row.no_order || ""),
-                    "Toko": row.toko || "-",
-                    "Kurir": row.kurir || "-",
-                    "SKU_Jumlah": row.produk || "-",
-                    "Status_Marketplace": row.status_mp || "-",
-                    "Status_Scan": row.status || "VALID",
-                    "Waktu_Scan": String(row.scanned_at || "-"),
-                    "User": row.scanned_by || "-"
+                    "No": index++,
+                    "Nomor_Pesanan": String(resi),
+                    "Nama_Panggilan_Toko_BigSeller": meta.toko,
+                    "Jasa_Kirim_yang_Dipilih_Pembeli": meta.kurir,
+                    "SKU / Jumlah": meta.produk,
+                    "Status_Marketplace": meta.statusMp || "-",
+                    "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
+                    "Waktu Scan": waktuScan,
+                    "User ID": currentUser || "-"
                 });
             });
 
             const worksheet = XLSX.utils.json_to_sheet(exportRows, { skipHeader: true });
             worksheet['!cols'] = [
                 { wch: 6 },
-                { wch: 16 },
                 { wch: 22 },
                 { wch: 24 },
                 { wch: 24 },
                 { wch: 28 },
                 { wch: 18 },
+                { wch: 16 },
                 { wch: 14 },
-                { wch: 20 },
                 { wch: 12 }
             ];
 
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Pickup History");
-            const fileLabel = selectedDate === 'ALL' ? getLocalDateString() : selectedDate;
-            XLSX.writeFile(workbook, `Pickup_History_${fileLabel}.xlsx`);
-            showToast("File XLSX Pickup History berhasil diunduh", "success");
-        });
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
+
+            const dateStr = getLocalDateString();
+            XLSX.writeFile(workbook, `Laporan_Resi_v4_${dateStr}.xlsx`);
+            showToast("File XLSX Rekap Hari Ini berhasil diunduh", "success");
+        }
+
+        async function exportPickupHistoryReportXlsx() {
+            try {
+                showToast("Mengambil data Pickup History...", "info");
+
+                if (pickupHistoryData.length === 0) {
+                    const { data, error } = await supabaseClient
+                        .from('pickup_history')
+                        .select('*')
+                        .order('scanned_at', { ascending: false });
+
+                    if (error) throw error;
+                    pickupHistoryData = data || [];
+                    populatePickupDateOptions();
+                }
+
+                const selectedDate = pickupDateFilter ? pickupDateFilter.value : 'ALL';
+                const rows = selectedDate && selectedDate !== 'ALL'
+                    ? pickupHistoryData.filter(r => (r.pickup_date || extractDatePart(r.scanned_at)) === selectedDate)
+                    : pickupHistoryData;
+
+                if (rows.length === 0) {
+                    showToast("Data Pickup History masih kosong", "warn");
+                    return;
+                }
+
+                let exportRows = [];
+                exportRows.push({ "No": "LAPORAN ARSIP PICKUP HISTORY (SUPABASE)" });
+                exportRows.push({ "No": `Filter Tanggal: ${selectedDate || 'ALL'} | Dicetak: ${new Date().toLocaleDateString('id-ID')}` });
+                exportRows.push({});
+
+                exportRows.push({
+                    "No": "No",
+                    "Tanggal_Pickup": "Tanggal_Pickup",
+                    "Nomor_Pesanan": "Nomor_Pesanan",
+                    "Toko": "Toko",
+                    "Kurir": "Kurir",
+                    "SKU_Jumlah": "SKU_Jumlah",
+                    "Status_Marketplace": "Status_Marketplace",
+                    "Status_Scan": "Status_Scan",
+                    "Waktu_Scan": "Waktu_Scan",
+                    "User": "User"
+                });
+
+                rows.forEach((row, idx) => {
+                    exportRows.push({
+                        "No": idx + 1,
+                        "Tanggal_Pickup": row.pickup_date || extractDatePart(row.scanned_at) || "-",
+                        "Nomor_Pesanan": String(row.no_order || ""),
+                        "Toko": row.toko || "-",
+                        "Kurir": row.kurir || "-",
+                        "SKU_Jumlah": row.produk || "-",
+                        "Status_Marketplace": row.status_mp || "-",
+                        "Status_Scan": row.status || "VALID",
+                        "Waktu_Scan": String(row.scanned_at || "-"),
+                        "User": row.scanned_by || "-"
+                    });
+                });
+
+                const worksheet = XLSX.utils.json_to_sheet(exportRows, { skipHeader: true });
+                worksheet['!cols'] = [
+                    { wch: 6 },
+                    { wch: 16 },
+                    { wch: 22 },
+                    { wch: 24 },
+                    { wch: 24 },
+                    { wch: 28 },
+                    { wch: 18 },
+                    { wch: 14 },
+                    { wch: 20 },
+                    { wch: 12 }
+                ];
+
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Pickup History");
+                const fileLabel = selectedDate && selectedDate !== 'ALL' ? selectedDate : getLocalDateString();
+                XLSX.writeFile(workbook, `Pickup_History_${fileLabel}.xlsx`);
+                showToast("File XLSX Pickup History berhasil diunduh", "success");
+            } catch (err) {
+                console.error("Gagal export pickup_history:", err);
+                showToast("Gagal mengunduh Pickup History", "error");
+            }
+        }
 
         searchHistory.addEventListener('input', (e) => {
             renderHistoryList(e.target.value);
@@ -1502,70 +1641,6 @@
                 showToast(`Berhasil menyalin ${remainingNumbers.length} sisa resi`, "success");
                 closeRemainingPopup();
             });
-        });
-
-        btnExportXlsx.addEventListener('click', () => {
-            if (masterDatabase.size === 0) {
-                showToast("Database Supabase belum termuat", "error");
-                return;
-            }
-
-            let exportRows = [];
-            let index = 1;
-
-            exportRows.push({ "No": "LAPORAN REKAPITULASI PEMINDAIAN RESI (SUPABASE)" });
-            exportRows.push({ "No": `Dicetak oleh: ${currentUser.toUpperCase()} | Tanggal: ${new Date().toLocaleDateString('id-ID')}` });
-            exportRows.push({});
-
-            exportRows.push({
-                "No": "No",
-                "Nomor_Pesanan": "Nomor_Pesanan",
-                "Nama_Panggilan_Toko_BigSeller": "Nama_Panggilan_Toko_BigSeller",
-                "Jasa_Kirim_yang_Dipilih_Pembeli": "Jasa_Kirim_yang_Dipilih_Pembeli",
-                "SKU / Jumlah": "SKU / Jumlah",
-                "Status_Marketplace": "Status_Marketplace",
-                "Status Scan": "Status Scan",
-                "Waktu Scan": "Waktu Scan",
-                "User ID": "User ID"
-            });
-
-            masterDatabase.forEach((meta, resi) => {
-                let isScanned = scannedNumbers.has(resi);
-                let historyItem = scanHistoryData.find(item => item.resi === resi);
-                let waktuScan = historyItem ? historyItem.waktu : "-";
-
-                exportRows.push({
-                    "No": index++,
-                    "Nomor_Pesanan": String(resi),
-                    "Nama_Panggilan_Toko_BigSeller": meta.toko,
-                    "Jasa_Kirim_yang_Dipilih_Pembeli": meta.kurir,
-                    "SKU / Jumlah": meta.produk,
-                    "Status_Marketplace": meta.statusMp || "-",
-                    "Status Scan": isScanned ? "Berhasil Scan" : "Belum Discan",
-                    "Waktu Scan": waktuScan,
-                    "User ID": currentUser || "-"
-                });
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(exportRows, { skipHeader: true });
-            worksheet['!cols'] = [
-                { wch: 6 },
-                { wch: 22 },
-                { wch: 24 },
-                { wch: 24 },
-                { wch: 28 },
-                { wch: 18 },
-                { wch: 16 },
-                { wch: 14 },
-                { wch: 12 }
-            ];
-
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekapitulasi Resi");
-
-            const dateStr = getLocalDateString();
-            XLSX.writeFile(workbook, `Laporan_Resi_v4_${dateStr}.xlsx`);
-            showToast("File XLSX rapi berhasil diunduh", "success");
         });
     </script>
 </body>
