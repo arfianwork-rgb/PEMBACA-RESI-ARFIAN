@@ -1,1 +1,317 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Viewer Data Resi (Read-Only)</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="./Gemini_Generated_Image_f2emmuf2emmuf2em.png">
+    <link rel="icon" type="image/png" href="./Gemini_Generated_Image_f2emmuf2emmuf2em.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #09090b;
+            --fg: #fafafa;
+            --panel: rgba(24, 24, 27, 0.88);
+            --card: #18181b;
+            --inp: #09090b;
+            --line: rgba(255, 255, 255, 0.13);
+        }
+        body.theme-light {
+            --bg: #f4f4f5;
+            --fg: #09090b;
+            --panel: rgba(255, 255, 255, 0.92);
+            --card: #ffffff;
+            --inp: #f4f4f5;
+            --line: rgba(9, 9, 11, 0.12);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            transition: background-color .2s ease, color .2s ease;
+        }
+        .glass-panel {
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            border: 1px solid var(--line);
+        }
+        .surface-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+        }
+        .surface-input {
+            background: var(--inp);
+            border: 1px solid var(--line);
+            color: var(--fg);
+        }
+    </style>
+</head>
+<body class="theme-dark min-h-screen p-4 pb-12">
+    <div class="w-full max-w-2xl mx-auto space-y-4">
+        <!-- Header -->
+        <header class="glass-panel px-4 py-3.5 rounded-3xl flex justify-between items-center gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <img src="./Gemini_Generated_Image_f2emmuf2emmuf2em.png" alt="Logo" class="w-11 h-11 rounded-2xl object-cover ring-1 ring-white/20 shrink-0">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-sm font-extrabold tracking-tight truncate">Viewer Data Resi</h1>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/10 border border-white/15 uppercase">Lihat Saja</span>
+                    </div>
+                    <p id="viewer-status" class="text-[11px] opacity-75 truncate">Memuat data dari Supabase...</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="toggleTheme()" class="surface-card text-[11px] font-bold px-3 py-2 rounded-xl">Tema</button>
+                <button onclick="loadAllViewerData(true)" class="surface-card text-[11px] font-bold px-3 py-2 rounded-xl">Refresh</button>
+            </div>
+        </header>
 
+        <!-- Ringkasan -->
+        <div class="grid grid-cols-3 gap-3">
+            <div class="glass-panel p-3.5 rounded-3xl text-center">
+                <span id="stat-total" class="block text-2xl font-black">0</span>
+                <span class="text-[10px] uppercase opacity-70 font-bold">Total Resi</span>
+            </div>
+            <div class="glass-panel p-3.5 rounded-3xl text-center">
+                <span id="stat-scanned" class="block text-2xl font-black">0</span>
+                <span class="text-[10px] uppercase opacity-70 font-bold">Sudah Discan</span>
+            </div>
+            <div class="glass-panel p-3.5 rounded-3xl text-center">
+                <span id="stat-unscanned" class="block text-2xl font-black">0</span>
+                <span class="text-[10px] uppercase opacity-70 font-bold">Belum Discan</span>
+            </div>
+        </div>
+
+        <!-- Mode Tampilan & Pencarian -->
+        <section class="glass-panel p-4 rounded-3xl space-y-3">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <div class="flex gap-1.5">
+                    <button id="btn-mode-today" onclick="switchMode('today')" class="surface-card text-xs font-extrabold px-3.5 py-2 rounded-xl">Data Aktif Hari Ini</button>
+                    <button id="btn-mode-archive" onclick="switchMode('archive')" class="surface-card text-xs font-extrabold px-3.5 py-2 rounded-xl opacity-70">Pickup History</button>
+                </div>
+                <button onclick="exportCurrentViewXlsx()" class="surface-card text-xs font-bold px-3.5 py-2 rounded-xl">Download XLSX</button>
+            </div>
+
+            <div id="today-filters" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input type="text" id="search-input" oninput="renderViewerList()" placeholder="Cari nomor pesanan, toko, SKU, kurir..." class="surface-input rounded-2xl px-4 py-2.5 text-xs focus:outline-none">
+                <select id="status-filter" onchange="renderViewerList()" class="surface-input rounded-2xl px-3 py-2.5 text-xs focus:outline-none">
+                    <option value="ALL">Semua Status Scan</option>
+                    <option value="SUDAH">Sudah Discan</option>
+                    <option value="BELUM">Belum Discan</option>
+                </select>
+            </div>
+
+            <div id="archive-filters" class="hidden grid-cols-1 sm:grid-cols-2 gap-2">
+                <select id="archive-date-filter" onchange="renderViewerList()" class="surface-input rounded-2xl px-3 py-2.5 text-xs focus:outline-none">
+                    <option value="ALL">Semua Tanggal Arsip</option>
+                </select>
+                <input type="text" id="archive-search-input" oninput="renderViewerList()" placeholder="Cari resi atau toko di arsip..." class="surface-input rounded-2xl px-4 py-2.5 text-xs focus:outline-none">
+            </div>
+
+            <ul id="viewer-list" class="surface-card space-y-2 p-3 rounded-2xl max-h-[60vh] overflow-y-auto">
+                <li class="text-center opacity-60 text-xs py-6">Memuat data...</li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ncsegckiapxnfxpyudvs.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_hYILyFeq5KXyeoqsPvLZtA_ZFZSBQrt";
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let masterMap = new Map();
+        let scannedSet = new Set();
+        let scanTimeMap = new Map();
+        let archiveRows = [];
+        let activeMode = 'today';
+
+        const todayStr = () => {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+        const datePart = v => v ? String(v).trim().slice(0, 10) : '';
+        const formatSku = (sku, jml) => {
+            const s = String(sku ?? '').trim();
+            const j = String(jml ?? '').trim();
+            if (!s && !j) return '-';
+            return s && j ? `${s} (x${j})` : (s || `(x${j})`);
+        };
+
+        function toggleTheme() {
+            document.body.classList.toggle('theme-light');
+        }
+
+        function switchMode(mode) {
+            activeMode = mode;
+            document.getElementById('btn-mode-today').classList.toggle('opacity-70', mode !== 'today');
+            document.getElementById('btn-mode-archive').classList.toggle('opacity-70', mode !== 'archive');
+            document.getElementById('today-filters').classList.toggle('hidden', mode !== 'today');
+            document.getElementById('today-filters').classList.toggle('grid', mode === 'today');
+            document.getElementById('archive-filters').classList.toggle('hidden', mode !== 'archive');
+            document.getElementById('archive-filters').classList.toggle('grid', mode === 'archive');
+            renderViewerList();
+        }
+
+        async function loadAllViewerData(notify = false) {
+            const statusEl = document.getElementById('viewer-status');
+            statusEl.innerText = 'Menyinkronkan data...';
+            try {
+                const nowDate = todayStr();
+                const [{ data: mData, error: mErr }, { data: sData, error: sErr }, { data: pData, error: pErr }] = await Promise.all([
+                    sb.from('master_resi').select('*'),
+                    sb.from('scan_history').select('*'),
+                    sb.from('pickup_history').select('*').order('scanned_at', { ascending: false })
+                ]);
+                if (mErr || sErr || pErr) throw (mErr || sErr || pErr);
+
+                masterMap.clear();
+                (mData || []).forEach(r => {
+                    const resi = String(r["Nomor Pesanan"] ?? r["Nomor_Pesanan"] ?? r.no_order ?? '').trim();
+                    if (!resi) return;
+                    const toko = String(r["Nama Panggilan Toko BigSeller"] ?? r["Nama_Panggilan_Toko_BigSeller"] ?? '-').trim() || '-';
+                    const kurir = String(r["Jasa Kirim yang Dipilih Pembeli"] ?? r["Jasa_Kirim_yang_Dipilih_Pembeli"] ?? '-').trim() || '-';
+                    const skuItem = formatSku(r["SKU"], r["Jumlah"]);
+                    if (!masterMap.has(resi)) {
+                        masterMap.set(resi, { resi, toko, kurir, produk: skuItem });
+                    } else if (skuItem !== '-') {
+                        const cur = masterMap.get(resi);
+                        const list = cur.produk !== '-' ? cur.produk.split(', ') : [];
+                        if (!list.includes(skuItem)) {
+                            list.push(skuItem);
+                            cur.produk = list.join(', ');
+                        }
+                    }
+                });
+
+                scannedSet.clear();
+                scanTimeMap.clear();
+                (sData || []).filter(r => datePart(r.scanned_at) === nowDate).forEach(r => {
+                    const resi = String(r.no_order ?? '').trim();
+                    if (!resi) return;
+                    scannedSet.add(resi);
+                    scanTimeMap.set(resi, r.scanned_at || '-');
+                });
+
+                archiveRows = pData || [];
+                const dates = [...new Set(archiveRows.map(r => r.pickup_date || datePart(r.scanned_at)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+                const dateSel = document.getElementById('archive-date-filter');
+                dateSel.innerHTML = `<option value="ALL">Semua Tanggal Arsip (${archiveRows.length})</option>` +
+                    dates.map(d => `<option value="${d}">${d}</option>`).join('');
+
+                const total = masterMap.size;
+                const scanned = [...masterMap.keys()].filter(k => scannedSet.has(k)).length;
+                document.getElementById('stat-total').innerText = total;
+                document.getElementById('stat-scanned').innerText = scanned;
+                document.getElementById('stat-unscanned').innerText = Math.max(0, total - scanned);
+                statusEl.innerText = `Terhubung • Tanggal ${nowDate} (${total} resi)`;
+
+                renderViewerList();
+                if (notify) alert('Data berhasil diperbarui');
+            } catch (e) {
+                statusEl.innerText = 'Gagal memuat data dari Supabase';
+            }
+        }
+
+        function getTodayFilteredRows() {
+            const q = document.getElementById('search-input').value.trim().toLowerCase();
+            const st = document.getElementById('status-filter').value;
+            return [...masterMap.values()].filter(item => {
+                const isScanned = scannedSet.has(item.resi);
+                if (st === 'SUDAH' && !isScanned) return false;
+                if (st === 'BELUM' && isScanned) return false;
+                return !q ||
+                    item.resi.toLowerCase().includes(q) ||
+                    item.toko.toLowerCase().includes(q) ||
+                    item.kurir.toLowerCase().includes(q) ||
+                    item.produk.toLowerCase().includes(q);
+            });
+        }
+
+        function getArchiveFilteredRows() {
+            const d = document.getElementById('archive-date-filter').value;
+            const q = document.getElementById('archive-search-input').value.trim().toLowerCase();
+            return archiveRows.filter(r => {
+                const rd = r.pickup_date || datePart(r.scanned_at);
+                return (d === 'ALL' || rd === d) &&
+                    (!q || String(r.no_order).toLowerCase().includes(q) || String(r.toko).toLowerCase().includes(q));
+            });
+        }
+
+        function renderViewerList() {
+            const listEl = document.getElementById('viewer-list');
+            if (activeMode === 'today') {
+                const rows = getTodayFilteredRows();
+                listEl.innerHTML = rows.length
+                    ? rows.map(item => {
+                        const done = scannedSet.has(item.resi);
+                        return `<li class="surface-card p-3 rounded-2xl text-xs space-y-1.5">
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="font-mono font-bold">${item.resi}</span>
+                                <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-zinc-500/30">${done ? 'Sudah Discan' : 'Belum Discan'}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1 text-[11px] opacity-80 pt-1 border-t border-zinc-500/15">
+                                <div>Toko: <b>${item.toko}</b></div>
+                                <div>Kurir: <b>${item.kurir}</b></div>
+                                <div class="col-span-2">SKU / Jumlah: <b>${item.produk}</b></div>
+                            </div>
+                        </li>`;
+                    }).join('')
+                    : `<li class="text-center opacity-60 text-xs py-6">Tidak ada data sesuai filter</li>`;
+            } else {
+                const rows = getArchiveFilteredRows();
+                listEl.innerHTML = rows.length
+                    ? rows.map(r => `<li class="surface-card p-3 rounded-2xl text-xs space-y-1.5">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="font-mono font-bold">${r.no_order}</span>
+                            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-zinc-500/30">${r.pickup_date || datePart(r.scanned_at) || '-'}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1 text-[11px] opacity-80 pt-1 border-t border-zinc-500/15">
+                            <div>Toko: <b>${r.toko || '-'}</b></div>
+                            <div>Kurir: <b>${r.kurir || '-'}</b></div>
+                            <div class="col-span-2">SKU / Jumlah: <b>${r.produk || '-'}</b></div>
+                        </div>
+                    </li>`).join('')
+                    : `<li class="text-center opacity-60 text-xs py-6">Belum ada data arsip</li>`;
+            }
+        }
+
+        function exportCurrentViewXlsx() {
+            const d = todayStr();
+            if (activeMode === 'today') {
+                const rows = getTodayFilteredRows().map((item, idx) => ({
+                    No: idx + 1,
+                    "Nomor Pesanan": item.resi,
+                    "Nama Panggilan Toko BigSeller": item.toko,
+                    "SKU / Jumlah": item.produk,
+                    "Jasa Kirim yang Dipilih Pembeli": item.kurir,
+                    Status_Scan: scannedSet.has(item.resi) ? 'Sudah Discan' : 'Belum Discan',
+                    Waktu_Scan: scanTimeMap.get(item.resi) || '-'
+                }));
+                const ws = XLSX.utils.json_to_sheet(rows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Data Resi');
+                XLSX.writeFile(wb, `Viewer_Resi_${d}.xlsx`);
+            } else {
+                const rows = getArchiveFilteredRows().map((r, idx) => ({
+                    No: idx + 1,
+                    Tanggal_Pickup: r.pickup_date || datePart(r.scanned_at) || '-',
+                    "Nomor Pesanan": r.no_order,
+                    "Nama Panggilan Toko BigSeller": r.toko || '-',
+                    "SKU / Jumlah": r.produk || '-',
+                    "Jasa Kirim yang Dipilih Pembeli": r.kurir || '-',
+                    Waktu_Scan: r.scanned_at || '-'
+                }));
+                const ws = XLSX.utils.json_to_sheet(rows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Pickup History');
+                XLSX.writeFile(wb, `Viewer_Pickup_History_${d}.xlsx`);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => loadAllViewerData(false));
+    </script>
+</body>
+</html>
