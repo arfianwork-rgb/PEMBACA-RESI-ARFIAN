@@ -513,7 +513,7 @@
 
             $('result-list').innerHTML = rows.length
                 ? rows.map(i => buildCard(i.resi, `${currentTab.toUpperCase()} (${i.waktu})`,
-                    i.status === 'VALID' ? [['Toko', i.toko], ['Kurir', i.kurir], ['SKU / Jumlah', i.produk, true], ['Status MP', i.statusMp, true]] : [])).join('')
+                    i.status === 'VALID' ? [['Toko', i.toko], ['Kurir', i.kurir], ['SKU / Jumlah', i.produk, true]] : [])).join('')
                 : `<li class="text-center opacity-60 text-xs py-5">Tidak ada riwayat ${currentTab.toUpperCase()} hari ini</li>`;
         }
 
@@ -538,7 +538,6 @@
                     toko: meta.toko || '-',
                     kurir: meta.kurir || '-',
                     produk: meta.produk || '-',
-                    status_mp: meta.statusMp || '-',
                     pickup_date: datePart(r.scanned_at)
                 };
             });
@@ -552,6 +551,14 @@
             resetLocalSession(nowDate);
             if (!$('pickup-history-popup').classList.contains('hidden')) await loadPickupHistory();
             return payload.length;
+        }
+
+        function formatSkuItem(sku, jml) {
+            const cleanSku = String(sku ?? '').trim();
+            const cleanJml = String(jml ?? '').trim();
+            if (!cleanSku && !cleanJml) return '';
+            if (cleanSku && cleanJml) return `${cleanSku} (x${cleanJml})`;
+            return cleanSku || `(x${cleanJml})`;
         }
 
         async function autoSyncDatabase(notifyUser = true) {
@@ -568,16 +575,27 @@
 
                 masterDatabase.clear();
                 (masterRows || []).forEach(row => {
-                    const resi = String(row["Nomor_Pesanan"] ?? row["Nomor Pesanan"] ?? row.no_order ?? '').trim();
+                    const resi = String(row["Nomor Pesanan"] ?? row["Nomor_Pesanan"] ?? row.no_order ?? '').trim();
                     if (!resi) return;
-                    const sku = row["SKU"] ?? '';
-                    const jml = row["Jumlah"] ?? '';
-                    masterDatabase.set(resi, {
-                        toko: row["Nama_Panggilan_Toko_BigSeller"] ?? row["Nama Panggilan Toko BigSeller"] ?? row.nama_toko ?? '-',
-                        kurir: row["Jasa_Kirim_yang_Dipilih_Pembeli"] ?? row["Jasa Kirim yang Dipilih Pembeli"] ?? row.kurir_yang_pickup ?? '-',
-                        produk: sku ? (jml !== '' && jml !== null ? `${sku} (x${jml})` : sku) : (row.nama_produk ?? '-'),
-                        statusMp: row["Status_Marketplace"] ?? row["Status Marketplace"] ?? ''
-                    });
+
+                    const toko = String(row["Nama Panggilan Toko BigSeller"] ?? row["Nama_Panggilan_Toko_BigSeller"] ?? row.nama_toko ?? '-').trim() || '-';
+                    const kurir = String(row["Jasa Kirim yang Dipilih Pembeli"] ?? row["Jasa_Kirim_yang_Dipilih_Pembeli"] ?? row.kurir_yang_pickup ?? '-').trim() || '-';
+                    const skuItem = formatSkuItem(row["SKU"], row["Jumlah"]);
+
+                    if (!masterDatabase.has(resi)) {
+                        masterDatabase.set(resi, {
+                            toko,
+                            kurir,
+                            produk: skuItem || '-'
+                        });
+                    } else if (skuItem) {
+                        const existing = masterDatabase.get(resi);
+                        const currentList = existing.produk && existing.produk !== '-' ? existing.produk.split(', ') : [];
+                        if (!currentList.includes(skuItem)) {
+                            currentList.push(skuItem);
+                            existing.produk = currentList.join(', ');
+                        }
+                    }
                 });
 
                 const archivedCount = await archiveOldScanHistory();
@@ -595,8 +613,9 @@
                     const t = String(r.scanned_at ?? '');
                     merged.set(resiNum, {
                         resi: resiNum, invoice: resiNum,
-                        toko: inDb && meta ? meta.toko : '-', kurir: inDb && meta ? meta.kurir : '-',
-                        produk: inDb && meta ? meta.produk : '-', statusMp: inDb && meta ? (meta.statusMp || '-') : '-',
+                        toko: inDb && meta ? meta.toko : '-',
+                        kurir: inDb && meta ? meta.kurir : '-',
+                        produk: inDb && meta ? meta.produk : '-',
                         status: inDb ? 'VALID' : 'TIDAK VALID',
                         waktu: t.includes(' ') ? t.split(' ')[1] : (t || '-'),
                         tanggal: nowDate
@@ -636,7 +655,7 @@
             const rem = [...masterDatabase.entries()].filter(([resi]) => !scannedNumbers.has(resi));
             $('count-remaining').innerText = rem.length;
             $('popup-remaining-list').innerHTML = rem.length
-                ? rem.map(([resi, m]) => buildCard(resi, 'Belum', [['Toko', m.toko], ['Kurir', m.kurir], ['SKU / Jumlah', m.produk, true], ['Status MP', m.statusMp, true]])).join('')
+                ? rem.map(([resi, m]) => buildCard(resi, 'Belum', [['Toko', m.toko], ['Kurir', m.kurir], ['SKU / Jumlah', m.produk, true]])).join('')
                 : `<li class="text-center font-bold text-xs py-5">Semua resi di database sudah selesai discan</li>`;
         }
 
@@ -742,10 +761,14 @@
                 const rows = [...masterDatabase.entries()].map(([resi, m], idx) => {
                     const h = scanHistoryData.find(x => x.resi === resi);
                     return {
-                        No: idx + 1, Nomor_Pesanan: String(resi), Toko: m.toko, Kurir: m.kurir,
-                        SKU_Jumlah: m.produk, Status_MP: m.statusMp || '-',
+                        No: idx + 1,
+                        "Nomor Pesanan": String(resi),
+                        "Nama Panggilan Toko BigSeller": m.toko,
+                        "SKU / Jumlah": m.produk,
+                        "Jasa Kirim yang Dipilih Pembeli": m.kurir,
                         Status_Scan: scannedNumbers.has(resi) ? 'Berhasil Scan' : 'Belum Discan',
-                        Waktu_Scan: h ? h.waktu : '-', User: currentUser || '-'
+                        Waktu_Scan: h ? h.waktu : '-',
+                        User: currentUser || '-'
                     };
                 });
                 writeWorkbook(rows, 'Rekap Hari Ini', `Laporan_Resi_v4_${d}.xlsx`);
@@ -754,10 +777,15 @@
                 const rows = getFilteredPickup();
                 if (!rows.length) return showToast('Data Pickup History masih kosong');
                 const out = rows.map((r, idx) => ({
-                    No: idx + 1, Tanggal_Pickup: r.pickup_date || datePart(r.scanned_at) || '-',
-                    Nomor_Pesanan: String(r.no_order || ''), Toko: r.toko || '-', Kurir: r.kurir || '-',
-                    SKU_Jumlah: r.produk || '-', Status_MP: r.status_mp || '-',
-                    Status_Scan: r.status || 'VALID', Waktu_Scan: String(r.scanned_at || '-'), User: r.scanned_by || '-'
+                    No: idx + 1,
+                    Tanggal_Pickup: r.pickup_date || datePart(r.scanned_at) || '-',
+                    "Nomor Pesanan": String(r.no_order || ''),
+                    "Nama Panggilan Toko BigSeller": r.toko || '-',
+                    "SKU / Jumlah": r.produk || '-',
+                    "Jasa Kirim yang Dipilih Pembeli": r.kurir || '-',
+                    Status_Scan: r.status || 'VALID',
+                    Waktu_Scan: String(r.scanned_at || '-'),
+                    User: r.scanned_by || '-'
                 }));
                 const selDate = $('pickup-date-filter')?.value || 'ALL';
                 writeWorkbook(out, 'Pickup History', `Pickup_History_${selDate !== 'ALL' ? selDate : d}.xlsx`);
@@ -828,7 +856,7 @@
                 }
 
                 const inDb = masterDatabase.size === 0 || masterDatabase.has(num);
-                const meta = masterDatabase.get(num) || { toko: '-', kurir: '-', produk: '-', statusMp: '-' };
+                const meta = masterDatabase.get(num) || { toko: '-', kurir: '-', produk: '-' };
                 const statusText = inDb ? 'VALID' : 'TIDAK VALID';
 
                 scannedNumbers.add(num);
@@ -836,8 +864,8 @@
 
                 scanHistoryData.unshift({
                     resi: num, invoice: num, toko: meta.toko, kurir: meta.kurir,
-                    produk: meta.produk, statusMp: meta.statusMp || '-',
-                    status: statusText, waktu: new Date().toLocaleTimeString(), tanggal: nowDate
+                    produk: meta.produk, status: statusText,
+                    waktu: new Date().toLocaleTimeString(), tanggal: nowDate
                 });
 
                 const now = new Date();
@@ -850,10 +878,10 @@
                 updateRemainingDisplay();
 
                 playSound(inDb ? 'success' : 'error');
-                const statusMpLabel = meta.statusMp && meta.statusMp !== '-' ? meta.statusMp : 'Tanpa Status MP';
+                const kurirLabel = meta.kurir && meta.kurir !== '-' ? meta.kurir : 'Tanpa Kurir';
                 const tokoLabel = meta.toko && meta.toko !== '-' ? meta.toko : '-';
                 $('last-scanned-badge').innerHTML = inDb
-                    ? `<span class="text-[10px] bg-white text-zinc-950 px-3 py-1 rounded-xl font-bold text-right leading-tight">${statusMpLabel} • ${tokoLabel}</span>`
+                    ? `<span class="text-[10px] bg-white text-zinc-950 px-3 py-1 rounded-xl font-bold text-right leading-tight">${kurirLabel} • ${tokoLabel}</span>`
                     : `<span class="text-[10px] bg-zinc-800 text-zinc-300 border border-zinc-600 px-3 py-1 rounded-xl font-bold">Tidak Ada</span>`;
             } catch {
                 $('last-scanned-number').innerText = 'Error Sistem';
